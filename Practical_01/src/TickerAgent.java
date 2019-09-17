@@ -8,10 +8,15 @@ public class TickerAgent extends Agent{
 	
 	Behaviour loop;
 	protected void setup(){
-		loop = new TickerBehaviour(this, 300) {
+		loop = new TickerBehaviour(this, 1000) {
 			protected void onTick() {
-				//Print elapsed time since launch
-				System.out.println(System.currentTimeMillis()-t0 + ": "+myAgent.getLocalName());
+				
+				if (System.currentTimeMillis()-t0 < 10000) {
+					System.out.println((System.currentTimeMillis()-t0)/1000 + " seconds left.");
+				} else {
+					System.out.println("Deleting agent...");
+					myAgent.doDelete(); // Delete this agent
+				}
 			}
 		};
 	addBehaviour(loop);
