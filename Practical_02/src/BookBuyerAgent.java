@@ -1,4 +1,5 @@
 import jade.core.Agent;
+import jade.core.behaviours.*;
 import jade.core.AID;
 
 public class BookBuyerAgent extends Agent{
@@ -16,11 +17,24 @@ public class BookBuyerAgent extends Agent{
 		
 		// Get the title of the book to buy as a start-up argument
 		Object[] args = getArguments();
+		
 		if (args != null && args.length > 0) {
+			
 			targetBookTitle = (String) args[0];
+			
 		 	System.out.println("Trying to buy "+targetBookTitle);
+		 	
+		 	//Add a TickerBheaviour that schedules a request to seller agents every minute
+		 	addBehaviour(new TickerBehaviour(this, 60000) {
+		 		
+		 		protected void onTick() {
+		 			
+		 			myAgent.addBehaviour(new RequestPerformer());
+		 		}
+		 	} );
 		}
 		else {
+			
 			// Make the agent terminate immediately
 			System.out.println("No book title specified");
 			doDelete();
