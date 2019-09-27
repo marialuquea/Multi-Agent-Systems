@@ -1,5 +1,9 @@
 import jade.core.Agent;
 import jade.core.behaviours.*;
+import jade.domain.DFService;
+import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
@@ -14,7 +18,10 @@ public class BookSellerAgent extends Agent {
 	private BookSellerGui myGui;
 	
 	// Put agent initializations here
-	protected void setup() {
+	protected void setup() 
+	{
+		System.out.println("Seller-agent "+getAID().getName()+" starting.");
+		
 		// Create the catalogue
 		catalogue = new Hashtable();
 		
@@ -27,10 +34,40 @@ public class BookSellerAgent extends Agent {
 		
 		// Add the behaviour serving purchase orders from buyer agents
 		addBehaviour(new PurchaseOrdersServer());
+		
+		// Register the book-selling service in the yellow pages
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.setName(getAID());
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType("book-selling");
+		sd.setName("JADE-book-trading");
+		dfd.addServices(sd);
+		
+		try 
+		{
+			DFService.register(this, dfd);
+		}
+		catch (FIPAException fe) 
+		{
+			fe.printStackTrace();
+		}
+
 	}
 	
 	// Put agent clean-up operations here
-	protected void takeDown() {
+	protected void takeDown() 
+	{
+		// Deregister from the yellow pages
+		try 
+		{
+			DFService.deregister(this);
+		}
+		catch (FIPAException fe) 
+		{
+			fe.printStackTrace();
+		 }
+		 // 
+		
 		// Close the GUI
 		myGui.dispose();
 		
@@ -41,9 +78,12 @@ public class BookSellerAgent extends Agent {
 	 /**
 	 This is invoked by the GUI when the user adds a new book for sale
 	 */
-	 public void updateCatalogue(final String title, final int price) {
-		 addBehaviour(new OneShotBehaviour() {
-			 public void action() {
+	 public void updateCatalogue(final String title, final int price) 
+	 {
+		 addBehaviour(new OneShotBehaviour() 
+		 {
+			 public void action() 
+			 {
 				 catalogue.put(title, new Integer(price));
 			 }
 		 } );
@@ -60,25 +100,35 @@ public class BookSellerAgent extends Agent {
 	 with a PROPOSE message specifying the price. Otherwise a REFUSE message is
 	 sent back.
 	*/
-	private class OfferRequestsServer extends CyclicBehaviour {
-		public void action() {
-			ACLMessage msg = myAgent.receive();
-			if (msg != null) {
+	private class OfferRequestsServer extends CyclicBehaviour 
+	{
+		public void action() 
+		{
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) 
+			{
 				// Message received. Process it
 				String title = msg.getContent();
 				ACLMessage reply = msg.createReply();
 				Integer price = (Integer) catalogue.get(title);
-				if (price != null) {
+				if (price != null) 
+				{
 					// The requested book is available for sale. Reply with the price
 					reply.setPerformative(ACLMessage.PROPOSE);
 					reply.setContent(String.valueOf(price.intValue()));
 				}
-				else {
+				else 
+				{
 					// The requested book is NOT available for sale.
 					reply.setPerformative(ACLMessage.REFUSE);
 					reply.setContent("not-available");
 				}
 				myAgent.send(reply);
+			}
+			else 
+			{
+				block();
 			}
 		}
 	} // End of inner class OfferRequestsServer
@@ -109,6 +159,6 @@ public class BookSellerAgent extends Agent {
 				block();
 			}
 		 }
-	} // End of inner class OfferRequestsServer
+	} // End of inner class PurchaseOrdersServer
 
 }
