@@ -51,7 +51,7 @@ class BookSellerGui extends JFrame {
 			}
 		} );
 		
-		setResizable(false);
+		setResizable(true);
 	}
 	
 	public void showGui() {
