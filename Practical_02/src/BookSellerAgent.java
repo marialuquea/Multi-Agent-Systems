@@ -35,7 +35,7 @@ public class BookSellerAgent extends Agent {
 		// Add the behaviour serving purchase orders from buyer agents
 		addBehaviour(new PurchaseOrdersServer());
 		
-		// Register the book-selling service in the yellow pages
+		// Register the book-selling service in the yellow pages (DF Agent) 
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
@@ -65,8 +65,7 @@ public class BookSellerAgent extends Agent {
 		catch (FIPAException fe) 
 		{
 			fe.printStackTrace();
-		 }
-		 // 
+		}
 		
 		// Close the GUI
 		myGui.dispose();

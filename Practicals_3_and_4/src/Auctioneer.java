@@ -1,11 +1,13 @@
 import java.util.Hashtable;
-
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 public class Auctioneer extends Agent{
 	
@@ -14,6 +16,7 @@ public class Auctioneer extends Agent{
 	
 	// The GUI by means of which the user can add books in the catalogue
 	private AuctioneerGui myGui;	
+	
 	
 	/**
 	Agent initialisations
@@ -27,7 +30,13 @@ public class Auctioneer extends Agent{
 
 		// Create and show the GUI
 		myGui = new AuctioneerGui(this);
-		myGui.show();		
+		myGui.show();	
+		
+		// Add the behaviour serving requests for offer from buyer agents
+		addBehaviour(new OfferRequestsServer());
+				
+		// Add the behaviour serving purchase orders from buyer agents
+		addBehaviour(new PurchaseOrdersServer());
 
 		// Register the book-selling service in the yellow pages (DF Agent) 
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -44,7 +53,7 @@ public class Auctioneer extends Agent{
 		{
 			fe.printStackTrace();
 		}
-	}
+	} // End of setup()
 	
 	
 	
@@ -72,7 +81,7 @@ public class Auctioneer extends Agent{
 		
 		// Printout a dismissal message
 		System.out.println("Seller-agent "+getAID().getName()+" terminating.");
-	 }
+	 } // End of takeDown()
 	
 	
 	
@@ -91,6 +100,92 @@ public class Auctioneer extends Agent{
 				 catalogue.put(title, new Integer(price));
 			 }
 		 } );
-	 }
+	 } // End of updateCatalogue()
+	 
+	 
+	 
+	 
+	 
+	 
+	 /**
+	 Inner class OfferRequestsServer.
+	 This is the behaviour used by Book-seller agents to serve incoming requests
+	 for offer from buyer agents.
+	 If the requested book is in the local catalogue the seller agent replies
+	 with a PROPOSE message specifying the price. Otherwise a REFUSE message is
+	 sent back.
+	*/
+	private class OfferRequestsServer extends CyclicBehaviour 
+	{
+		public void action() 
+		{
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) 
+			{
+				// Message received. Process it
+				String title = msg.getContent();
+				ACLMessage reply = msg.createReply();
+				Integer price = (Integer) catalogue.get(title);
+				if (price != null) 
+				{
+					// The requested book is available for sale. Reply with the price
+					reply.setPerformative(ACLMessage.PROPOSE);
+					reply.setContent(String.valueOf(price.intValue()));
+				}
+				else 
+				{
+					// The requested book is NOT available for sale.
+					reply.setPerformative(ACLMessage.REFUSE);
+					reply.setContent("not-available");
+				}
+				myAgent.send(reply);
+			}
+			else 
+			{
+				block();
+			}
+		}
+	} // End of inner class OfferRequestsServer
+	
+	
+	
+	
+	
+	
+	/**
+	Inner class PurchaseOrdersServer
+	*/
+	private class PurchaseOrdersServer extends CyclicBehaviour 
+	{
+		public void action() 
+		{
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) 
+			{
+				// ACCEPT_PROPOSAL Message received. Process it
+				String title = msg.getContent();
+				ACLMessage reply = msg.createReply();
+				Integer price = (Integer) catalogue.remove(title);
+				if (price != null) 
+				{
+					reply.setPerformative(ACLMessage.INFORM);
+					System.out.println(title+" sold to agent "+msg.getSender().getName());
+				}
+				else 
+				{
+					// The requested book has been sold to another buyer in the meanwhile .
+					reply.setPerformative(ACLMessage.FAILURE);
+					reply.setContent("not-available");
+				}
+				myAgent.send(reply);
+			}
+			else 
+			{
+				block();
+			}
+		 }
+	} // End of inner class PurchaseOrdersServer
 
 }
