@@ -14,6 +14,8 @@ public class Bidder extends Agent
 	private String targetBookTitle;
 	//The list of known seller agents
 	private AID[] sellerAgents;
+	
+	long t0 = System.currentTimeMillis();
 		
 	/**
 	 * Agent initialisations
@@ -32,10 +34,15 @@ public class Bidder extends Agent
 		 	System.out.println("Trying to buy "+targetBookTitle);
 		 	
 		 	//Add a TickerBheaviour that schedules a request to seller agents every minute
-		 	addBehaviour(new TickerBehaviour(this, 10000) 
+		 	addBehaviour(new TickerBehaviour(this, 30000) 
 		 	{
 		 		protected void onTick() 
 		 		{
+		 			
+		 			System.out.println((System.currentTimeMillis()-t0)/1000 + " seconds");
+					
+		 			
+		 			
 		 			// Update the list of seller agents / Register with DF agent
 		 			DFAgentDescription template = new DFAgentDescription();
 		 			ServiceDescription sd = new ServiceDescription();
@@ -118,12 +125,14 @@ public class Bidder extends Agent
 					ACLMessage reply = myAgent.receive(mt);
 					if (reply != null) // Reply received
 					{
+						System.out.println("reply: "+reply);
 						if (reply.getPerformative() == ACLMessage.PROPOSE) 
 						{
 							// This is an offer
 							int price = Integer.parseInt(reply.getContent());
 							if (bestSeller == null || price > bestPrice) 
 							{
+								System.out.println("new best price: "+price);
 								// This is the best offer at present
 								bestPrice = price;
 								bestSeller = reply.getSender();
@@ -133,6 +142,7 @@ public class Bidder extends Agent
 						if (repliesCnt >= sellerAgents.length) 
 						{
 							// We received all replies
+							System.out.println("All replies received");
 							step = 2;
 						}
 					}

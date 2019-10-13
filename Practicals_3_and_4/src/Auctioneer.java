@@ -80,7 +80,7 @@ public class Auctioneer extends Agent{
 		myGui.dispose();
 		
 		// Printout a dismissal message
-		System.out.println("Seller-agent "+getAID().getName()+" terminating.");
+		System.out.println("Auctioneer "+getAID().getName()+" terminating.");
 	 } // End of takeDown()
 	
 	
