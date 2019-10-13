@@ -12,7 +12,7 @@ public class TickerAgent extends Agent{
 			protected void onTick() {
 				
 				if (System.currentTimeMillis()-t0 < 10000) {
-					System.out.println((System.currentTimeMillis()-t0)/1000 + " seconds left.");
+					System.out.println((System.currentTimeMillis()-t0)/1000 + " seconds");
 				} else {
 					System.out.println("Deleting agent...");
 					myAgent.doDelete(); // Delete this agent

@@ -109,8 +109,8 @@ public class Auctioneer extends Agent{
 	 
 	 /**
 	 Inner class OfferRequestsServer.
-	 This is the behaviour used by Book-seller agents to serve incoming requests
-	 for offer from buyer agents.
+	 This is the behaviour used by Auctioneer agents to serve incoming requests
+	 for offer from bidder agents.
 	 If the requested book is in the local catalogue the seller agent replies
 	 with a PROPOSE message specifying the price. Otherwise a REFUSE message is
 	 sent back.

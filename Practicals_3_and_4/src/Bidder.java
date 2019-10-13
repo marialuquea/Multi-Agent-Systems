@@ -26,17 +26,17 @@ public class Bidder extends Agent
 		// Get the title of the book to buy as a start-up argument
 		Object[] args = getArguments();
 		
-		if (args != null && args.length > 0) 
+		if (args != null && args.length > 0) // if argument not empty
 		{
-			targetBookTitle = (String) args[0];
+			targetBookTitle = (String) args[0]; 
 		 	System.out.println("Trying to buy "+targetBookTitle);
 		 	
 		 	//Add a TickerBheaviour that schedules a request to seller agents every minute
-		 	addBehaviour(new TickerBehaviour(this, 1000) 
+		 	addBehaviour(new TickerBehaviour(this, 10000) 
 		 	{
 		 		protected void onTick() 
 		 		{
-		 			// Update the list of seller agents
+		 			// Update the list of seller agents / Register with DF agent
 		 			DFAgentDescription template = new DFAgentDescription();
 		 			ServiceDescription sd = new ServiceDescription();
 		 			sd.setType("book-selling");
@@ -105,23 +105,24 @@ public class Bidder extends Agent
 					}
 					cfp.setContent(targetBookTitle);
 					cfp.setConversationId("book-trade");
-					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
+					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value (seed)
 					myAgent.send(cfp);
 					// Prepare the template to get proposals
-					mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
+					mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), 
+											 MessageTemplate.MatchInReplyTo(cfp.getReplyWith())
+											);
 					step = 1;
 					break;
 				case 1:
 					// Receive all proposals/refusals from seller agents
 					ACLMessage reply = myAgent.receive(mt);
-					if (reply != null) 
+					if (reply != null) // Reply received
 					{
-						// Reply received
 						if (reply.getPerformative() == ACLMessage.PROPOSE) 
 						{
 							// This is an offer
 							int price = Integer.parseInt(reply.getContent());
-							if (bestSeller == null || price < bestPrice) 
+							if (bestSeller == null || price > bestPrice) 
 							{
 								// This is the best offer at present
 								bestPrice = price;
@@ -135,7 +136,7 @@ public class Bidder extends Agent
 							step = 2;
 						}
 					}
-					else 
+					else // no reply
 					{
 						block();
 					}
@@ -149,7 +150,9 @@ public class Bidder extends Agent
 					order.setReplyWith("order"+System.currentTimeMillis());
 					myAgent.send(order);
 					// Prepare the template to get the purchase order reply
-					mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), MessageTemplate.MatchInReplyTo(order.getReplyWith()));
+					mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), 
+											 MessageTemplate.MatchInReplyTo(order.getReplyWith())
+											);
 					step = 3;
 					break;
 				case 3:
