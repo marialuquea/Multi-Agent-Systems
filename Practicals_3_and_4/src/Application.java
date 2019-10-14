@@ -21,9 +21,16 @@ public class Application
 			
 			String[] books = {"Java", "Maria"};
 			
-			//Start the Auctioneer agent
-			AgentController myAgent = myContainer.createNewAgent("bidder", Bidder.class.getCanonicalName(), null);
-			myAgent.start();
+			//Start the Bidder agents
+			AgentController bidderAgent1 = myContainer.createNewAgent("bidder1", Bidder.class.getCanonicalName(), null);
+			bidderAgent1.start();
+			
+			AgentController bidderAgent2 = myContainer.createNewAgent("bidder2", Bidder.class.getCanonicalName(), null);  
+			bidderAgent2.start();
+			
+			//Start the auctioneer agent
+			AgentController auctioneerAgent = myContainer.createNewAgent("auctioneer", Auctioneer.class.getCanonicalName(), books);  
+			auctioneerAgent.start();
 		}
 		catch (Exception e)
 		{

@@ -182,7 +182,6 @@ public class BookBuyerAgent extends Agent
 		@Override
 		public boolean done() 
 		{
-			//
 			return ((step == 2 && bestSeller == null) || step == 4);
 		}
 	} // End of inner class RequestPerformer

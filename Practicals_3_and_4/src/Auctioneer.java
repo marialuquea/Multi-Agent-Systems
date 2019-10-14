@@ -10,10 +10,12 @@ import jade.core.AID;
 
 public class Auctioneer extends Agent 
 {
-	// The title of the book to buy
+	// The title of the book to sell
 	private String targetBookTitle;
 	//The list of known seller agents
 	private AID[] bidderAgents;
+	
+	// private String[] items_to_sell = books; 
 	
 	long t0 = System.currentTimeMillis();
 	
@@ -42,8 +44,8 @@ public class Auctioneer extends Agent
 		 		}
 		 	});
 		 	
-		 	//Add a TickerBheaviour that schedules a request to seller agents every 10 seconds
-		 	addBehaviour(new TickerBehaviour(this, 10000) 
+		 	//Add a TickerBheaviour that schedules a request to bidder agents every 30 seconds
+		 	addBehaviour(new TickerBehaviour(this, 30000) 
 		 	{
 		 		protected void onTick() 
 		 		{
@@ -55,26 +57,16 @@ public class Auctioneer extends Agent
 		 			try 
 		 			{
 		 				DFAgentDescription[] result = DFService.search(myAgent, template);
-		 				
-		 				System.out.println("-------------------------------------");
-		 				System.out.println("result: "+result);
-		 				//System.out.println("bidderAgents.length: "+bidderAgents.length);
-		 				System.out.println("result.length: "+result.length);
-		 				System.out.println("-------------------------------------");
-		 				
 		 				bidderAgents = new AID[result.length];
 		 				for (int i = 0; i < result.length; ++i) 
 		 				{
 		 					bidderAgents[i] = result[i].getName();
-		 					System.out.println("bidderAgents.length2: "+bidderAgents.length);
-		 					System.out.println("bidderAgents[i]: "+bidderAgents[i]);
 		 				}
 		 			}
 		 			catch (FIPAException fe) {
 		 				fe.printStackTrace();
 		 			}
 
-		 			
 		 			// Perform the request 
 		 			myAgent.addBehaviour(new RequestPerformer());
 		 		}
@@ -101,9 +93,9 @@ public class Auctioneer extends Agent
 	
 	
 	/**
-	 Inner class RequestPerformer.
-	 This is the behaviour used by auctioneer agents to request bidder
-	 agents the price.
+	 * Inner class RequestPerformer.
+	 * This is the behaviour used by auctioneer agents to request bidder
+	 * agents the price.
 	*/
 	private class RequestPerformer extends Behaviour 
 	{
@@ -117,7 +109,7 @@ public class Auctioneer extends Agent
 			switch (step) 
 			{
 				case 0:
-					// Send the cfp to all sellers
+					// Send the cfp to all bidders
 					ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
 					for (int i = 0; i < bidderAgents.length; ++i) 
 					{
@@ -138,25 +130,18 @@ public class Auctioneer extends Agent
 					ACLMessage reply = myAgent.receive(mt);
 					if (reply != null) // Reply received
 					{
-						System.out.println("reply: "+reply);
 						if (reply.getPerformative() == ACLMessage.PROPOSE) 
 						{
 							// This is an offer
 							int price = Integer.parseInt(reply.getContent());
 							if (bestBidder == null || price > bestPrice) 
 							{
-								System.out.println("price: "+price);
-								System.out.println("best price: "+bestPrice);
-								System.out.println("new best bidder: "+reply.getSender());
 								// This is the best offer at present
 								bestPrice = price;
 								bestBidder = reply.getSender();
 							}
 						}
 						repliesCnt++;
-						
-						System.out.println("repliesCnt: "+repliesCnt);
-						System.out.println("bidderAgents.length: "+bidderAgents.length);
 						
 						if (repliesCnt >= bidderAgents.length) 
 						{
