@@ -19,8 +19,10 @@ public class Application
 			AgentController rma = myContainer.createNewAgent("rma", "jade.tools.rma.rma", null);
 			rma.start();
 			
+			String[] books = {"Java", "Maria"};
+			
 			//Start the Auctioneer agent
-			AgentController myAgent = myContainer.createNewAgent("auctioneer", Auctioneer.class.getCanonicalName(), null);
+			AgentController myAgent = myContainer.createNewAgent("bidder", Bidder.class.getCanonicalName(), null);
 			myAgent.start();
 		}
 		catch (Exception e)

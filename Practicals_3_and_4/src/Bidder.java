@@ -1,196 +1,191 @@
+import java.util.Hashtable;
 import jade.core.Agent;
-import jade.core.behaviours.*;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.core.AID;
 
-public class Bidder extends Agent 
-{
-	// The title of the book to buy
-	private String targetBookTitle;
-	//The list of known seller agents
-	private AID[] sellerAgents;
+public class Bidder extends Agent{
 	
-	long t0 = System.currentTimeMillis();
-		
+	// The list of items to bid for
+	private Hashtable catalogue;
+	
+	// The GUI by means of which the user can add items to book for in the catalogue
+	private BidderGui myGui;	
+	
+	
 	/**
-	 * Agent initialisations
-	 */
+	* Agent initialisations
+	*/
 	protected void setup()
 	{
-		//Print a welcome message
-		System.out.println("Bidder Agent "+getAID().getName()+" is ready.");
-				
-		// Get the title of the book to buy as a start-up argument
-		Object[] args = getArguments();
+		System.out.println("Bidder agent "+getAID().getName()+" starting.");
 		
-		if (args != null && args.length > 0) // if argument not empty
-		{
-			targetBookTitle = (String) args[0]; 
-		 	System.out.println("Trying to buy "+targetBookTitle);
-		 	
-		 	//Add a TickerBheaviour that schedules a request to seller agents every minute
-		 	addBehaviour(new TickerBehaviour(this, 30000) 
-		 	{
-		 		protected void onTick() 
-		 		{
-		 			
-		 			System.out.println((System.currentTimeMillis()-t0)/1000 + " seconds");
-					
-		 			
-		 			
-		 			// Update the list of seller agents / Register with DF agent
-		 			DFAgentDescription template = new DFAgentDescription();
-		 			ServiceDescription sd = new ServiceDescription();
-		 			sd.setType("book-selling");
-		 			template.addServices(sd);
-		 			try 
-		 			{
-		 				DFAgentDescription[] result = DFService.search(myAgent, template);
-		 				sellerAgents = new AID[result.length];
-		 				for (int i = 0; i < result.length; ++i) 
-		 				{
-		 					sellerAgents[i] = result[i].getName();
-		 				}
-		 			}
-		 			catch (FIPAException fe) {
-		 				fe.printStackTrace();
-		 			}
+		// Create the catalogue
+		catalogue = new Hashtable();
 
-		 			
-		 			// Perform the request 
-		 			myAgent.addBehaviour(new RequestPerformer());
-		 		}
-		 	} );
-		}
-		else 
+		// Create and show the GUI
+		myGui = new BidderGui(this);
+		myGui.show();	
+		
+		// Add the behaviour serving requests for offer from buyer agents
+		addBehaviour(new OfferRequestsServer());
+				
+		// Add the behaviour serving purchase orders from buyer agents
+		addBehaviour(new PurchaseOrdersServer());
+
+		// Register the book-selling service in the yellow pages (DF Agent) 
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.setName(getAID());
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType("book-selling");
+		sd.setName("JADE-book-trading");
+		dfd.addServices(sd);
+		try 
 		{
-			// Make the agent terminate immediately
-			System.out.println("No book title specified");
-			doDelete();
+			DFService.register(this, dfd);
+		}
+		catch (FIPAException fe) 
+		{
+			fe.printStackTrace();
 		}
 	} // End of setup()
 	
 	
 	
+	
+	
+	
+	
 	/**
-	 * Agent clean-up operations
-	 */
+	Agent clean-up operations
+	*/
 	protected void takeDown() 
 	{
-	// Printout a dismissal message
-		System.out.println("Bidder Agent "+getAID().getName()+" terminating.");
-	}
+		// De-register from the yellow pages
+		try 
+		{
+			DFService.deregister(this);
+		}
+		catch (FIPAException fe) 
+		{
+			fe.printStackTrace();
+		}
+		
+		// Close the GUI
+		myGui.dispose();
+		
+		// Printout a dismissal message
+		System.out.println("Bidder "+getAID().getName()+" terminating.");
+	 } // End of takeDown()
+	
+	
+	
+	
+	
+	
+	 /**
+	 This is invoked by the GUI when the bidder adds a new item to bid for
+	 */
+	 public void updateCatalogue(final String title, final int price) 
+	 {
+		 addBehaviour(new OneShotBehaviour() 
+		 {
+			 public void action() 
+			 {
+				 catalogue.put(title, new Integer(price));
+			 }
+		 } );
+	 } // End of updateCatalogue()
+	 
+	 
+	 
+	 
+	 
+	 
+	 /**
+	 * Inner class OfferRequestsServer.
+	 * This is the behaviour used by Bidder agents to serve incoming requests
+	 * for offer from auctioneer agents.
+	 * If the requested item is in the local catalogue the auctioneer agent replies
+	 * with a PROPOSE message specifying the price. Otherwise a REFUSE message is
+	 * sent back.
+	*/
+	private class OfferRequestsServer extends CyclicBehaviour 
+	{
+		public void action() 
+		{
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) 
+			{
+				// Message received. Process it
+				String title = msg.getContent();
+				ACLMessage reply = msg.createReply();
+				Integer price = (Integer) catalogue.get(title);
+				if (price != null) 
+				{
+					// The requested book is available for sale. Reply with the price
+					reply.setPerformative(ACLMessage.PROPOSE);
+					reply.setContent(String.valueOf(price.intValue()));
+				}
+				else 
+				{
+					// The requested book is NOT available for sale.
+					reply.setPerformative(ACLMessage.REFUSE);
+					reply.setContent("not-available");
+				}
+				myAgent.send(reply);
+			}
+			else 
+			{
+				block();
+			}
+		}
+	} // End of inner class OfferRequestsServer
+	
+	
+	
+	
 	
 	
 	/**
-	 Inner class RequestPerformer.
-	 This is the behaviour used by Book-buyer agents to request seller
-	 agents the target book.
+	* Inner class PurchaseOrdersServer
 	*/
-	private class RequestPerformer extends Behaviour 
+	private class PurchaseOrdersServer extends CyclicBehaviour 
 	{
-		private AID bestSeller; // The agent who provides the best offer
-		private int bestPrice; // The best offered price
-		private int repliesCnt = 0; // The counter of replies from seller agents
-		private MessageTemplate mt; // The template to receive replies
-		private int step = 0;
 		public void action() 
 		{
-			switch (step) 
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) 
 			{
-				case 0:
-					// Send the cfp to all sellers
-					ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-					for (int i = 0; i < sellerAgents.length; ++i) 
-					{
-						cfp.addReceiver(sellerAgents[i]);
-					}
-					cfp.setContent(targetBookTitle);
-					cfp.setConversationId("book-trade");
-					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value (seed)
-					myAgent.send(cfp);
-					// Prepare the template to get proposals
-					mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), 
-											 MessageTemplate.MatchInReplyTo(cfp.getReplyWith())
-											);
-					step = 1;
-					break;
-				case 1:
-					// Receive all proposals/refusals from seller agents
-					ACLMessage reply = myAgent.receive(mt);
-					if (reply != null) // Reply received
-					{
-						System.out.println("reply: "+reply);
-						if (reply.getPerformative() == ACLMessage.PROPOSE) 
-						{
-							// This is an offer
-							int price = Integer.parseInt(reply.getContent());
-							if (bestSeller == null || price > bestPrice) 
-							{
-								System.out.println("new best price: "+price);
-								// This is the best offer at present
-								bestPrice = price;
-								bestSeller = reply.getSender();
-							}
-						}
-						repliesCnt++;
-						if (repliesCnt >= sellerAgents.length) 
-						{
-							// We received all replies
-							System.out.println("All replies received");
-							step = 2;
-						}
-					}
-					else // no reply
-					{
-						block();
-					}
-					break;
-				case 2:
-					// Send the purchase order to the seller that provided the best offer
-					ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-					order.addReceiver(bestSeller);
-					order.setContent(targetBookTitle);
-					order.setConversationId("book-trade");
-					order.setReplyWith("order"+System.currentTimeMillis());
-					myAgent.send(order);
-					// Prepare the template to get the purchase order reply
-					mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), 
-											 MessageTemplate.MatchInReplyTo(order.getReplyWith())
-											);
-					step = 3;
-					break;
-				case 3:
-					// Receive the purchase order reply
-					reply = myAgent.receive(mt);
-					if (reply != null) 
-					{
-						// Purchase order reply received
-						if (reply.getPerformative() == ACLMessage.INFORM) 
-						{
-							// Purchase successful. We can terminate
-							System.out.println(targetBookTitle+" successfully purchased.");
-							System.out.println("Price = "+bestPrice);
-							myAgent.doDelete();
-						}
-						step = 4;
-					}
-					else 
-					{
-						block();
-					}
-					break;
+				// ACCEPT_PROPOSAL Message received. Process it
+				String title = msg.getContent();
+				ACLMessage reply = msg.createReply();
+				Integer price = (Integer) catalogue.remove(title);
+				if (price != null) 
+				{
+					reply.setPerformative(ACLMessage.INFORM);
+					System.out.println(title+" sold to agent "+msg.getSender().getName());
+				}
+				else 
+				{
+					// The requested book has been sold to another buyer in the meanwhile .
+					reply.setPerformative(ACLMessage.FAILURE);
+					reply.setContent("not-available");
+				}
+				myAgent.send(reply);
 			}
-		}
-		public boolean done() 
-		{
-			return ((step == 2 && bestSeller == null) || step == 4);
-		}
-	} // End of inner class RequestPerformer
-	
+			else 
+			{
+				block();
+			}
+		 }
+	} // End of inner class PurchaseOrdersServer
+
 }

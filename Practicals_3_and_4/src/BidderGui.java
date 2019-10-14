@@ -4,12 +4,12 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class AuctioneerGui extends JFrame
+public class BidderGui extends JFrame
 {
-	private Auctioneer myAgent;
+	private Bidder myAgent;
 	private JTextField titleField, priceField;
 	
-	AuctioneerGui(Auctioneer a) 
+	BidderGui(Bidder a) 
 	{
 		super( a.getLocalName() );
 		
@@ -40,7 +40,7 @@ public class AuctioneerGui extends JFrame
 				}
 				catch (Exception e) 
 				{
-					JOptionPane.showMessageDialog(AuctioneerGui.this, "Invalid values. "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(BidderGui.this, "Invalid values. "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		} );
