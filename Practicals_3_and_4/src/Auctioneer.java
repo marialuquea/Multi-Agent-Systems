@@ -34,7 +34,7 @@ public class Auctioneer extends Agent
 			targetBookTitle = (String) args[0]; 
 		 	System.out.println("Trying to sell "+targetBookTitle);
 		 	
-		 	addBehaviour(new TickerBehaviour(this, 1000) 
+		 	addBehaviour(new TickerBehaviour(this, 10000) 
 		 	{
 		 		protected void onTick() 
 		 		{
@@ -145,7 +145,8 @@ public class Auctioneer extends Agent
 							int price = Integer.parseInt(reply.getContent());
 							if (bestBidder == null || price > bestPrice) 
 							{
-								System.out.println("new best price: "+price);
+								System.out.println("price: "+price);
+								System.out.println("best price: "+bestPrice);
 								System.out.println("new best bidder: "+reply.getSender());
 								// This is the best offer at present
 								bestPrice = price;

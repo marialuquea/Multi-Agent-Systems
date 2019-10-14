@@ -14,7 +14,7 @@ public class BookBuyerAgent extends Agent
 	// The title of the book to buy
 	private String targetBookTitle;
 	//The list of known seller agents
-	private AID[] sellerAgents;
+	private AID[] sellerAgents = { new AID("sellerStefan", AID.ISLOCALNAME), new AID("sellerPaul", AID.ISLOCALNAME) };
 		
 	//Put agent initialisations here
 	protected void setup() 
@@ -34,12 +34,12 @@ public class BookBuyerAgent extends Agent
 		 	System.out.println("Trying to buy "+targetBookTitle);
 		 	
 		 	//Add a TickerBheaviour that schedules a request to seller agents every minute
-		 	addBehaviour(new TickerBehaviour(this, 1000) 
+		 	addBehaviour(new TickerBehaviour(this, 15000) 
 		 	{
 		 		
 		 		protected void onTick() 
 		 		{
-		 			
+		 			/*
 		 			// Update the list of seller agents
 		 			DFAgentDescription template = new DFAgentDescription();
 		 			ServiceDescription sd = new ServiceDescription();
@@ -57,7 +57,7 @@ public class BookBuyerAgent extends Agent
 		 			catch (FIPAException fe) {
 		 				fe.printStackTrace();
 		 			}
-
+					*/
 		 			
 		 			// Perform the request 
 		 			myAgent.addBehaviour(new RequestPerformer());
@@ -73,6 +73,7 @@ public class BookBuyerAgent extends Agent
 	}
 	
 	// Put agent clean-up operations here
+	@Override
 	protected void takeDown() {
 		// Printout a dismissal message
 		System.out.println("Buyer-agent "+getAID().getName()+" terminating.");
@@ -92,31 +93,33 @@ public class BookBuyerAgent extends Agent
 		private int repliesCnt = 0; // The counter of replies from seller agents
 		private MessageTemplate mt; // The template to receive replies
 		private int step = 0;
+		
 		public void action() {
 			switch (step) 
 			{
 				case 0:
 					// Send the cfp to all sellers
-					ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-					for (int i = 0; i < sellerAgents.length; ++i) 
+					ACLMessage cfp = new ACLMessage(ACLMessage.CFP); //create empty call for proposal
+					for (AID s:sellerAgents) 
 					{
-						cfp.addReceiver(sellerAgents[i]);
+						cfp.addReceiver(s);
 					}
 					cfp.setContent(targetBookTitle);
 					cfp.setConversationId("book-trade");
 					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
-					myAgent.send(cfp);
+					myAgent.send(cfp); // send proposal to all sellers
+					
 					// Prepare the template to get proposals
 					mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
 					step = 1;
 					break;
 				case 1:
 					// Receive all proposals/refusals from seller agents
-					ACLMessage reply = myAgent.receive(mt);
+					ACLMessage reply = myAgent.receive(mt); //make a new message which is the reply to the offers/refusals received 
 					if (reply != null) 
 					{
 						// Reply received
-						if (reply.getPerformative() == ACLMessage.PROPOSE) 
+						if (reply.getPerformative() == ACLMessage.PROPOSE) // if type of response is a proposal
 						{
 							// This is an offer
 							int price = Integer.parseInt(reply.getContent());
@@ -137,17 +140,19 @@ public class BookBuyerAgent extends Agent
 					else 
 					{
 						block();
+						// not moving to next step until a reply is received
 					}
 					break;
 				case 2:
 					// Send the purchase order to the seller that provided the best offer
-					ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+					ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL); // new message accepting proposal
 					order.addReceiver(bestSeller);
 					order.setContent(targetBookTitle);
 					order.setConversationId("book-trade");
 					order.setReplyWith("order"+System.currentTimeMillis());
 					myAgent.send(order);
 					// Prepare the template to get the purchase order reply
+					// prepare to listen to incoming messages
 					mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), MessageTemplate.MatchInReplyTo(order.getReplyWith()));
 					step = 3;
 					break;
@@ -157,14 +162,14 @@ public class BookBuyerAgent extends Agent
 					if (reply != null) 
 					{
 						// Purchase order reply received
-						if (reply.getPerformative() == ACLMessage.INFORM) 
+						if (reply.getPerformative() == ACLMessage.INFORM) //our offer was accepted
 						{
 							// Purchase successful. We can terminate
 							System.out.println(targetBookTitle+" successfully purchased.");
 							System.out.println("Price = "+bestPrice);
 							myAgent.doDelete();
 						}
-						step = 4;
+						step = 4; //move out of the switch
 					}
 					else 
 					{
@@ -173,16 +178,14 @@ public class BookBuyerAgent extends Agent
 					break;
 			}
 		}
+		
+		@Override
 		public boolean done() 
 		{
+			//
 			return ((step == 2 && bestSeller == null) || step == 4);
 		}
 	} // End of inner class RequestPerformer
-	
-	
-	
-	
-	
 	
 	
 }

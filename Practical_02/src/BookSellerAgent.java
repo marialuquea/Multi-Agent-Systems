@@ -35,6 +35,7 @@ public class BookSellerAgent extends Agent {
 		// Add the behaviour serving purchase orders from buyer agents
 		addBehaviour(new PurchaseOrdersServer());
 		
+		/*
 		// Register the book-selling service in the yellow pages (DF Agent) 
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -51,12 +52,15 @@ public class BookSellerAgent extends Agent {
 		{
 			fe.printStackTrace();
 		}
+		*/
 
 	}
 	
 	// Put agent clean-up operations here
+	@Override
 	protected void takeDown() 
 	{
+		/*
 		// Deregister from the yellow pages
 		try 
 		{
@@ -66,6 +70,7 @@ public class BookSellerAgent extends Agent {
 		{
 			fe.printStackTrace();
 		}
+		*/
 		
 		// Close the GUI
 		myGui.dispose();
@@ -73,12 +78,14 @@ public class BookSellerAgent extends Agent {
 		// Printout a dismissal message
 		System.out.println("Seller-agent "+getAID().getName()+" terminating.");
 	 }
+
 	
 	 /**
 	 This is invoked by the GUI when the user adds a new book for sale
 	 */
 	 public void updateCatalogue(final String title, final int price) 
 	 {
+		 // UUID uniqueId = new UUID(); making unique ids for the key:value pairs of the hashtable
 		 addBehaviour(new OneShotBehaviour() 
 		 {
 			 public void action() 
@@ -98,24 +105,28 @@ public class BookSellerAgent extends Agent {
 	 If the requested book is in the local catalogue the seller agent replies
 	 with a PROPOSE message specifying the price. Otherwise a REFUSE message is
 	 sent back.
+	 Behaviour to listen, process and answer to CFP (call for proposal)
+	 like answering a client how much the book costs
 	*/
 	private class OfferRequestsServer extends CyclicBehaviour 
 	{
 		public void action() 
 		{
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-			ACLMessage msg = myAgent.receive(mt);
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP); //prepare to receive cfps
+			ACLMessage msg = myAgent.receive(mt); //receive cfps
 			if (msg != null) 
 			{
 				// Message received. Process it
 				String title = msg.getContent();
-				ACLMessage reply = msg.createReply();
+				
+				ACLMessage reply = msg.createReply(); //create a new reply
 				Integer price = (Integer) catalogue.get(title);
+				
 				if (price != null) 
 				{
 					// The requested book is available for sale. Reply with the price
-					reply.setPerformative(ACLMessage.PROPOSE);
-					reply.setContent(String.valueOf(price.intValue()));
+					reply.setPerformative(ACLMessage.PROPOSE); //set type of reply message
+					reply.setContent(String.valueOf(price.intValue())); //set content
 				}
 				else 
 				{
@@ -133,18 +144,25 @@ public class BookSellerAgent extends Agent {
 	} // End of inner class OfferRequestsServer
 	
 	
-	
-	private class PurchaseOrdersServer extends CyclicBehaviour {
-		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+	/**
+	 * selling the books
+	 * */
+	private class PurchaseOrdersServer extends CyclicBehaviour 
+	{
+		public void action() 
+		{
+			// prepare to receive proposal messages
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL); 
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				// ACCEPT_PROPOSAL Message received. Process it
 				String title = msg.getContent();
 				ACLMessage reply = msg.createReply();
 				Integer price = (Integer) catalogue.remove(title);
-				if (price != null) {
-					reply.setPerformative(ACLMessage.INFORM);
+				
+				if (price != null) 
+				{
+					reply.setPerformative(ACLMessage.INFORM); //set type of reply
 					System.out.println(title+" sold to agent "+msg.getSender().getName());
 				}
 				else {
