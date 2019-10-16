@@ -19,8 +19,6 @@ public class Auctioneer extends Agent
 	//The list of known seller agents
 	private AID[] bidderAgents;
 
-	// long t0 = System.currentTimeMillis();
-
 
 	/**
 	 * Agent initialisations
@@ -38,79 +36,82 @@ public class Auctioneer extends Agent
 
 
 			//count down 15 seconds
-			addBehaviour(new TickerBehaviour(this, 1000) 
+			addBehaviour(new TickerBehaviour(this, 1000) // every second print the seconds left
 			{   
-				protected void onTick() 
-				{
-					countdown();
-				}
+				protected void onTick() { countdown(); }
 			});
 			
 			
-			for (Object o : args) {
+			// for each item to sell, add them to list itemsToSell
+			for (Object o : args) 
+			{
 				itemsToSell.add((String) o);
-				System.out.println("Trying to sell " + (String) o);
+				// System.out.println("Trying to sell " + (String) o);
 			}
 			
-
-
-
-			//Add a TickerBheaviour that schedules a request to bidder agents every 15 seconds
-			addBehaviour(new TickerBehaviour(this, 15000) 
+			System.out.println("itemsToSell.size(): " + itemsToSell.size());
+			
+			if (itemsToSell.size() > 0)
 			{
-				protected void onTick() 
+				//Add a TickerBheaviour that schedules a request to bidder agents every 15 seconds
+				addBehaviour(new TickerBehaviour(this, 20000) 
 				{
-					// Update the list of bidder agents / Register with DF agent
-					DFAgentDescription template = new DFAgentDescription();
-					ServiceDescription sd = new ServiceDescription();
-					sd.setType("book-selling");
-					template.addServices(sd);
-					try 
+					protected void onTick() 
 					{
-						DFAgentDescription[] result = DFService.search(myAgent, template);
-						bidderAgents = new AID[result.length];
-						for (int i = 0; i < result.length; ++i) 
+						// Update the list of bidder agents / Register with DF agent
+						DFAgentDescription template = new DFAgentDescription();
+						ServiceDescription sd = new ServiceDescription();
+						sd.setType("book-selling");
+						template.addServices(sd);
+						try 
 						{
-							bidderAgents[i] = result[i].getName();
+							DFAgentDescription[] result = DFService.search(myAgent, template);
+							bidderAgents = new AID[result.length];
+							for (int i = 0; i < result.length; ++i) 
+							{
+								bidderAgents[i] = result[i].getName();
+							}
 						}
-					}
-					catch (FIPAException fe) {
-						fe.printStackTrace();
-					}
+						catch (FIPAException fe) {
+							fe.printStackTrace();
+						}
 
-					// Perform the request 
-					myAgent.addBehaviour(new RequestPerformer());
+						// Perform the request 
+						myAgent.addBehaviour(new RequestPerformer());
 
-				} // end of onTick
+					} // end of onTick
 
-			} ); //end of addBehaviour
-
+				} ); //end of addBehaviour
+				
+			} //End of:   if (itemsTosell not empty)
 
 		}
 		else 
 		{
 			// Make the agent terminate immediately
-			System.out.println("No book title specified");
+			System.out.println("No items to sell");
 			doDelete();
 		}
 	} // End of setup()
 
-	int t = 15;
-
+	
+	
+	
 	/**
 	 * Count down 15 seconds for each item in the auction
 	 */
+	int t = 20;
 	protected void countdown()
 	{
 
 		if (t > 0)  
 		{  
-			System.out.println(t + " seconds left");
+			System.out.println(t);
 			t--;
 		} else  
 		{
-			System.out.println("15 seconds of auction ended");
-			t = 15;
+			System.out.println("20 seconds of auction ended");
+			t = 20;
 		}
 	}
 
@@ -136,14 +137,14 @@ public class Auctioneer extends Agent
 		private int repliesCnt = 0; // The counter of replies from seller agents
 		private MessageTemplate mt; // The template to receive replies
 		private int step = 0;
-		private String itemToSell = itemsToSell.get(0);
+		private String itemToSell = itemsToSell.get(0); // first item on the list
 		public void action() 
 		{
 
 			switch (step) 
 			{
 			case 0:
-				// Send the cfp to all bidders
+				// Send the cfp (call for proposal) to all bidders
 				ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
 				for (int i = 0; i < bidderAgents.length; ++i) 
 				{
@@ -180,7 +181,6 @@ public class Auctioneer extends Agent
 					if (repliesCnt >= bidderAgents.length) 
 					{
 						// We received all replies
-						//System.out.println("15 seconds more gone");
 						step = 2;
 					}
 				}
@@ -212,15 +212,22 @@ public class Auctioneer extends Agent
 					if (reply.getPerformative() == ACLMessage.INFORM) 
 					{
 						// Purchase successful. We can terminate
-						System.out.println(itemsToSell+" successfully purchased by "+reply.getSender());
+						System.out.println(itemToSell+" successfully purchased by "+reply.getSender().getName());
 						System.out.println("Best price = "+bestPrice);
-						myAgent.doDelete();
+						
 					}
-					if (itemsToSell.size() == 0) { step = 4; }
+					if (itemsToSell.size() == 1) 
+					{ 
+						System.out.println("Agent Auctioneer has done its job and is terminating.");
+						myAgent.doDelete();
+						step = 4; 
+					}
 					else 
 					{ 
-						step = 1;
 						itemsToSell.remove(0);  // remove first item
+						System.out.println("itemToSell "+itemToSell+" removed from list.");
+						System.out.println("itemsToSell: "+itemsToSell);
+						step = 1;
 					}
 				}
 				else 

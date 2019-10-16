@@ -171,7 +171,7 @@ public class Bidder extends Agent{
 				if (price != null) 
 				{
 					reply.setPerformative(ACLMessage.INFORM);
-					System.out.println(title+" sold to agent "+msg.getSender().getName());
+					// System.out.println(title+" sold to agent "+msg.getSender().getName());
 				}
 				else 
 				{
