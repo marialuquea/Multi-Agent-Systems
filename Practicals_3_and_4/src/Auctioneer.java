@@ -158,7 +158,7 @@ public class Auctioneer extends Agent
 
 		public void action() 
 		{
-			System.out.println("Trying to sell "+itemToSell+"in requestPerformer");
+			System.out.println("Trying to sell "+itemToSell+" in requestPerformer");
 			System.out.println("step: "+step);
 
 			switch (step) 
