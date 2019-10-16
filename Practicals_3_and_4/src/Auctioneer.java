@@ -6,11 +6,10 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import jade.core.AID;
+
 
 public class Auctioneer extends Agent 
 {
@@ -18,6 +17,9 @@ public class Auctioneer extends Agent
 	private ArrayList<String> itemsToSell = new ArrayList<String>();
 	//The list of known seller agents
 	private AID[] bidderAgents;
+
+	private int round = 0;
+	private Boolean sold = false;
 
 
 	/**
@@ -34,26 +36,25 @@ public class Auctioneer extends Agent
 		if (args != null && args.length > 0) // if argument not empty
 		{
 
-
 			//count down 15 seconds
 			addBehaviour(new TickerBehaviour(this, 1000) // every second print the seconds left
-			{   
+					{   
 				protected void onTick() { countdown(); }
-			});
-			
-			
+					});
+
+
+
+
 			// for each item to sell, add them to list itemsToSell
-			for (Object o : args) 
-			{
-				itemsToSell.add((String) o);
-				// System.out.println("Trying to sell " + (String) o);
-			}
-			
-			System.out.println("itemsToSell.size(): " + itemsToSell.size());
-			
+			for (Object o : args) { itemsToSell.add((String) o); }
+
+
+
+			System.out.println("itemsToSell: " + itemsToSell);
+
 			if (itemsToSell.size() > 0)
 			{
-				//Add a TickerBheaviour that schedules a request to bidder agents every 15 seconds
+				//Add a TickerBheaviour that schedules a request to bidder agents every 20 seconds
 				addBehaviour(new TickerBehaviour(this, 20000) 
 				{
 					protected void onTick() 
@@ -82,7 +83,7 @@ public class Auctioneer extends Agent
 					} // end of onTick
 
 				} ); //end of addBehaviour
-				
+
 			} //End of:   if (itemsTosell not empty)
 
 		}
@@ -94,24 +95,39 @@ public class Auctioneer extends Agent
 		}
 	} // End of setup()
 
-	
-	
-	
+
+
+
 	/**
-	 * Count down 15 seconds for each item in the auction
+	 * Count down 20 seconds for each item in the auction
 	 */
-	int t = 20;
+	int t = 5;
 	protected void countdown()
 	{
-
-		if (t > 0)  
+		if (t > 0)  // keep the count down going
 		{  
 			System.out.println(t);
 			t--;
-		} else  
+		} else  if (sold == true) // if at the end of the round the item was sold
 		{
-			System.out.println("20 seconds of auction ended");
-			t = 20;
+			System.out.println("1) itemsToSell: " + itemsToSell);
+			
+			// next round, next item
+			round++;
+			System.out.println("round: " + round);
+			t = 5;
+			sold = false;
+		}
+		else // the item wasn't sold and the time ended
+		{
+			System.out.println("2) itemsToSell: " + itemsToSell);
+			
+			// pop first item, push it at the back, keep auction going selling next item
+			String item = itemsToSell.get(0);
+			itemsToSell.remove(0);
+			itemsToSell.add(item);
+			t = 5;
+			sold = true;
 		}
 	}
 
@@ -137,9 +153,13 @@ public class Auctioneer extends Agent
 		private int repliesCnt = 0; // The counter of replies from seller agents
 		private MessageTemplate mt; // The template to receive replies
 		private int step = 0;
+
 		private String itemToSell = itemsToSell.get(0); // first item on the list
+
 		public void action() 
 		{
+			System.out.println("Trying to sell "+itemToSell+"in requestPerformer");
+			System.out.println("step: "+step);
 
 			switch (step) 
 			{
@@ -214,16 +234,17 @@ public class Auctioneer extends Agent
 						// Purchase successful. We can terminate
 						System.out.println(itemToSell+" successfully purchased by "+reply.getSender().getName());
 						System.out.println("Best price = "+bestPrice);
-						
+
 					}
-					if (itemsToSell.size() == 1) 
+					if (itemsToSell.size() == 1) // no more things lift to sell
 					{ 
 						System.out.println("Agent Auctioneer has done its job and is terminating.");
 						myAgent.doDelete();
 						step = 4; 
 					}
-					else 
+					else //sold item, now remove from list of items to sell
 					{ 
+						sold = true;
 						itemsToSell.remove(0);  // remove first item
 						System.out.println("itemToSell "+itemToSell+" removed from list.");
 						System.out.println("itemsToSell: "+itemsToSell);

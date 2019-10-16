@@ -39,26 +39,6 @@ public class BookBuyerAgent extends Agent
 		 		
 		 		protected void onTick() 
 		 		{
-		 			/*
-		 			// Update the list of seller agents
-		 			DFAgentDescription template = new DFAgentDescription();
-		 			ServiceDescription sd = new ServiceDescription();
-		 			sd.setType("book-selling");
-		 			template.addServices(sd);
-		 			try 
-		 			{
-		 				DFAgentDescription[] result = DFService.search(myAgent, template);
-		 				sellerAgents = new AID[result.length];
-		 				for (int i = 0; i < result.length; ++i) 
-		 				{
-		 					sellerAgents[i] = result[i].getName();
-		 				}
-		 			}
-		 			catch (FIPAException fe) {
-		 				fe.printStackTrace();
-		 			}
-					*/
-		 			
 		 			// Perform the request 
 		 			myAgent.addBehaviour(new RequestPerformer());
 		 		}
