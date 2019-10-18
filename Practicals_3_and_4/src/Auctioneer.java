@@ -51,6 +51,7 @@ public class Auctioneer extends Agent
 
 
 			System.out.println("itemsToSell: " + itemsToSell);
+			//System.out.println("pwd: "+System.getProperty("user.dir"));
 
 			if (itemsToSell.size() > 0)
 			{
