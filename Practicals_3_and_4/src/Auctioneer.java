@@ -111,7 +111,7 @@ public class Auctioneer extends Agent
 			t--;
 		} else  if (sold == true) // if at the end of the round the item was sold
 		{
-			System.out.println("item sold so left itemsToSell: " + itemsToSell);
+			System.out.println("NOW SELLING " + itemsToSell.get(0));
 			
 			// next round, next item
 			round++;
@@ -125,7 +125,7 @@ public class Auctioneer extends Agent
 			String item = itemsToSell.get(0);
 			itemsToSell.remove(0);
 			itemsToSell.add(item);
-			System.out.println("itemsToSell now: " + itemsToSell);
+			System.out.println("NOW SELLING " + itemsToSell.get(0));
 			round++;
 			System.out.println("round: " + round);
 			t = 20;
