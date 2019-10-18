@@ -101,7 +101,7 @@ public class Auctioneer extends Agent
 	/**
 	 * Count down 20 seconds for each item in the auction
 	 */
-	int t = 5;
+	int t = 20;
 	protected void countdown()
 	{
 		if (t > 0)  // keep the count down going
@@ -110,24 +110,25 @@ public class Auctioneer extends Agent
 			t--;
 		} else  if (sold == true) // if at the end of the round the item was sold
 		{
-			System.out.println("1) itemsToSell: " + itemsToSell);
+			System.out.println("item sold so left itemsToSell: " + itemsToSell);
 			
 			// next round, next item
 			round++;
 			System.out.println("round: " + round);
-			t = 5;
+			t = 20;
 			sold = false;
 		}
 		else // the item wasn't sold and the time ended
 		{
-			System.out.println("2) itemsToSell: " + itemsToSell);
-			
 			// pop first item, push it at the back, keep auction going selling next item
 			String item = itemsToSell.get(0);
 			itemsToSell.remove(0);
 			itemsToSell.add(item);
-			t = 5;
-			sold = true;
+			System.out.println("itemsToSell now: " + itemsToSell);
+			round++;
+			System.out.println("round: " + round);
+			t = 20;
+			//sold = true;
 		}
 	}
 
@@ -153,14 +154,10 @@ public class Auctioneer extends Agent
 		private int repliesCnt = 0; // The counter of replies from seller agents
 		private MessageTemplate mt; // The template to receive replies
 		private int step = 0;
-
 		private String itemToSell = itemsToSell.get(0); // first item on the list
 
 		public void action() 
 		{
-			System.out.println("Trying to sell "+itemToSell+" in requestPerformer");
-			System.out.println("step: "+step);
-
 			switch (step) 
 			{
 			case 0:
@@ -247,7 +244,7 @@ public class Auctioneer extends Agent
 						sold = true;
 						itemsToSell.remove(0);  // remove first item
 						System.out.println("itemToSell "+itemToSell+" removed from list.");
-						System.out.println("itemsToSell: "+itemsToSell);
+						//System.out.println("itemsToSell: "+itemsToSell);
 						step = 1;
 					}
 				}
