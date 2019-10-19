@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="demo">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/JADE/JADE-examples-4.5.0/jade/demo/CalendarBean.jar!/" />
+      <root url="jar://$PROJECT_DIR$/JADE/JADE-examples-4.5.0/jade/demo/MeetingScheduler.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

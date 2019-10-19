@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Practical_01/Practical_01.iml" filepath="$PROJECT_DIR$/Practical_01/Practical_01.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Practical_02/Practical_02.iml" filepath="$PROJECT_DIR$/Practical_02/Practical_02.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Practicals_3_and_4/Practicals_3_and_4.iml" filepath="$PROJECT_DIR$/Practicals_3_and_4/Practicals_3_and_4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/JADE/JADE-examples-4.5.0/jade/jade.iml" filepath="$PROJECT_DIR$/JADE/JADE-examples-4.5.0/jade/jade.iml" />
+      <module fileurl="file://$PROJECT_DIR$/JADE/JADE-src-4.5.0/jade/jade1.iml" filepath="$PROJECT_DIR$/JADE/JADE-src-4.5.0/jade/jade1.iml" />
+    </modules>
+  </component>
+</project>
