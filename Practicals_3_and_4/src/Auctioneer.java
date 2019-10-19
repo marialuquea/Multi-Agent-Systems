@@ -20,6 +20,8 @@ public class Auctioneer extends Agent
 
 	private int round = 0;
 	private Boolean sold = false;
+	
+	Item item = new Item();
 
 
 	/**
