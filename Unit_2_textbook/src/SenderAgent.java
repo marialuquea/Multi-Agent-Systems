@@ -38,6 +38,7 @@ public class SenderAgent extends Agent
 		addBehaviour(new SenderBehaviour(this,10000));
 	}
 	
+	
 	protected void takeDown()
 	{
 		//Deregister from the yellow pages
@@ -50,6 +51,7 @@ public class SenderAgent extends Agent
 			e.printStackTrace();
 		}
 	} // End of method takeDown
+	
 	
 	public class SearchYellowPages extends TickerBehaviour
 	{
@@ -83,6 +85,7 @@ public class SenderAgent extends Agent
 		}
 	} // End of class SearchYellowPages
 	
+	
 	public class SenderBehaviour extends TickerBehaviour
 	{
 		public SenderBehaviour(Agent a, long period)
@@ -107,6 +110,8 @@ public class SenderAgent extends Agent
 				msg.addReceiver(receiver);
 			}
 			myAgent.send(msg);
+			// a msg can be sent to one or more recipients at the same time
+			// through repeated calls to addReceiver and send it via .send()
 		}
 	}// End of class SenderBehaviour
 }
