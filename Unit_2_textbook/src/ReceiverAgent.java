@@ -55,6 +55,11 @@ public class ReceiverAgent extends Agent
 		{
 			//try to receive a message
 			ACLMessage msg = myAgent.receive();
+			/*When a message is sent to an agent, the receiving
+			 * agent automatically adds it to its message queue
+			 * (JADE takes care of this)
+			 * To receive a message in a FIFO manner, we call the 
+			 * .receive() method*/
 			if (msg != null)
 			{
 				//process the message
@@ -68,6 +73,13 @@ public class ReceiverAgent extends Agent
 			{
 				//put the behaviour to sleep until a msg arrives
 				block();
+				/*only the behaviour that block() was called within is put to sleep,
+				 * the other behaviours in the agent’s behaviour queue continue 
+				 * executing normally
+				 * (if you do actually want to put the whole agent to sleep, 
+				 * you can use the blockingReceive() method of Agent
+				 * The block method optionally takes an argument, which is the maximum 
+				 * number of milliseconds to remain blocked for*/
 			}
 		}
 	}
