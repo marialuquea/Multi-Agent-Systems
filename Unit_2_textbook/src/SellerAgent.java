@@ -24,7 +24,7 @@ public class SellerAgent extends Agent
 	@Override
 	protected void setup()
 	{
-		System.out.println("setup() in seller");
+		System.out.println("----------setup() in seller");
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -56,18 +56,18 @@ public class SellerAgent extends Agent
 		@Override
 		public void action()
 		{
-			System.out.println("TickerWaiter action() START in seller");
+			System.out.println("----------TickerWaiter action() START in seller to receive newday/termination");
 			// receive messages
 			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"), MessageTemplate.MatchContent("terminate"));
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null)
 			{
-				System.out.println("msg in TickerWaiter in seller: " + msg);
+				System.out.println("----------msg in TickerWaiter in seller: " + msg);
 				if (tickerAgent == null)
 					tickerAgent = msg.getSender(); // find sender of message received
 				if (msg.getContent().equals("new day"))
 				{
-					System.out.println("tickerAgent in TickerWaiter in seller: " + tickerAgent);
+					System.out.println("----------tickerAgent in TickerWaiter in seller: " + tickerAgent);
 					
 					// DAILY ACTIVITIES
 					myAgent.addBehaviour(new BookGenerator());
@@ -82,15 +82,16 @@ public class SellerAgent extends Agent
 				{
 					//termination message to end simulation
 					// when message == "termination" and not "new day"
-					System.out.println("new day in seller TickerWaiter");
+					System.out.println("----------new day in seller TickerWaiter");
 					myAgent.doDelete();
 				}
 			}
 			else
 			{
+				System.out.println("msg newday/termination not received in seller");
 				block();
 			}
-			System.out.println("TickerWaiter action() END in seller");
+			System.out.println("----------TickerWaiter action() END in seller");
 		}
 		
 		/*
@@ -101,7 +102,6 @@ public class SellerAgent extends Agent
 			@Override
 			public void action()
 			{
-				System.out.println("BookGenerator in seller");
 				booksForSale.clear();
 				//select one book for sale per day
 				int rand = (int)Math.round((1+2 * Math.random()));
@@ -111,15 +111,15 @@ public class SellerAgent extends Agent
 				{
 				case 1:
 					booksForSale.put("Java for Dummies", price);
-					System.out.println("booksForSale: " + booksForSale);
+					System.out.println("----------booksForSale: " + booksForSale);
 					break;
 				case 2:
 					booksForSale.put("JADE: the Inside Story", price);
-					System.out.println("booksForSale: " + booksForSale);
+					System.out.println("----------booksForSale: " + booksForSale);
 					break;
 				case 3:
 					booksForSale.put("Multi-Agent Systems for Everybody", price);
-					System.out.println("booksForSale: " + booksForSale);
+					System.out.println("----------booksForSale: " + booksForSale);
 					break;
 				}
 			}
@@ -139,7 +139,6 @@ public class SellerAgent extends Agent
 			@Override
 			public void action()
 			{
-				System.out.println("FindBuyers action() in seller");
 				// Register with DF so sellers can be found by buyers
 				DFAgentDescription buyerTemplate = new DFAgentDescription();
 				ServiceDescription sd = new ServiceDescription();
@@ -148,12 +147,12 @@ public class SellerAgent extends Agent
 				buyerTemplate.addServices(sd);
 				try
 				{
-					System.out.println("buyers before: " + buyers);
+					System.out.println("----------buyers before: " + buyers);
 					buyers.clear();
 					DFAgentDescription[] agentsType1 = DFService.search(myAgent, buyerTemplate);
 					for(int i = 0; i<agentsType1.length; i++)
 						buyers.add(agentsType1[i].getName());
-					System.out.println("buyers after: " + buyers);
+					System.out.println("----------buyers after: " + buyers);
 				}
 				catch (FIPAException e)
 				{
@@ -178,11 +177,13 @@ public class SellerAgent extends Agent
 		@Override
 		public void action()
 		{
-			//System.out.println("OfferServer in seller");
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 			ACLMessage msg = myAgent.receive(mt);
+			// THIS IS NULL
+			System.out.println("----------msg with books wanted from buyer: " + msg);
 			if (msg != null)
 			{
+				
 				ACLMessage reply = msg.createReply();
 				String book = msg.getContent();
 				if (booksForSale.containsKey(book))
@@ -195,7 +196,7 @@ public class SellerAgent extends Agent
 				{
 					reply.setPerformative(ACLMessage.REFUSE);
 				}
-				System.out.println("reply in OfferServer in seller: " + reply);
+				System.out.println("----------reply in OfferServer in seller: " + reply);
 				myAgent.send(reply);
 			}
 			else 
@@ -232,25 +233,25 @@ public class SellerAgent extends Agent
 		@Override
 		public void action() 
 		{
-			System.out.println("EndDayListener in seller");
+			System.out.println("----------EndDayListener in seller");
 			MessageTemplate mt = MessageTemplate.MatchContent("done");
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null)
 			{
-				System.out.println("msg in EndDayListener in seller: " + msg);
+				System.out.println("----------msg in EndDayListener in seller: " + msg);
 				buyersFinished++;
-				System.out.println("buyersFinished in seller EndDayListener: " + buyersFinished);
-				System.out.println("buyers in seller EndDayListener: " + buyers);
+				System.out.println("----------buyersFinished in seller EndDayListener: " + buyersFinished);
+				System.out.println("----------buyers in seller EndDayListener: " + buyers);
 			}
 			else
 			{
-				System.out.println("msg (null) in EndDayListener in seller: " + msg);
+				System.out.println("----------msg (null) in EndDayListener in seller: " + msg);
 				block();
 			}
 			if (buyersFinished == buyers.size())
 			{
-				System.out.println("buyersFinished in seller EndDayListener 2: " + buyersFinished);
-				System.out.println("buyers in seller EndDayListener 2: " + buyers);
+				System.out.println("----------buyersFinished in seller EndDayListener 2: " + buyersFinished);
+				System.out.println("----------buyers in seller EndDayListener 2: " + buyers);
 				//we are finished 
 				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 				tick.setContent("done");
