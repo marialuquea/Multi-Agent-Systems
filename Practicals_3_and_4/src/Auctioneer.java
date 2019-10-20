@@ -40,9 +40,9 @@ public class Auctioneer extends Agent
 
 			//count down 15 seconds
 			addBehaviour(new TickerBehaviour(this, 1000) // every second print the seconds left
-					{   
+			{   
 				protected void onTick() { countdown(); }
-					});
+			});
 
 
 

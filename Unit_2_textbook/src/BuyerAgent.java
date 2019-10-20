@@ -25,6 +25,7 @@ public class BuyerAgent extends Agent
 	@Override
 	protected void setup()
 	{
+		System.out.println("setup() in buyer");
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -44,6 +45,7 @@ public class BuyerAgent extends Agent
 		booksToBuy.add("Java for Dummies");
 		booksToBuy.add("JADE: the Inside Story");
 		booksToBuy.add("Multi-Agent Systems for Everybody");
+		System.out.println("booksToBuy: " + booksToBuy);
 		
 		addBehaviour(new TickerWaiter(this));
 	} // End of setup()
@@ -54,6 +56,7 @@ public class BuyerAgent extends Agent
 		//Deregister from the yellow pages
 		try 
 		{
+			System.out.println("takeDown in buyer");
 			DFService.deregister(this);
 		}
 		catch (FIPAException e)
@@ -73,14 +76,17 @@ public class BuyerAgent extends Agent
 		@Override
 		public void action()
 		{
+			System.out.println("TickerWaiter action() in buyer");
 			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"), MessageTemplate.MatchContent("terminate"));
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null)
 			{
+				System.out.println("msg in TW in buyer: "+msg);
 				if (tickerAgent == null)
 					tickerAgent = msg.getSender();
 				if (msg.getContent().equals("new day"))
 				{
+					System.out.println("tickerAgent in buyer: "+tickerAgent);
 					//spawn new sequential behaviour or a day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
@@ -93,6 +99,7 @@ public class BuyerAgent extends Agent
 				else
 				{
 					//termination message to end simulation
+					System.out.println("terminating buyer agent");
 					myAgent.doDelete();
 				}
 			}
@@ -113,16 +120,19 @@ public class BuyerAgent extends Agent
 		@Override
 		public void action()
 		{
+			System.out.println("FindSellers action() in buyer");
 			DFAgentDescription sellerTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
 			sd.setType("seller");
 			sellerTemplate.addServices(sd);
 			try
 			{
+				System.out.println("sellers 1: " + sellers);
 				sellers.clear();
 				DFAgentDescription[] agentsType1 = DFService.search(myAgent,  sellerTemplate);
 				for(int i = 0; i<agentsType1.length; i++)
 					sellers.add(agentsType1[i].getName()); // this is the AID
+				System.out.println("sellers 2: " + sellers);
 			}
 			catch (FIPAException e)
 			{
@@ -141,18 +151,23 @@ public class BuyerAgent extends Agent
 		@Override 
 		public void action()
 		{
+			System.out.println("SendEnquiries in buyer");
 			//send out a call for proposal for each book
 			numQueriesSent = 0;
+			System.out.println("booksToBuy: " + booksToBuy);
 			for(String bookTitle : booksToBuy)
 			{
+				System.out.println("bookTitle: " + bookTitle);
 				ACLMessage enquiry = new ACLMessage(ACLMessage.CFP);
 				enquiry.setContent(bookTitle);
 				enquiry.setConversationId(bookTitle);
 				for(AID seller:sellers)
 				{
 					enquiry.addReceiver(seller);
+					System.out.println("enquiry to sellers: " + sellers);
 					numQueriesSent++;
 				}
+				System.out.println("enquiry: " + enquiry);
 				myAgent.send(enquiry);
 			}
 		}
@@ -172,22 +187,31 @@ public class BuyerAgent extends Agent
 		@Override 
 		public void action()
 		{
+			System.out.println("CollectOffers in buyer");
 			boolean received = false;
+			System.out.println("booksToBuy in CollectOffers buyer: " + booksToBuy);
 			for (String bookTitle:booksToBuy)
 			{
+				System.out.println("bookTitle in CollectOffers buyer: " + bookTitle);
+				//receive proposal messages from seller
 				MessageTemplate mt = MessageTemplate.MatchConversationId(bookTitle);
 				ACLMessage msg = myAgent.receive(mt);
 				if (msg != null) 
 				{
 					received = true;
 					numRepliesReceived++;
+					System.out.println("numRepliesReceived: " + numRepliesReceived);
 					if (msg.getPerformative() == ACLMessage.PROPOSE)
 					{
-						//the reply is  an offer so see whether to update the best ofer
-						//update is no existing offer
+						System.out.println("msg proposal from seller: " + msg);
+						// the reply is an offer so see whether to update the best offer
+						// update if no existing offer
+						System.out.println("bestOffers: " + bestOffers);
+						System.out.println("bookTitle: " + bookTitle);
 						if (!bestOffers.containsKey(bookTitle))
 						{
 							bestOffers.put(bookTitle, new Offer(msg.getSender(), Integer.parseInt(msg.getContent())));
+							System.out.println("passed1");
 						}
 						else
 						{
@@ -195,10 +219,14 @@ public class BuyerAgent extends Agent
 							int newOffer = Integer.parseInt(msg.getContent());
 							int existingOffer = bestOffers.get(bookTitle).getPrice();
 							
+							System.out.println("newOffer: " + newOffer);
+							System.out.println("existingOffer: " + existingOffer);
+							
 							if (newOffer < existingOffer)
 							{
 								bestOffers.remove(bookTitle);
 								bestOffers.put(bookTitle, new Offer(msg.getSender(), newOffer));
+								System.out.println("bestOffers912: " + bestOffers);
 							}
 						}
 					}
@@ -206,6 +234,7 @@ public class BuyerAgent extends Agent
 			}
 			if (!received)
 			{
+				System.out.println("offer not received so block in buyer woah woah");
 				block();
 			}
 		}
@@ -213,6 +242,7 @@ public class BuyerAgent extends Agent
 		@Override
 		public boolean done()
 		{
+			System.out.println("done() in buyer");
 			return numRepliesReceived == numQueriesSent;
 		}
 		
@@ -232,6 +262,7 @@ public class BuyerAgent extends Agent
 					System.out.println("No offers for " + book);
 				}
 			}
+			System.out.println("onEnd() in buyer");
 			return 0;
 		}
 	}
@@ -246,6 +277,7 @@ public class BuyerAgent extends Agent
 		@Override
 		public void action()
 		{
+			System.out.println("EndDay in buyer");
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");

@@ -17,6 +17,7 @@ public class BuyerSellerTicker extends Agent
 	@Override
 	protected void setup()
 	{
+		System.out.println("setup() in ticker");
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -69,6 +70,7 @@ public class BuyerSellerTicker extends Agent
 			switch(step)
 			{
 				case 0:
+					System.out.println("SynchAgentsBehaviour case 0 in ticker");
 					//find all agents using directory service
 					DFAgentDescription template1 = new DFAgentDescription();
 					ServiceDescription sd = new ServiceDescription();
@@ -110,6 +112,7 @@ public class BuyerSellerTicker extends Agent
 					day++;
 					break;
 				case 1:
+					System.out.println("SynchAgentsBehaviour case 1 in ticker");
 					//wait to receive a "done" message from all agents
 					MessageTemplate mt = MessageTemplate.MatchContent("done");
 					ACLMessage msg = myAgent.receive(mt);
