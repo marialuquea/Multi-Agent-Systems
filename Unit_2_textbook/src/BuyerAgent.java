@@ -82,7 +82,7 @@ public class BuyerAgent extends Agent
 				if (msg.getContent().equals("new day"))
 				{
 					//spawn new sequential behaviour or a day's activities
-					SequentialBehaviour dailyActivity = new SequetialBehaviour();
+					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindSellers(myAgent));
 					dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
