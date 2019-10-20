@@ -62,6 +62,7 @@ public class SellerAgent extends Agent
 					tickerAgent = msg.getSender();
 				if (msg.getContent().equals("new day"))
 				{
+					// DAILY ACTIVITIES
 					myAgent.addBehaviour(new BookGenerator());
 					myAgent.addBehaviour(new FindBuyers(myAgent));
 					CyclicBehaviour os = new OffersServer(myAgent);
@@ -82,6 +83,9 @@ public class SellerAgent extends Agent
 			}
 		}
 		
+		/*
+		 * Add stock to the agent for that day
+		 */
 		public class BookGenerator extends OneShotBehaviour
 		{
 			@Override
@@ -107,6 +111,10 @@ public class SellerAgent extends Agent
 			}
 		}
 		
+		
+		/*
+		 * Find ADSs of all buyer agents
+		 */
 		public class FindBuyers extends OneShotBehaviour
 		{
 			public FindBuyers(Agent a)
@@ -136,6 +144,11 @@ public class SellerAgent extends Agent
 		}
 	}
 	
+	/*
+	 * Does most of the work.
+	 * listen for calls for proposals from buyers and reply
+	 * with either PROPOSE or REFUSE message
+	 */
 	public class OffersServer extends CyclicBehaviour
 	{
 		public OffersServer(Agent a)
@@ -166,6 +179,19 @@ public class SellerAgent extends Agent
 		}
 	}
 	
+	/*
+	 * At the end of the day, any cylic behaviours will need to be removed
+	 * from the agent's behaviour queue so that they can re-added fresh the 
+	 * following day.
+	 * We add cyclic behaviours to a list, so that we can pass references 
+	 * to them to the EndDayListener behaviour.
+	 * 
+	 * This behaviour waits for each buyer to send it a “done” message 
+	 * (and is itself a cyclic behaviour). When it has received “done” from 
+	 * each buyer it removes all of the cyclic behaviours (including itself). 
+	 * These will be re-created when the TickerWaiter receives a “new day” 
+	 * message from the ticker agent.
+	 */
 	public class EndDayListener extends CyclicBehaviour
 	{
 		private int buyersFinished = 0;
