@@ -170,11 +170,3 @@ public class BuyerSellerTicker extends Agent
 	}
 }
 
-
-
-
-
-
-
-
-
