@@ -4,35 +4,34 @@ import jade.core.Runtime;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 
-public class Application 
-{
+public class Message_sending_2_1_main {
+
+
 	public static void main(String[] args)
 	{
 		//Setup JADE environment
 		Profile myProfile = new ProfileImpl();
 		Runtime myRuntime = Runtime.instance();
 		ContainerController myContainer = myRuntime.createMainContainer(myProfile);
-		
+
 		try 
 		{
 			//Start the agent controller (rma)
 			AgentController rma = myContainer.createNewAgent("rma", "jade.tools.rma.rma", null);
 			rma.start();
-		
-			//Start the Bidder agents
-			AgentController ticker = myContainer.createNewAgent("ticker", BuyerSellerTicker.class.getCanonicalName(), null);
-			ticker.start();
-			
-			AgentController buyerAgent = myContainer.createNewAgent("buyer", BuyerAgent.class.getCanonicalName(), null);  
-			buyerAgent.start();
-			
-			//Start the auctioneer agent
-			AgentController sellerAgent = myContainer.createNewAgent("seller", SellerAgent.class.getCanonicalName(), null);  
-			sellerAgent.start();
+
+			//Start the sender agents
+			AgentController sender = myContainer.createNewAgent("sender", SenderAgent.class.getCanonicalName(), null);
+			sender.start();
+
+			AgentController receiver = myContainer.createNewAgent("receiver", ReceiverAgent.class.getCanonicalName(), null);  
+			receiver.start();
 		}
 		catch (Exception e)
 		{
 			System.out.println("Exception starting agent: " + e.toString());
 		}
 	}
+
+
 }
