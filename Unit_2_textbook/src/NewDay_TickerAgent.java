@@ -168,22 +168,4 @@ public class NewDay_TickerAgent extends Agent
 			return 0;
 		}
 	}
-	
-	
-	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

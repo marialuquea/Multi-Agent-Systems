@@ -17,7 +17,7 @@ public class BuyerSellerTicker extends Agent
 	@Override
 	protected void setup()
 	{
-		System.out.println("setup() in ticker");
+		System.out.println("setup() in ticker, register wth DF");
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -69,11 +69,9 @@ public class BuyerSellerTicker extends Agent
 		@Override
 		public void action()
 		{
-			System.out.println("SynchAgentsBehaviour START in ticker");
 			switch(step)
 			{
 				case 0:
-					System.out.println("Start case 0 in Ticker");
 					//find all agents using directory service
 					DFAgentDescription template1 = new DFAgentDescription();
 					ServiceDescription sd = new ServiceDescription();
@@ -87,16 +85,17 @@ public class BuyerSellerTicker extends Agent
 					
 					try
 					{
-						System.out.println("SimulationAgents 1: " + simulationAgents);
+						//System.out.println("SimulationAgents before: " + simulationAgents);
+						
 						DFAgentDescription[] agentsType1 = DFService.search(myAgent, template1);
-						for(int i = 1; i < agentsType1.length; i++)
+						for(int i = 0; i < agentsType1.length; i++)
 							simulationAgents.add(agentsType1[i].getName()); //this is the AID
 						
 						DFAgentDescription[] agentsType2 = DFService.search(myAgent, template2);
 						for(int i = 0; i<agentsType2.length; i++)
 							simulationAgents.add(agentsType2[i].getName()); // this is the AID 
 						
-						System.out.println("SimulationAgents 2: " + simulationAgents);
+						System.out.println("SimulationAgents: " + simulationAgents);
 					}
 					catch (FIPAException e)
 					{
@@ -108,21 +107,22 @@ public class BuyerSellerTicker extends Agent
 					for(AID id : simulationAgents)
 						tick.addReceiver(id);
 					myAgent.send(tick);
+					
+					//System.out.println("NewDay msg sent: "+tick);
+					
 					step++;
 					day++;
-					System.out.println("myAgent: "+myAgent);
-					System.out.println("step: "+step);
-					System.out.println("day: "+day);
-					System.out.println("End case 0 in Ticker");
+					
+					System.out.println("---------------Day: "+day);
 					break;
 				case 1:
-					System.out.println("Start case 1 in ticker - receive done messages from agents");
 					//wait to receive a "done" message from all agents
 					MessageTemplate mt = MessageTemplate.MatchContent("done");
 					ACLMessage msg = myAgent.receive(mt);
-					System.out.println("msg done from agents: "+msg);
 					if(msg != null)
 					{
+						//System.out.println("Done msg received by agents: "+msg.getContent());
+						
 						numFinReceived++;
 						if (numFinReceived >= simulationAgents.size())
 						{
@@ -133,15 +133,14 @@ public class BuyerSellerTicker extends Agent
 					{
 						block();
 					}
-					System.out.println("End case 1 in ticker");
 
 			}
-			System.out.println("SynchAgentsBehaviour END in ticker");
 		}
 		
 		@Override
 		public boolean done()
 		{
+			//System.out.println("done() in Ticker");
 			return step == 2;
 		}
 		
@@ -149,27 +148,32 @@ public class BuyerSellerTicker extends Agent
 		public void reset()
 		{
 			super.reset();
-			System.out.println("Before reset in Ticker: "+step+", "+simulationAgents+", "+numFinReceived);
 			step = 0;
 			simulationAgents.clear();
 			numFinReceived = 0;
-			System.out.println("After reset in Ticker: "+step+", "+simulationAgents+", "+numFinReceived);
+			//System.out.println("reset() in Ticker: "+step+", "+simulationAgents+", "+numFinReceived);
 		}
 		
 		@Override 
 		public int onEnd()
 		{
-			System.out.println("---------End of day---------");
+			// System.out.println("---------End of day---------");
 			if(day == NUM_DAYS)
 			{
+				// send new message to terminate day
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setContent("terminate");
-				System.out.println("simulationAgents at end of day: "+simulationAgents);
+				
+				//System.out.println("simulationAgents at termination in ticker: "+simulationAgents);
+				
 				for(AID agent : simulationAgents)
 				{
 					msg.addReceiver(agent);
 				}
 				myAgent.send(msg);
+				
+				//System.out.println("Termination msg: "+msg);
+				
 				myAgent.doDelete();
 			}
 			else
