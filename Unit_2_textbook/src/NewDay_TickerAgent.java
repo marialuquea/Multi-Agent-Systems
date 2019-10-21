@@ -15,6 +15,7 @@ public class NewDay_TickerAgent extends Agent
 	@Override
 	protected void setup()
 	{
+		System.out.println("setup() in tickerAgent, register with DF");
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -32,6 +33,7 @@ public class NewDay_TickerAgent extends Agent
 		}
 		
 		//wait for the other agents to start
+		System.out.println("wait 10 seconds in tickeragent for other agents to start");
 		doWait(10000);
 		addBehaviour(new SynchAgentsBehaviour(this));
 	} // End of setup()
@@ -43,6 +45,7 @@ public class NewDay_TickerAgent extends Agent
 		//Deresgister with the yellow pages
 		try
 		{
+			System.out.println("Deregister tickerAgent with DF");
 			DFService.deregister(this);
 		}
 		catch (FIPAException e)
@@ -71,7 +74,7 @@ public class NewDay_TickerAgent extends Agent
 			case 0:
 				//find all agents using directory service
 				//here we have 2 types of agents
-				//"simulation-agent" and "simulation-agent 2"
+				//"simulation-agent" and "simulation-agent2"
 				DFAgentDescription template1 = new DFAgentDescription();
 				ServiceDescription sd = new ServiceDescription();
 				sd.setType("simulation-agent");
@@ -87,17 +90,17 @@ public class NewDay_TickerAgent extends Agent
 					simulationAgents.clear();
 					//search for agents of type "simulation-agent"
 					DFAgentDescription[] agentsType1 = DFService.search(myAgent, template1);
-					for(int i = 1; i < agentsType1.length; i++)
+					for(int i = 0 ; i < agentsType1.length; i++)
 					{
 						simulationAgents.add(agentsType1[i].getName()); //this is the AID
-						System.out.println(agentsType1[i].getName());
+						//System.out.println("*******"+agentsType1[i].getName());
 					}
 					//search for agents of type "simulation-agent2"
 					DFAgentDescription[] agentsType2 = DFService.search(myAgent, template2);
-					for(int i = 0; i<agentsType2.length; i++)
+					for(int j = 0; j<agentsType2.length; j++)
 					{
-						simulationAgents.add(agentsType2[i].getName()); // this is the AID 
-						System.out.println(agentsType2[i].getName());
+						simulationAgents.add(agentsType2[j].getName()); // this is the AID 
+						//System.out.println(agentsType2[j].getName());
 					}
 				}
 				catch (FIPAException e)
@@ -111,6 +114,9 @@ public class NewDay_TickerAgent extends Agent
 				{
 					tick.addReceiver(id);
 				}
+				
+				//System.out.println("newDay msg to send: "+tick.getContent());
+				
 				myAgent.send(tick);
 				step++;
 				break;
@@ -118,12 +124,15 @@ public class NewDay_TickerAgent extends Agent
 				//wait to receive a "done" message from all agents
 				MessageTemplate mt = MessageTemplate.MatchContent("done");
 				ACLMessage msg = myAgent.receive(mt);
+				//System.out.println("Done msg received from simulation agents: "+msg);
 				if(msg != null)
 				{
+					System.out.println("Done msg received: "+msg.getContent());
 					numFinReceived++;
 					if (numFinReceived >= simulationAgents.size())
 					{
 						step++;
+						//System.out.println("step in ticker when done message is received: "+step);
 					}
 				}
 				else
@@ -136,6 +145,7 @@ public class NewDay_TickerAgent extends Agent
 		@Override
 		public boolean done()
 		{
+			//System.out.println("done()");
 			return step == 2;
 		}
 		
@@ -150,6 +160,9 @@ public class NewDay_TickerAgent extends Agent
 		public int onEnd()
 		{
 			System.out.println("End of day");
+			//System.out.println("step: "+step);
+			//System.out.println("numFinReceived: "+numFinReceived);
+			System.out.println("------");
 			reset();
 			myAgent.addBehaviour(this);
 			return 0;

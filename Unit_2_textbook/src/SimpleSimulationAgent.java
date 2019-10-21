@@ -21,6 +21,7 @@ public class SimpleSimulationAgent extends Agent
 	@Override
 	protected void setup()
 	{
+		System.out.println("setup() in tickerAgent, register with DF");
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -45,6 +46,7 @@ public class SimpleSimulationAgent extends Agent
 		//Deregister from the yellow pages
 		try
 		{
+			System.out.println("Deregister simulationAgent with DF");
 			DFService.deregister(this);
 		}
 		catch (FIPAException e)
@@ -62,19 +64,28 @@ public class SimpleSimulationAgent extends Agent
 			//wait for a new day message
 			MessageTemplate mt = MessageTemplate.MatchContent("new day");
 			ACLMessage msg = myAgent.receive(mt);
+			
+			
 			if (msg != null)
 			{
+				System.out.println("NewDay message received: "+msg.getContent());
+				// System.out.println("tickerAgent before: "+tickerAgent);
 				if (tickerAgent == null)
 				{
 					tickerAgent = msg.getSender(); //AID of the Ticker Agent
+					//System.out.println("tickerAgent after: "+tickerAgent);
 				}
 				//do computation here
 				day++;
-				System.out.println(getLocalName() + "day: " + day);
+				
+				System.out.println(getLocalName() + " day: " + day);
+				
 				addBehaviour(new WakerBehaviour(myAgent,5000) 
 				{
-					protected void onWake()
+					protected void onWake() 
 					{
+						//System.out.println("WakerBehaviour reached");
+						
 						//send a "done" message
 						ACLMessage dayDone = new ACLMessage(ACLMessage.INFORM);
 						dayDone.addReceiver(tickerAgent);
