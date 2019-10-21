@@ -6,7 +6,6 @@ import jade.wrapper.ContainerController;
 
 public class Message_sending_2_1_main {
 
-
 	public static void main(String[] args)
 	{
 		//Setup JADE environment

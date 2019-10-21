@@ -11,6 +11,7 @@ public class ReceiverAgent extends Agent
 	@Override
 	protected void setup()
 	{
+		System.out.println("setup() in receiver, register with DF");
 		//add this agent to the yelloe pages 
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -26,7 +27,7 @@ public class ReceiverAgent extends Agent
 		{
 			e.printStackTrace();
 		}
-	} // End of setuo()
+	} // End of setup()
 	
 	
 	protected void takeDown()
@@ -34,6 +35,7 @@ public class ReceiverAgent extends Agent
 		//Deregister from the yellow pages
 		try
 		{
+			System.out.println("deregister receiver with DF");
 			DFService.deregister(this);
 		}
 		catch (FIPAException e)

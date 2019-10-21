@@ -16,6 +16,7 @@ public class SenderAgent extends Agent
 	@Override
 	protected void setup()
 	{
+		System.out.println("setup() in sender, register with DF");
 		//add this agent to yellow pages 
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -44,6 +45,7 @@ public class SenderAgent extends Agent
 		//Deregister from the yellow pages
 		try
 		{
+			System.out.println("deregister sender with DF");
 			DFService.deregister(this);
 		}
 		catch (FIPAException e)
