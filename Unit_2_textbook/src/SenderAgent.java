@@ -73,12 +73,14 @@ public class SenderAgent extends Agent
 			//query the DF agent
 			try
 			{
+				//System.out.println("reciverAgents before: "+receiverAgents);
 				DFAgentDescription[] result = DFService.search(myAgent, template);
 				receiverAgents.clear(); //we're going to replace this
 				for(int i = 0; i < result.length; i++)
 				{
 					receiverAgents.add(result[i].getName()); // this is the AID
 				}
+				//System.out.println("receiver agents after: "+receiverAgents);
 			}
 			catch (FIPAException e)
 			{

@@ -27,6 +27,8 @@ public class ReceiverAgent extends Agent
 		{
 			e.printStackTrace();
 		}
+		//add the receiver behaviour
+		addBehaviour(new ReceiverBehaviour(this));
 	} // End of setup()
 	
 	
@@ -66,7 +68,7 @@ public class ReceiverAgent extends Agent
 			{
 				//process the message
 				System.out.println("I am " + myAgent.getLocalName());
-				System.out.println("Message received from " + msg.getSender());
+				System.out.println("Message received from " + msg.getSender().getLocalName());
 				System.out.println("The message is: ");
 				System.out.println(msg.getContent());
 				System.out.println();
