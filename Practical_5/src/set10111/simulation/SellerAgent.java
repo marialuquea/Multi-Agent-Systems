@@ -60,8 +60,11 @@ public class SellerAgent extends Agent {
 					myAgent.addBehaviour(new FindBuyers(myAgent));
 					CyclicBehaviour os = new OffersServer(myAgent);
 					myAgent.addBehaviour(os);
+					CyclicBehaviour rp = new ReceiveProposal(myAgent);
+					myAgent.addBehaviour(rp);
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
 					cyclicBehaviours.add(os);
+					cyclicBehaviours.add(rp);
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
 				}
 				else {
@@ -156,6 +159,37 @@ public class SellerAgent extends Agent {
 			
 		}
 		
+	}
+	
+	// receive msg accept or reject proposal for best offer
+	public class ReceiveProposal extends CyclicBehaviour
+	{
+		public ReceiveProposal(Agent a) {
+			super(a);
+		}
+		@Override
+		public void action()
+		{
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+			ACLMessage msg = myAgent.receive(mt);
+			System.out.println("accept msg received: "+msg);
+			if(msg != null) {
+				ACLMessage reply = msg.createReply();
+				String book = msg.getContent();
+				if(booksForSale.containsKey(book)) {
+					//we can send an offer
+					reply.setPerformative(ACLMessage.INFORM);
+					reply.setContent("book "+book+"sold to "+myAgent.getLocalName());
+				}
+				else {
+					System.out.println("idk lol");
+				}
+				myAgent.send(reply);
+			}
+			else {
+				block();
+			}
+		}
 	}
 	
 	public class EndDayListener extends CyclicBehaviour {

@@ -44,16 +44,10 @@ public class Auctioneer extends Agent
 				protected void onTick() { countdown(); }
 			});
 
-
-
-
 			// for each item to sell, add them to list itemsToSell
 			for (Object o : args) { itemsToSell.add((String) o); }
 
-
-
 			System.out.println("itemsToSell: " + itemsToSell);
-			//System.out.println("pwd: "+System.getProperty("user.dir"));
 
 			if (itemsToSell.size() > 0)
 			{

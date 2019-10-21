@@ -2,6 +2,8 @@ package set10111.simulation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -154,8 +156,8 @@ public class BuyerAgent extends Agent {
 	public class CollectOffers extends Behaviour 
 	{
 		private int numRepliesReceived = 0;
-		
-		public CollectOffers(Agent a) {
+		public CollectOffers(Agent a) 
+		{
 			super(a);
 			currentOffers.clear();
 		}
@@ -197,8 +199,6 @@ public class BuyerAgent extends Agent {
 				block();
 		}
 
-		
-
 		@Override
 		public boolean done() {
 			return numRepliesReceived == numQueriesSent;
@@ -206,6 +206,7 @@ public class BuyerAgent extends Agent {
 
 		@Override
 		public int onEnd() {
+			/*
 			//print the offers for every book
 			for(String book : booksToBuy) 
 			{
@@ -220,16 +221,16 @@ public class BuyerAgent extends Agent {
 					System.out.println("No offers for " + book);
 				}
 			}
+			*/
 			return 0;
 		}
 	}
 	
-	
-	
 	public class CompleteSale extends Behaviour
 	{
-
-		public CompleteSale(Agent a) {
+		boolean finished = false;
+		public CompleteSale(Agent a) 
+		{
 			super(a);
 		}
 		
@@ -237,12 +238,53 @@ public class BuyerAgent extends Agent {
 		public void action()
 		{
 			
+			
+			//print the offers for every book
+			for(String book : booksToBuy) 
+			{
+				int bestPrice = 100;
+				Offer bestOffer = null;
+				
+				if(currentOffers.containsKey(book)) 
+				{
+					ArrayList<Offer> offers = currentOffers.get(book);
+					for(Offer o : offers)
+					{
+						System.out.println("Offer: "+book + ", " + o.getSeller().getLocalName() + ", £" + o.getPrice());
+						if (o.getPrice() <= bestPrice)
+						{
+							bestPrice = o.getPrice();
+							bestOffer = o;
+						}
+							
+					}
+					System.out.println("Best offer for book "+book+": £"+bestOffer.getPrice()+" by "+bestOffer.getSeller().getLocalName());
+					// do code here for best offer
+					// send ACCEPT_PROPOSAL to bestOffer Seller
+					ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+					order.addReceiver(bestOffer.getSeller());
+					order.setContent(book); 
+					order.setConversationId(book);
+					//order.setReplyWith("order"+System.currentTimeMillis());
+					myAgent.send(order);
+					System.out.println("Accep_proposal sent: "+order);
+					// Prepare the template to get the purchase order reply
+					//mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), 
+						//	MessageTemplate.MatchInReplyTo(order.getReplyWith())
+						//	);
+				}
+				else 
+				{
+					System.out.println("No offers for " + book);
+				}
+			}
+			finished = true;
 		}
 		
 		@Override
 		public boolean done()
 		{
-			return true;
+			return finished;
 		}
 		
 	}
