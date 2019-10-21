@@ -1,3 +1,5 @@
+package set10111.music_shop_ontology;
+
 import jade.content.Concept;
 
 public class Item implements Concept

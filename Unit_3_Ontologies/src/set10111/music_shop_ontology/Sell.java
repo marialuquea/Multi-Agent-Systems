@@ -1,3 +1,5 @@
+package set10111.music_shop_ontology;
+
 import jade.content.AgentAction;
 import jade.core.AID;
 

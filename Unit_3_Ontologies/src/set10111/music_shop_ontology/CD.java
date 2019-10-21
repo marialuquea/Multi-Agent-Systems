@@ -1,3 +1,5 @@
+package set10111.music_shop_ontology;
+
 import java.util.List;
 import jade.content.onto.annotations.AggregateSlot;
 import jade.content.onto.annotations.Slot;
@@ -21,7 +23,7 @@ public class CD extends Item
 		return tracks;
 	}
 	
-	public void setTracks(List<Tracks> tracks) {
+	public void setTracks(List<Track> tracks) {
 		this.tracks = tracks;
 	}
 }
