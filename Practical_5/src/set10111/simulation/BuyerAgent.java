@@ -259,15 +259,16 @@ public class BuyerAgent extends Agent {
 							
 					}
 					System.out.println("Best offer for book "+book+": £"+bestOffer.getPrice()+" by "+bestOffer.getSeller().getLocalName());
+					System.out.println("");
 					// do code here for best offer
 					// send ACCEPT_PROPOSAL to bestOffer Seller
 					ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 					order.addReceiver(bestOffer.getSeller());
-					order.setContent(book); 
+					order.setContent(Integer.toString(bestPrice)); 
 					order.setConversationId(book);
 					//order.setReplyWith("order"+System.currentTimeMillis());
-					myAgent.send(order);
-					System.out.println("Accep_proposal sent: "+order);
+					myAgent.send(order); // THIS WORKS
+					//System.out.println("Accep_proposal sent: "+order);
 					// Prepare the template to get the purchase order reply
 					//mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), 
 						//	MessageTemplate.MatchInReplyTo(order.getReplyWith())

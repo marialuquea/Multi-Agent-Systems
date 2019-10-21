@@ -172,10 +172,12 @@ public class SellerAgent extends Agent {
 		{
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 			ACLMessage msg = myAgent.receive(mt);
-			System.out.println("accept msg received: "+msg);
+			//System.out.println("accept msg received: "+msg);
 			if(msg != null) {
+				System.out.println("accept msg from buyer received: "+ msg.getConversationId() + " - £"+msg.getContent()+" to "+myAgent.getLocalName());
 				ACLMessage reply = msg.createReply();
-				String book = msg.getContent();
+				String book = msg.getConversationId();
+				System.out.println("book: "+book);
 				if(booksForSale.containsKey(book)) {
 					//we can send an offer
 					reply.setPerformative(ACLMessage.INFORM);
@@ -185,6 +187,7 @@ public class SellerAgent extends Agent {
 					System.out.println("idk lol");
 				}
 				myAgent.send(reply);
+				System.out.println("reply INFORM sent back"+reply);
 			}
 			else {
 				block();
