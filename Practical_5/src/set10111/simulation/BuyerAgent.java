@@ -229,6 +229,7 @@ public class BuyerAgent extends Agent {
 	public class CompleteSale extends Behaviour
 	{
 		boolean finished = false;
+		
 		public CompleteSale(Agent a) 
 		{
 			super(a);
@@ -237,8 +238,6 @@ public class BuyerAgent extends Agent {
 		@Override
 		public void action()
 		{
-			
-			
 			//print the offers for every book
 			for(String book : booksToBuy) 
 			{
@@ -250,33 +249,39 @@ public class BuyerAgent extends Agent {
 					ArrayList<Offer> offers = currentOffers.get(book);
 					for(Offer o : offers)
 					{
-						System.out.println("Offer: "+book + ", " + o.getSeller().getLocalName() + ", £" + o.getPrice());
+						System.out.println("Offer:    "+book + "      " + o.getSeller().getLocalName() + "       £" + o.getPrice());
 						if (o.getPrice() <= bestPrice)
 						{
 							bestPrice = o.getPrice();
 							bestOffer = o;
 						}
-							
 					}
-					System.out.println("Best offer for book "+book+": £"+bestOffer.getPrice()+" by "+bestOffer.getSeller().getLocalName());
+					//System.out.println("Best offer for book "+book+": £"+bestOffer.getPrice()+" by "+bestOffer.getSeller().getLocalName());
 					System.out.println("");
-					// do code here for best offer
+					
 					// send ACCEPT_PROPOSAL to bestOffer Seller
 					ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 					order.addReceiver(bestOffer.getSeller());
 					order.setContent(Integer.toString(bestPrice)); 
 					order.setConversationId(book);
-					//order.setReplyWith("order"+System.currentTimeMillis());
 					myAgent.send(order); // THIS WORKS
-					//System.out.println("Accep_proposal sent: "+order);
-					// Prepare the template to get the purchase order reply
-					//mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"), 
-						//	MessageTemplate.MatchInReplyTo(order.getReplyWith())
-						//	);
+					
+					// send REJECT_PROPOSAL to other sellers
+					ACLMessage orderRejected = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
+					for(AID seller : sellers) {
+						if (!seller.getLocalName().equals(bestOffer.getSeller().getLocalName()) )
+							orderRejected.addReceiver(seller);
+					}
+					//System.out.println("");
+					orderRejected.setContent("sorry lol ur offer was rejected"); 
+					orderRejected.setConversationId(book);
+					myAgent.send(orderRejected); // CHECK IF IT WORKS
+					//System.out.println("rejected msg sent: "+orderRejected);
 				}
 				else 
 				{
 					System.out.println("No offers for " + book);
+					System.out.println("");
 				}
 			}
 			finished = true;

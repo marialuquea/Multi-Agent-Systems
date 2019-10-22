@@ -170,28 +170,38 @@ public class SellerAgent extends Agent {
 		@Override
 		public void action()
 		{
+			// receive messages that match the performative ACCEPT_PROPOSAL
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 			ACLMessage msg = myAgent.receive(mt);
-			//System.out.println("accept msg received: "+msg);
+			
 			if(msg != null) {
-				System.out.println("accept msg from buyer received: "+ msg.getConversationId() + " - £"+msg.getContent()+" to "+myAgent.getLocalName());
 				ACLMessage reply = msg.createReply();
 				String book = msg.getConversationId();
-				System.out.println("book: "+book);
 				if(booksForSale.containsKey(book)) {
 					//we can send an offer
 					reply.setPerformative(ACLMessage.INFORM);
-					reply.setContent("book "+book+"sold to "+myAgent.getLocalName());
-				}
-				else {
-					System.out.println("idk lol");
+					reply.setContent("Book "+book+" sold to "+myAgent.getLocalName()+" for £"+msg.getContent());
+					System.out.println(reply.getContent());
+					System.out.println("");
 				}
 				myAgent.send(reply);
-				System.out.println("reply INFORM sent back"+reply);
+				//System.out.println("reply INFORM sent back"+reply);
 			}
 			else {
 				block();
 			}
+			
+			// receive rejected messages
+			MessageTemplate rp = MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL);
+			ACLMessage msgNo = myAgent.receive(mt);
+			//System.out.println("msgNo: "+msgNo);
+			if(msgNo != null) {
+				System.out.println("REJECT msg from buyer received: "+ msgNo);
+			}
+			else {
+				block();
+			}
+			
 		}
 	}
 	
