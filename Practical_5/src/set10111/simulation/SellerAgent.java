@@ -178,7 +178,7 @@ public class SellerAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 
 			if(msg != null) {
-				System.out.println("msg received:: "+ msg);
+				//System.out.println("msg received:: "+ msg);
 				ACLMessage reply = msg.createReply();
 				String book = msg.getConversationId();
 				if(booksForSale.containsKey(book)) {
@@ -196,6 +196,7 @@ public class SellerAgent extends Agent {
 			}
 
 			// receive rejected messages
+			/*
 			MessageTemplate rp = MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL);
 			ACLMessage msgNo = myAgent.receive(mt);
 			if(msgNo != null) {
@@ -204,6 +205,7 @@ public class SellerAgent extends Agent {
 			else {
 				block();
 			}
+			*/
 
 		}
 	}

@@ -234,6 +234,7 @@ public class BuyerAgent extends Agent {
 						{
 							bestPrice = o.getPrice();
 							bestOffer = o;
+							System.out.println("Nest offer for today was " + bestPrice);
 						}
 					}
 					//System.out.println("Best offer for book "+book+": £"+bestOffer.getPrice()+" by "+bestOffer.getSeller().getLocalName());
@@ -247,6 +248,7 @@ public class BuyerAgent extends Agent {
 					myAgent.send(order); // THIS WORKS
 					System.out.println("aceept msg sent: "+order);
 					
+					/*
 					// send REJECT_PROPOSAL to other sellers
 					ACLMessage orderRejected = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
 					for(AID seller : sellers) {
@@ -257,6 +259,7 @@ public class BuyerAgent extends Agent {
 					orderRejected.setContent("sorry lol ur offer was rejected"); 
 					orderRejected.setConversationId(book);
 					myAgent.send(orderRejected); // CHECK IF IT WORKS
+					*/
 					//System.out.println("rejected msg sent: "+orderRejected);
 				}
 				else 

@@ -30,7 +30,7 @@ public class BuyerSellerTicker extends Agent {
 			e.printStackTrace();
 		}
 		//wait for the other agents to start
-		doWait(3000);
+		doWait(15000);
 		addBehaviour(new SynchAgentsBehaviour(this));
 	}
 
