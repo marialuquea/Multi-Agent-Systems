@@ -203,38 +203,18 @@ public class BuyerAgent extends Agent {
 		public boolean done() {
 			return numRepliesReceived == numQueriesSent;
 		}
-
 		@Override
 		public int onEnd() {
-			/*
-			//print the offers for every book
-			for(String book : booksToBuy) 
-			{
-				if(currentOffers.containsKey(book)) 
-				{
-					ArrayList<Offer> offers = currentOffers.get(book);
-					for(Offer o : offers) 
-						System.out.println("Offer: "+book + "," + o.getSeller().getLocalName() + "," + o.getPrice());
-				}
-				else 
-				{
-					System.out.println("No offers for " + book);
-				}
-			}
-			*/
 			return 0;
 		}
 	}
 	
-	public class CompleteSale extends Behaviour
+	public class CompleteSale extends OneShotBehaviour
 	{
-		boolean finished = false;
-		
 		public CompleteSale(Agent a) 
 		{
 			super(a);
 		}
-		
 		@Override
 		public void action()
 		{
@@ -257,7 +237,7 @@ public class BuyerAgent extends Agent {
 						}
 					}
 					//System.out.println("Best offer for book "+book+": £"+bestOffer.getPrice()+" by "+bestOffer.getSeller().getLocalName());
-					System.out.println("");
+					//System.out.println("");
 					
 					// send ACCEPT_PROPOSAL to bestOffer Seller
 					ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
@@ -265,6 +245,7 @@ public class BuyerAgent extends Agent {
 					order.setContent(Integer.toString(bestPrice)); 
 					order.setConversationId(book);
 					myAgent.send(order); // THIS WORKS
+					System.out.println("aceept msg sent: "+order);
 					
 					// send REJECT_PROPOSAL to other sellers
 					ACLMessage orderRejected = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
@@ -281,18 +262,11 @@ public class BuyerAgent extends Agent {
 				else 
 				{
 					System.out.println("No offers for " + book);
-					System.out.println("");
+					//System.out.println("");
 				}
 			}
-			finished = true;
 		}
-		
-		@Override
-		public boolean done()
-		{
-			return finished;
-		}
-		
+	
 	}
 	
 	

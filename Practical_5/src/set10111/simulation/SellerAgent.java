@@ -35,10 +35,11 @@ public class SellerAgent extends Agent {
 		catch(FIPAException e){
 			e.printStackTrace();
 		}
-		
+		doWait(1000);
+		addBehaviour(new FindBuyers(this));
 		addBehaviour(new TickerWaiter(this));
 	}
-	
+
 	public class TickerWaiter extends CyclicBehaviour {
 
 		//behaviour to wait for a new day
@@ -57,7 +58,7 @@ public class SellerAgent extends Agent {
 				}
 				if(msg.getContent().equals("new day")) {
 					myAgent.addBehaviour(new BookGenerator());
-					myAgent.addBehaviour(new FindBuyers(myAgent));
+					// myAgent.addBehaviour(new FindBuyers(myAgent));
 					CyclicBehaviour os = new OffersServer(myAgent);
 					myAgent.addBehaviour(os);
 					CyclicBehaviour rp = new ReceiveProposal(myAgent);
@@ -76,7 +77,7 @@ public class SellerAgent extends Agent {
 				block();
 			}
 		}
-		
+
 		public class BookGenerator extends OneShotBehaviour {
 
 			@Override
@@ -87,51 +88,53 @@ public class SellerAgent extends Agent {
 				//price will be between 1 and 50 GBP
 				int price = (int)Math.round((1 + 49 * Math.random()));
 				switch(rand) {
-					case 1 :
-						booksForSale.put("Java for Dummies", price);
-						break;
-					case 2 :
-						booksForSale.put("JADE: the Inside Story", price);
-						break;
-					case 3 :
-						booksForSale.put("Multi-Agent Systems for Everybody", price);
-						break;
+				case 1 :
+					booksForSale.put("Java for Dummies", price);
+					break;
+				case 2 :
+					booksForSale.put("JADE: the Inside Story", price);
+					break;
+				case 3 :
+					booksForSale.put("Multi-Agent Systems for Everybody", price);
+					break;
 				}
 			}
-			
+
 		}
-		
-		public class FindBuyers extends OneShotBehaviour {
 
-			public FindBuyers(Agent a) {
-				super(a);
+
+
+	}
+	
+	public class FindBuyers extends OneShotBehaviour {
+
+		public FindBuyers(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			DFAgentDescription buyerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("buyer");
+			buyerTemplate.addServices(sd);
+			try{
+				buyers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,buyerTemplate); 
+				for(int i=0; i<agentsType1.length; i++){
+					buyers.add(agentsType1[i].getName()); // this is the AID
+				}
 			}
-
-			@Override
-			public void action() {
-				DFAgentDescription buyerTemplate = new DFAgentDescription();
-				ServiceDescription sd = new ServiceDescription();
-				sd.setType("buyer");
-				buyerTemplate.addServices(sd);
-				try{
-					buyers.clear();
-					DFAgentDescription[] agentsType1  = DFService.search(myAgent,buyerTemplate); 
-					for(int i=0; i<agentsType1.length; i++){
-						buyers.add(agentsType1[i].getName()); // this is the AID
-					}
-				}
-				catch(FIPAException e) {
-					e.printStackTrace();
-				}
-
+			catch(FIPAException e) {
+				e.printStackTrace();
 			}
 
 		}
 
 	}
-	
+
 	public class OffersServer extends CyclicBehaviour {
-		
+
 		public OffersServer(Agent a) {
 			super(a);
 		}
@@ -156,11 +159,11 @@ public class SellerAgent extends Agent {
 			else {
 				block();
 			}
-			
+
 		}
-		
+
 	}
-	
+
 	// receive msg accept or reject proposal for best offer
 	public class ReceiveProposal extends CyclicBehaviour
 	{
@@ -173,8 +176,9 @@ public class SellerAgent extends Agent {
 			// receive messages that match the performative ACCEPT_PROPOSAL
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 			ACLMessage msg = myAgent.receive(mt);
-			
+
 			if(msg != null) {
+				System.out.println("msg received:: "+ msg);
 				ACLMessage reply = msg.createReply();
 				String book = msg.getConversationId();
 				if(booksForSale.containsKey(book)) {
@@ -182,7 +186,7 @@ public class SellerAgent extends Agent {
 					reply.setPerformative(ACLMessage.INFORM);
 					reply.setContent("Book "+book+" sold to "+myAgent.getLocalName()+" for £"+msg.getContent());
 					System.out.println(reply.getContent());
-					System.out.println("");
+					//System.out.println("");
 				}
 				myAgent.send(reply);
 				//System.out.println("reply INFORM sent back"+reply);
@@ -190,25 +194,24 @@ public class SellerAgent extends Agent {
 			else {
 				block();
 			}
-			
+
 			// receive rejected messages
 			MessageTemplate rp = MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL);
 			ACLMessage msgNo = myAgent.receive(mt);
-			//System.out.println("msgNo: "+msgNo);
 			if(msgNo != null) {
 				System.out.println("REJECT msg from buyer received: "+ msgNo);
 			}
 			else {
 				block();
 			}
-			
+
 		}
 	}
-	
+
 	public class EndDayListener extends CyclicBehaviour {
 		private int buyersFinished = 0;
 		private List<Behaviour> toRemove;
-		
+
 		public EndDayListener(Agent a, List<Behaviour> toRemove) {
 			super(a);
 			this.toRemove = toRemove;
@@ -237,6 +240,6 @@ public class SellerAgent extends Agent {
 				myAgent.removeBehaviour(this);
 			}
 		}
-		
+
 	}
 }
