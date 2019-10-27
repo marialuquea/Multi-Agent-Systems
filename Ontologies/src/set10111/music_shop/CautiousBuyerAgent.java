@@ -1,7 +1,6 @@
 package set10111.music_shop;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -10,7 +9,6 @@ import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import set10111.music_shop_ontology.ECommerceOntology;

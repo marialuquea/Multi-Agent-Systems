@@ -3,7 +3,7 @@ package set10111.elements;
 import jade.content.Concept;
 import jade.content.onto.annotations.Slot;
 
-public class Smatphone implements Concept
+public class Smartphone implements Concept
 {
 	private int serialNumber;
 	private int screen;

@@ -47,7 +47,6 @@ public class BuyerAgent extends Agent {
 		addBehaviour(new TickerWaiter(this));
 	}
 
-
 	@Override
 	protected void takeDown() {
 		//Deregister from the yellow pages
@@ -59,9 +58,9 @@ public class BuyerAgent extends Agent {
 		}
 	}
 
-	public class TickerWaiter extends CyclicBehaviour {
-
-		//behaviour to wait for a new day
+	//behaviour to wait for a new day
+	public class TickerWaiter extends CyclicBehaviour 
+	{
 		public TickerWaiter(Agent a) {
 			super(a);
 		}
