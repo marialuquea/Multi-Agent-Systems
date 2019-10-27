@@ -88,23 +88,25 @@ public class DayTicker extends Agent
 					DFAgentDescription[] agentsType1  = DFService.search(myAgent,template1); 
 					for(int i=0; i<agentsType1.length; i++) {
 						simulationAgents.add(agentsType1[i].getName()); // this is the AID
-						System.out.println("1: "+agentsType1[i].getName());
+						//System.out.println("1: "+agentsType1[i].getName());
 					}
 					DFAgentDescription[] agentsType2  = DFService.search(myAgent,template2); 
 					for(int i=0; i<agentsType2.length; i++) {
 						simulationAgents.add(agentsType2[i].getName()); // this is the AID
-						System.out.println("2: "+agentsType2[i].getName());
+						//System.out.println("2: "+agentsType2[i].getName());
 					}
 					DFAgentDescription[] agentsType3  = DFService.search(myAgent,template3); 
 					for(int i=0; i<agentsType3.length; i++) {
 						simulationAgents.add(agentsType3[i].getName()); // this is the AID
-						System.out.println("3: "+agentsType3[i].getName());
+						//System.out.println("3: "+agentsType3[i].getName());
 					}
 					
+					/*
 					System.out.println("simulationAgents START: "+simulationAgents.size());
 					for (AID agent : simulationAgents)
 						System.out.println(agent.getLocalName());
 					System.out.println("---------");
+					*/
 				}
 				catch(FIPAException e) {
 					e.printStackTrace();
@@ -127,14 +129,16 @@ public class DayTicker extends Agent
 				ACLMessage msg = myAgent.receive(mt);
 				if(msg != null) 
 				{
-					System.out.println("msg received in ticker: "+msg.getContent()+", "+msg.getSender().getLocalName());
+					System.out.println("msg received in ticker: "+msg.getSender().getLocalName()+" - "+msg.getContent());
 					numFinReceived++;
 					if(numFinReceived >= simulationAgents.size()) 
 						step++;
+					/*
 					System.out.println("numFinReceived: "+numFinReceived+", step: "+step);
 					System.out.println("simulationAgents size: "+simulationAgents.size());
 					for (AID agent : simulationAgents)
 						System.out.println(agent.getLocalName());
+					*/
 				}
 				else 
 					block();
@@ -143,14 +147,14 @@ public class DayTicker extends Agent
 
 		@Override
 		public boolean done() {
-			System.out.println("done() in dayTicker");
+			//System.out.println("done() in dayTicker");
 			return step == 2;
 		}
 
 		
 		@Override
 		public void reset() {
-			System.out.println("reset() in dayTicker");
+			//System.out.println("reset() in dayTicker");
 			super.reset();
 			step = 0;
 			simulationAgents.clear();
