@@ -63,33 +63,34 @@ public class SellerAgent extends Agent
 			if(msg != null)
 			{
 				System.out.println("");
-				System.out.println("msg QUERY IF received by seller: "+msg);
 				try 
 				{
 					ContentElement ce = null;
-					System.out.println(msg.getContent()); //print out the message content in SL
+					System.out.println("msg QUERY IF received by seller: "+msg.getContent()); //print out the message content in SL
 
 					// Let JADE convert from String to Java objects
 					// Output will be a ContentElement
 					ce = getContentManager().extractContent(msg);
+					
 					if (ce instanceof Owns) 
 					{
 						Owns owns = (Owns) ce;
-						System.out.println("owns: "+owns);
 						Item item = owns.getItem();
-						System.out.println("item: "+item);
+						
 						// Extract the CD name and print it to demonstrate use of the ontology
 						CD cd = (CD)item;
-						System.out.println("cd: "+cd);
-						System.out.println("cd.getName(): " + cd.getName());
+						System.out.println("cd no.: "+cd.getSerialNumber()+", name: "+cd.getName());
 						
 						//check if seller has it in stock
-						if(itemsForSale.containsKey(cd.getSerialNumber())) {
+						if(itemsForSale.containsKey(cd.getSerialNumber())) 
+						{
 							System.out.println("Seller (me) has CD in stock!");
-							
+							//sell it
 						}
-						else {
+						else 
+						{
 							System.out.println("CD out of stock");
+							//send reject proposal message
 						}
 					}
 				}
@@ -119,32 +120,40 @@ public class SellerAgent extends Agent
 			ACLMessage msg = receive(mt);
 			if(msg != null)
 			{
-				System.out.println("msg REQUEST received by seller: "+msg);
+				//System.out.println("msg REQUEST received by seller: "+msg);
 				try 
 				{
 					ContentElement ce = null;
 					
 					//print out the message content in SL
-					System.out.println("msg content: "+msg.getContent()); 
+					System.out.println(""); 
+					System.out.println("msg REQUEST content: "+msg.getContent()); 
 					
 					// Let JADE convert from String to Java objects
 					// Output will be a ContentElement
 					ce = getContentManager().extractContent(msg);
+					
 					if(ce instanceof Action) 
 					{
 						Concept action = ((Action)ce).getAction();
+						//System.out.println("action: "+action);
+						
 						if (action instanceof Sell) 
 						{
 							Sell order = (Sell)action;
-							Item it = order.getItem();
+							System.out.println("order buyer/item: "+order.getBuyer().getLocalName());
+							Item item = order.getItem();
+							System.out.println("item no.: "+item.getSerialNumber());
+							
 							// Extract the CD name and print it to demonstrate use of the ontology
-							if(it instanceof CD)
+							if(item instanceof CD)
 							{
-								CD cd = (CD)it;
+								CD cd = (CD)item;
 								//check if seller has it in stock
 								if(itemsForSale.containsKey(cd.getSerialNumber())) 
 								{
-									System.out.println("Selling CD " + cd.getName());
+									//System.out.println("itemsForSale: "+itemsForSale);
+									System.out.println("Selling CD " + cd.getName()+" to "+order.getBuyer().getLocalName());
 									System.out.println("itemsForSale: " + itemsForSale);
 								}
 								else 

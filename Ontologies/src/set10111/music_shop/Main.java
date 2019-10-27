@@ -18,7 +18,7 @@ public class Main {
 			AgentController sellerAgent = myContainer.createNewAgent("seller", SellerAgent.class.getCanonicalName(), null);
 			sellerAgent.start();
 			
-			AgentController buyerAgent = myContainer.createNewAgent("buyer", CautiousBuyerAgent.class.getCanonicalName(),
+			AgentController buyerAgent = myContainer.createNewAgent("cautious buyer", CautiousBuyerAgent.class.getCanonicalName(),
 					null);
 			buyerAgent.start();
 			
