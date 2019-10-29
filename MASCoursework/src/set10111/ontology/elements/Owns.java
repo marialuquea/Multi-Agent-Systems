@@ -1,4 +1,4 @@
-package set10111.elements;
+package set10111.ontology.elements;
 
 
 import jade.content.Predicate;

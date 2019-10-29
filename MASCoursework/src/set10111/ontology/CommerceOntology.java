@@ -15,7 +15,7 @@ public class CommerceOntology extends BeanOntology
 	private CommerceOntology(String name) {
 		super(name);
 		try {
-			add("set10111.elements");
+			add("set10111.ontology.elements");
 		} catch (BeanOntologyException e) {
 			e.printStackTrace();
 		}

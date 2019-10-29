@@ -8,6 +8,7 @@ import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -22,7 +23,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
-import set10111.elements.*;
+import set10111.ontology.elements.*;
 
 public class Customer extends Agent
 {
@@ -30,10 +31,17 @@ public class Customer extends Agent
 	private Ontology ontology = CommerceOntology.getInstance();
 	private AID sellerAID;
 	private AID tickerAgent;
+	private Order order = new Order();
+	private Smartphone smartphone = new Smartphone();
 
 	protected void setup()
 	{
 		System.out.println("setup() in Customer");
+		
+		// register codec
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
+		
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -62,8 +70,8 @@ public class Customer extends Agent
 		}
 	}
 
-	//behaviour to wait for a new day
-	public class TickerWaiter extends CyclicBehaviour 
+	// activities to do every day
+	private class TickerWaiter extends CyclicBehaviour 
 	{
 		public TickerWaiter(Agent a) {
 			super(a);
@@ -78,15 +86,17 @@ public class Customer extends Agent
 			if(msg != null) 
 			{
 				System.out.println("msg received in customer: "+msg.getContent());
-				
+
 				if(tickerAgent == null) 
 					tickerAgent = msg.getSender();
-				
+
 				if(msg.getContent().equals("new day")) 
 				{
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
+					dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
+					dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -102,7 +112,105 @@ public class Customer extends Agent
 
 	}
 
-	public class EndDay extends OneShotBehaviour {
+	// 
+
+	// find supplier through DF agent
+	private class FindSupplier extends OneShotBehaviour
+	{
+		public FindSupplier(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action()
+		{
+			DFAgentDescription sellerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("supplier");
+			sellerTemplate.addServices(sd);
+			try
+			{
+				// returns an array
+				DFAgentDescription[] supplierAgent  = DFService.search(myAgent,sellerTemplate);
+				sellerAID = supplierAgent[0].getName();
+			}
+			catch(FIPAException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	// send offer
+	public class SendEnquiries extends OneShotBehaviour 
+	{
+		public SendEnquiries(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() 
+		{
+			// Prepare the message
+			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+			msg.addReceiver(sellerAID);
+			msg.setLanguage(codec.getName());
+			msg.setOntology(ontology.getName());
+
+			//Prepare the content - the order
+			if (Math.random() < 0.5)
+			{
+				//small smartphone
+				smartphone.setScreen(5);
+				smartphone.setBattery(2000);
+			}
+			else
+			{
+				//phablet
+				smartphone.setScreen(7);
+				smartphone.setBattery(3000);
+			}
+
+			if (Math.random() < 0.5)
+				smartphone.setRAM(4);
+			else
+				smartphone.setRAM(8);
+
+			if (Math.random() < 0.5)
+				smartphone.setStorage(64);
+			else
+				smartphone.setStorage(256);
+
+			order.setSpecification(smartphone);
+			order.setQuantity((int)Math.floor(1 + 50 * Math.random()));
+			order.setPrice((int)Math.floor(100 + 500 * Math.random()));
+			order.setDaysDue((int)Math.floor(1 + 10 * Math.random()));
+			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
+			
+			System.out.println("order: "+order);
+			System.out.println("smartphone: "+smartphone);
+
+			Action request = new Action();
+			request.setAction(order);
+			request.setActor(sellerAID); // the agent that you request to perform the action
+			try
+			{
+				getContentManager().fillContent(msg, request); //send the wrapper object
+				send(msg);
+				System.out.println("msg sent with order from supplier: ");
+				System.out.println(msg);
+			}
+			catch (CodecException ce) {
+				ce.printStackTrace();
+			}
+			catch (OntologyException oe) {
+				oe.printStackTrace();
+			} 
+
+		}
+	}
+
+	//behaviour to go on to the next day of the simulation
+	private class EndDay extends OneShotBehaviour {
 
 		public EndDay(Agent a) {
 			super(a);
@@ -114,7 +222,7 @@ public class Customer extends Agent
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
 			myAgent.send(msg);
-			
+
 			/*
 			//send a message to each seller that we have finished
 			ACLMessage sellerDone = new ACLMessage(ACLMessage.INFORM);
@@ -123,9 +231,10 @@ public class Customer extends Agent
 				sellerDone.addReceiver(seller);
 			}
 			myAgent.send(sellerDone);
-			*/
+			 */
 		}
 
 	}
+
 
 }

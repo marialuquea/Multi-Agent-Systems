@@ -1,4 +1,4 @@
-package set10111.elements;
+package set10111.ontology.elements;
 
 import jade.content.Concept;
 import jade.content.onto.annotations.Slot;

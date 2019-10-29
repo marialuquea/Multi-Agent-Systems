@@ -1,4 +1,4 @@
-package set10111.elements;
+package set10111.ontology.elements;
 
 import jade.content.AgentAction;
 import jade.core.AID;
@@ -6,7 +6,7 @@ import jade.core.AID;
 public class Sell implements AgentAction 
 {
 	private AID buyer;
-	private Smartphone smartphone;
+	private Order order;
 	
 	public AID getBuyer() {
 		return buyer;
@@ -15,13 +15,14 @@ public class Sell implements AgentAction
 	public void setBuyer(AID buyer) {
 		this.buyer = buyer;
 	}
-	
-	public Smartphone getSmartphone() {
-		return smartphone;
+
+	public Order getOrder() {
+		return order;
+	}
+
+	public void setOrder(Order order) {
+		this.order = order;
 	}
 	
-	public void setSmartphone(Smartphone smartphone) {
-		this.smartphone = smartphone;
-	}	
 	
 }

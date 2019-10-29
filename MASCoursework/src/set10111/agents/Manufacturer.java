@@ -22,9 +22,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
-import set10111.agents.Customer.EndDay;
-import set10111.agents.Customer.TickerWaiter;
-import set10111.elements.*;
+import set10111.ontology.elements.*;
 
 public class Manufacturer extends Agent
 {
