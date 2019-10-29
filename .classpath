@@ -6,10 +6,6 @@
 	<classpathentry kind="src" path="Practical_01/src"/>
 	<classpathentry kind="src" path="Practical_02/src"/>
 	<classpathentry kind="src" path="Practicals_3_and_4/src"/>
-	<classpathentry kind="lib" path="JADE/JADE-bin-4.5.0/jade/lib/jade.jar"/>
-	<classpathentry kind="lib" path="JADE/JADE-examples-4.5.0/jade/demo/CalendarBean.jar"/>
-	<classpathentry kind="lib" path="JADE/JADE-examples-4.5.0/jade/demo/MeetingScheduler.jar"/>
-	<classpathentry kind="lib" path="JADE/JADE-examples-4.5.0/jade/lib/jadeExamples.jar"/>
-	<classpathentry kind="lib" path="JADE/JADE-src-4.5.0/jade/lib/commons-codec/commons-codec-1.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/40280156/Desktop/Multi-Agent-Systems/JADE/JADE-bin-4.5.0/jade/lib/jade.jar"/>
 	<classpathentry kind="output" path="Practical_01/bin"/>
 </classpath>

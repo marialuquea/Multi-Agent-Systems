@@ -18,17 +18,12 @@ public class Main
 			AgentController rma = myContainer.createNewAgent("rma", "jade.tools.rma.rma", null);
 			rma.start();
 			
-			/*
-			int numCustomers = 0;
+			int numCustomers = 3;
 			AgentController customer;
 			for(int i=0; i<numCustomers;i++) {
 				customer = myContainer.createNewAgent("customer"+ i, Customer.class.getCanonicalName(), null);
 				customer.start();
 			}
-			*/
-			
-			AgentController customer = myContainer.createNewAgent("customer", Customer.class.getCanonicalName(), null);
-			customer.start();
 			
 			AgentController manufacturer = myContainer.createNewAgent("manufacturer", Manufacturer.class.getCanonicalName(),
 					null);
