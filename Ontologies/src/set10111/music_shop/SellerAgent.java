@@ -72,6 +72,7 @@ public class SellerAgent extends Agent
 					// Output will be a ContentElement
 					ce = getContentManager().extractContent(msg);
 					
+					System.out.println("ce in Owns: " + (ce instanceof Owns));
 					if (ce instanceof Owns) 
 					{
 						Owns owns = (Owns) ce;

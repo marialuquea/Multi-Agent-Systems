@@ -3,11 +3,13 @@ package set10111.agents;
 import java.util.ArrayList;
 import java.util.List;
 
+import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -34,6 +36,9 @@ public class Supplier extends Agent
 	protected void setup()
 	{
 		System.out.println("setup() in Supplier");
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
+		
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -49,6 +54,7 @@ public class Supplier extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
+		addBehaviour(new ReceiveOrderRequests());
 	}
 
 	@Override
@@ -90,16 +96,54 @@ public class Supplier extends Agent
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
-				else {
-					//termination message to end simulation
+				else 
 					myAgent.doDelete();
-				}
 			}
-			else{
+			else
 				block();
-			}
 		}
 
+	}
+
+	// behaviour to receive customer requests
+	private class ReceiveOrderRequests extends CyclicBehaviour
+	{
+		@Override
+		public void action() 
+		{
+			// respond to REQUEST messages
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			ACLMessage msg = receive(mt);
+			if(msg != null)
+			{
+				//System.out.println();
+				try
+				{
+					ContentElement ce = null;
+					System.out.println("msg REQUEST received by supplier: "+msg.getContent());
+					
+					// Let JADE convert from String to Java objects
+					// Output will be a ContentElement
+					ce = getContentManager().extractContent(msg);
+					 
+					
+					Action available = (Action) ce;
+					Order order = (Order) available.getAction();
+					
+					System.out.println("- price: "+order.getPrice());
+					System.out.println(available);
+					
+					Smartphone smartphone = order.getSpecification();
+					System.out.println(smartphone.getScreen());
+
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
+			}
+			else
+				block();
+		}
+		
 	}
 
 	public class EndDay extends OneShotBehaviour {

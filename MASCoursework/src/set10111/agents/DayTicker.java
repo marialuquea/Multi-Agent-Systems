@@ -101,12 +101,6 @@ public class DayTicker extends Agent
 						//System.out.println("3: "+agentsType3[i].getName());
 					}
 					
-					/*
-					System.out.println("simulationAgents START: "+simulationAgents.size());
-					for (AID agent : simulationAgents)
-						System.out.println(agent.getLocalName());
-					System.out.println("---------");
-					*/
 				}
 				catch(FIPAException e) {
 					e.printStackTrace();
