@@ -85,7 +85,7 @@ public class Customer extends Agent
 			ACLMessage msg = myAgent.receive(mt); 
 			if(msg != null) 
 			{
-				System.out.println("msg received in customer: "+msg.getContent());
+				//System.out.println("msg received in customer: "+msg.getContent());
 
 				if(tickerAgent == null) 
 					tickerAgent = msg.getSender();
@@ -180,14 +180,27 @@ public class Customer extends Agent
 			else
 				smartphone.setStorage(256);
 
+			order.setCustomer(myAgent.getAID());
 			order.setSpecification(smartphone);
 			order.setQuantity((int)Math.floor(1 + 50 * Math.random()));
 			order.setPrice((int)Math.floor(100 + 500 * Math.random()));
 			order.setDaysDue((int)Math.floor(1 + 10 * Math.random()));
 			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
 			
-			System.out.println("order: "+order);
-			System.out.println("smartphone: "+smartphone);
+			// Print order details
+			System.out.print("order: "
+					+order.getCustomer().getLocalName()+", "
+					+"£"+order.getPenalty()+" per day, "
+					+order.getQuantity()+"units, "
+					+"£"+order.getPrice()+" each"
+					);
+			System.out.println(", smartphone: "
+					+smartphone.getBattery()+"mAh, "
+					+smartphone.getRAM()+"Gb, "
+					+smartphone.getScreen()+"', "
+					+smartphone.getStorage()+"Gb, "
+					);
+			
 
 			Action request = new Action();
 			request.setAction(order);
@@ -196,8 +209,6 @@ public class Customer extends Agent
 			{
 				getContentManager().fillContent(msg, request); //send the wrapper object
 				send(msg);
-				System.out.println("msg sent with order from supplier: ");
-				System.out.println(msg);
 			}
 			catch (CodecException ce) {
 				ce.printStackTrace();

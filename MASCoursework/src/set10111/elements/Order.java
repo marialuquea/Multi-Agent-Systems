@@ -8,16 +8,16 @@ public class Order implements AgentAction
 {
 	private AID customer; 
 	private int price; // price set by the customer
-	private Date dueDate; 
 	private int penalty; // per-day penalty for late delivery
 	private Smartphone specification; // smartphone specification
 	private int quantity; // how many smartphones ordered
 	private int daysDue;
+	private boolean accepted;
 	
-	public AID getSeller() {
+	public AID getCustomer() {
 		return customer;
 	}
-	public void setSeller(AID seller) {
+	public void setCustomer(AID seller) {
 		this.customer = seller;
 	}
 	public int getPrice() {
@@ -25,12 +25,6 @@ public class Order implements AgentAction
 	}
 	public void setPrice(int price) {
 		this.price = price;
-	}
-	public Date getDueDate() {
-		return dueDate;
-	}
-	public void setDueDate(Date dueDate) {
-		this.dueDate = dueDate;
 	}
 	public int getPenalty() {
 		return penalty;
@@ -55,6 +49,12 @@ public class Order implements AgentAction
 	}
 	public void setDaysDue(int daysDue) {
 		this.daysDue = daysDue;
+	}
+	public boolean isAccepted() {
+		return accepted;
+	}
+	public void setAccepted(boolean accepted) {
+		this.accepted = accepted;
 	}
 	
 }

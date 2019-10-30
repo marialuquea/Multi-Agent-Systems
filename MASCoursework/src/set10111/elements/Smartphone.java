@@ -9,7 +9,7 @@ public class Smartphone implements Concept
 	private int screen;
 	private int battery;
 	private int storage;
-	private int RAM;
+	private int ram;
 
 	@Slot (mandatory = true)
 	public int getSerialNumber() {
@@ -45,11 +45,11 @@ public class Smartphone implements Concept
 	}
 
 	public int getRAM() {
-		return RAM;
+		return ram;
 	}
 
-	public void setRAM(int RAM) {
-		this.RAM = RAM;
+	public void setRAM(int ram) {
+		this.ram = ram;
 	}
 
 }

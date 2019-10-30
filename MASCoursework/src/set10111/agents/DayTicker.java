@@ -14,7 +14,7 @@ import jade.lang.acl.MessageTemplate;
 
 public class DayTicker extends Agent
 {
-	public static final int NUM_DAYS = 30;
+	public static final int NUM_DAYS = 10;
 	
 	@Override
 	protected void setup() 
@@ -129,7 +129,7 @@ public class DayTicker extends Agent
 				ACLMessage msg = myAgent.receive(mt);
 				if(msg != null) 
 				{
-					System.out.println("msg received in ticker: "+msg.getSender().getLocalName()+" - "+msg.getContent());
+					//System.out.println("msg received in ticker: "+msg.getSender().getLocalName()+" - "+msg.getContent());
 					numFinReceived++;
 					if(numFinReceived >= simulationAgents.size()) 
 						step++;

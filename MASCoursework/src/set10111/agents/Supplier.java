@@ -77,7 +77,7 @@ public class Supplier extends Agent
 			ACLMessage msg = myAgent.receive(mt); 
 			if(msg != null) 
 			{
-				System.out.println("msg received in supplier: "+msg.getContent());
+				//System.out.println("msg received in supplier: "+msg.getContent());
 
 				if(tickerAgent == null) 
 					tickerAgent = msg.getSender();
