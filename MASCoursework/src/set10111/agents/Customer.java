@@ -23,7 +23,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
-import set10111.ontology.elements.*;
+import set10111.elements.*;
 
 public class Customer extends Agent
 {
