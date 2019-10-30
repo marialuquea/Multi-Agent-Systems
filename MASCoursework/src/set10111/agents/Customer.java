@@ -29,7 +29,7 @@ public class Customer extends Agent
 {
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommerceOntology.getInstance();
-	private AID sellerAID;
+	private AID manufacturerAID;
 	private AID tickerAgent;
 	private Order order = new Order();
 	private Smartphone smartphone = new Smartphone();
@@ -95,7 +95,7 @@ public class Customer extends Agent
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
-					dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
+					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
@@ -112,12 +112,10 @@ public class Customer extends Agent
 
 	}
 
-	// 
-
-	// find supplier through DF agent
-	private class FindSupplier extends OneShotBehaviour
+	// find manufacturer through DF agent
+	private class FindManufacturer extends OneShotBehaviour
 	{
-		public FindSupplier(Agent a) {
+		public FindManufacturer(Agent a) {
 			super(a);
 		}
 
@@ -126,13 +124,13 @@ public class Customer extends Agent
 		{
 			DFAgentDescription sellerTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
-			sd.setType("supplier");
+			sd.setType("manufacturer");
 			sellerTemplate.addServices(sd);
 			try
 			{
 				// returns an array
-				DFAgentDescription[] supplierAgent  = DFService.search(myAgent,sellerTemplate);
-				sellerAID = supplierAgent[0].getName();
+				DFAgentDescription[] manufacturerAgent  = DFService.search(myAgent,sellerTemplate);
+				manufacturerAID = manufacturerAgent[0].getName();
 			}
 			catch(FIPAException e) {
 				e.printStackTrace();
@@ -152,7 +150,7 @@ public class Customer extends Agent
 		{
 			// Prepare the message
 			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-			msg.addReceiver(sellerAID);
+			msg.addReceiver(manufacturerAID);
 			msg.setLanguage(codec.getName());
 			msg.setOntology(ontology.getName());
 
@@ -204,7 +202,7 @@ public class Customer extends Agent
 
 			Action request = new Action();
 			request.setAction(order);
-			request.setActor(sellerAID); // the agent that you request to perform the action
+			request.setActor(manufacturerAID); // the agent that you request to perform the action
 			try
 			{
 				getContentManager().fillContent(msg, request); //send the wrapper object
@@ -216,7 +214,6 @@ public class Customer extends Agent
 			catch (OntologyException oe) {
 				oe.printStackTrace();
 			} 
-
 		}
 	}
 
@@ -233,16 +230,6 @@ public class Customer extends Agent
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
 			myAgent.send(msg);
-
-			/*
-			//send a message to each seller that we have finished
-			ACLMessage sellerDone = new ACLMessage(ACLMessage.INFORM);
-			sellerDone.setContent("done");
-			for(AID seller : sellers) {
-				sellerDone.addReceiver(seller);
-			}
-			myAgent.send(sellerDone);
-			 */
 		}
 
 	}

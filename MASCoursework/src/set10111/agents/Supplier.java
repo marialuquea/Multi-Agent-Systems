@@ -54,7 +54,6 @@ public class Supplier extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new ReceiveOrderRequests());
 	}
 
 	@Override
@@ -105,46 +104,7 @@ public class Supplier extends Agent
 
 	}
 
-	// behaviour to receive customer requests
-	private class ReceiveOrderRequests extends CyclicBehaviour
-	{
-		@Override
-		public void action() 
-		{
-			// respond to REQUEST messages
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-			ACLMessage msg = receive(mt);
-			if(msg != null)
-			{
-				//System.out.println();
-				try
-				{
-					ContentElement ce = null;
-					System.out.println("msg REQUEST received by supplier: "+msg.getContent());
-					
-					// Let JADE convert from String to Java objects
-					// Output will be a ContentElement
-					ce = getContentManager().extractContent(msg);
-					 
-					
-					Action available = (Action) ce;
-					Order order = (Order) available.getAction();
-					
-					System.out.println("- price: "+order.getPrice());
-					System.out.println(available);
-					
-					Smartphone smartphone = order.getSpecification();
-					System.out.println(smartphone.getScreen());
-
-				}
-				catch (CodecException ce) { ce.printStackTrace(); }
-				catch (OntologyException oe) { oe.printStackTrace(); }
-			}
-			else
-				block();
-		}
-		
-	}
+	
 
 	public class EndDay extends OneShotBehaviour {
 
