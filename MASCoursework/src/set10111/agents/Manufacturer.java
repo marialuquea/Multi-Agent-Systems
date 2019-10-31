@@ -32,6 +32,8 @@ public class Manufacturer extends Agent
 	private Ontology ontology = CommerceOntology.getInstance();
 	private AID sellerAID;
 	private AID tickerAgent;
+	Order order = new Order();
+	Smartphone smartphone = new Smartphone();
 
 	protected void setup()
 	{
@@ -54,7 +56,7 @@ public class Manufacturer extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new ReceiveOrderRequests());
+		//addBehaviour(new ReceiveOrderRequests());
 	}
 
 	@Override
@@ -93,6 +95,8 @@ public class Manufacturer extends Agent
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
+					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
+					myAgent.addBehaviour(ror);
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -112,6 +116,10 @@ public class Manufacturer extends Agent
 	// behaviour to receive customer requests
 		private class ReceiveOrderRequests extends CyclicBehaviour
 		{
+			public ReceiveOrderRequests(Agent a) {
+				super(a);
+			}
+
 			@Override
 			public void action() 
 			{
@@ -130,8 +138,52 @@ public class Manufacturer extends Agent
 						ce = getContentManager().extractContent(msg);
 						 
 						Action available = (Action) ce;
-						Order order = (Order) available.getAction(); // this is the order requested
-						Smartphone smartphone = order.getSpecification();
+						order = (Order) available.getAction(); // this is the order requested
+						smartphone = order.getSpecification();
+						
+						System.out.print("order received from "
+								+order.getCustomer().getLocalName()+": "
+								+"£"+order.getPenalty()+" per day, "
+								+order.getQuantity()+"units, "
+								+"£"+order.getPrice()+" each"
+								);
+						System.out.println(", smartphone: "
+								+smartphone.getBattery()+"mAh, "
+								+smartphone.getRAM()+"Gb, "
+								+smartphone.getScreen()+"', "
+								+smartphone.getStorage()+"Gb, "
+								);
+						
+						
+						// calculate cost of making offer from supplier 1
+						int total = 0;
+						
+						if (smartphone.getScreen() == 5)
+							total += 100;
+						if (smartphone.getScreen() == 7)
+							total += 150;
+						
+						if (smartphone.getBattery() == 2000)
+							total += 70;
+						if (smartphone.getBattery() == 3000)
+							total += 100;
+						
+						if (smartphone.getStorage() == 64)
+							total += 25;
+						if (smartphone.getStorage() == 256)
+							total += 50;
+						
+						if (smartphone.getRAM() == 4)
+							total += 30;
+						if (smartphone.getStorage() == 64)
+							total += 25;
+						
+						// how much it is going to sell for 
+						int sold = order.getPrice() * order.getQuantity();
+						System.out.println("price per unit: "+order.getPrice());
+						System.out.println("quantity: "+order.getQuantity());
+						System.out.println("sold: "+sold);
+						System.out.println("total: "+total);
 
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }

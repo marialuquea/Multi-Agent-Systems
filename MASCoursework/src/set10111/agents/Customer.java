@@ -186,8 +186,8 @@ public class Customer extends Agent
 			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
 			
 			// Print order details
-			System.out.print("order: "
-					+order.getCustomer().getLocalName()+", "
+			System.out.print("order sent from "
+					+order.getCustomer().getLocalName()+": "
 					+"£"+order.getPenalty()+" per day, "
 					+order.getQuantity()+"units, "
 					+"£"+order.getPrice()+" each"
