@@ -30,7 +30,7 @@ public class Manufacturer extends Agent
 {
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommerceOntology.getInstance();
-	private AID sellerAID;
+	private ArrayList<AID> customers = new ArrayList<>();
 	private AID tickerAgent;
 	Order order = new Order();
 	Smartphone smartphone = new Smartphone();
@@ -92,11 +92,15 @@ public class Manufacturer extends Agent
 
 				if(msg.getContent().equals("new day")) 
 				{
+					customers.clear();
+					
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
+					
 					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
 					myAgent.addBehaviour(ror);
+					
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -128,9 +132,11 @@ public class Manufacturer extends Agent
 				ACLMessage msg = receive(mt);
 				if(msg != null)
 				{
-					//System.out.println();
+					customers.add(msg.getSender());
+					//System.out.println("customers: "+customers.size()+" "+customers);
+					
 					try
-					{
+					{	
 						ContentElement ce = null;
 						
 						// Let JADE convert from String to Java objects
@@ -195,6 +201,7 @@ public class Manufacturer extends Agent
 			
 		}
 	
+	
 	public class EndDay extends OneShotBehaviour {
 
 		public EndDay(Agent a) {
@@ -207,8 +214,46 @@ public class Manufacturer extends Agent
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
 			myAgent.send(msg);
+			
 		}
 
 	}
+	
+	/*
+	public class EndDayListener extends CyclicBehaviour {
+		private int customersFinished = 0;
+		private List<Behaviour> toRemove;
+
+		public EndDayListener(Agent a, List<Behaviour> toRemove) {
+			super(a);
+			this.toRemove = toRemove;
+		}
+
+		@Override
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchContent("done");
+			ACLMessage msg = myAgent.receive(mt);
+			if(msg != null) {
+				customersFinished++;
+			}
+			else {
+				block();
+			}
+			if(customersFinished == buyers.size()) {
+				//we are finished
+				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
+				tick.setContent("done");
+				tick.addReceiver(tickerAgent);
+				myAgent.send(tick);
+				//remove behaviours
+				for(Behaviour b : toRemove) {
+					myAgent.removeBehaviour(b);
+				}
+				myAgent.removeBehaviour(this);
+			}
+		}
+
+	}
+	*/
 
 }

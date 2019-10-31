@@ -37,11 +37,11 @@ public class Customer extends Agent
 	protected void setup()
 	{
 		System.out.println("setup() in Customer");
-		
+
 		// register codec
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-		
+
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -184,7 +184,7 @@ public class Customer extends Agent
 			order.setPrice((int)Math.floor(100 + 500 * Math.random()));
 			order.setDaysDue((int)Math.floor(1 + 10 * Math.random()));
 			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
-			
+
 			// Print order details
 			System.out.print("order sent from "
 					+order.getCustomer().getLocalName()+": "
@@ -198,7 +198,7 @@ public class Customer extends Agent
 					+smartphone.getScreen()+"', "
 					+smartphone.getStorage()+"Gb, "
 					);
-			
+
 
 			Action request = new Action();
 			request.setAction(order);
@@ -230,6 +230,12 @@ public class Customer extends Agent
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
 			myAgent.send(msg);
+
+			//send a message to the manufacturer that we have finished
+			ACLMessage manufacturerDone = new ACLMessage(ACLMessage.INFORM);
+			manufacturerDone.setContent("done");
+			manufacturerDone.addReceiver(manufacturerAID);
+			myAgent.send(manufacturerDone);
 		}
 
 	}
