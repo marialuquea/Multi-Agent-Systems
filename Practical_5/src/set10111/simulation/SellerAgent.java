@@ -58,14 +58,17 @@ public class SellerAgent extends Agent {
 				}
 				if(msg.getContent().equals("new day")) {
 					myAgent.addBehaviour(new BookGenerator());
-					// myAgent.addBehaviour(new FindBuyers(myAgent));
+					
 					CyclicBehaviour os = new OffersServer(myAgent);
 					myAgent.addBehaviour(os);
+					
 					CyclicBehaviour rp = new ReceiveProposal(myAgent);
 					myAgent.addBehaviour(rp);
+					
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
 					cyclicBehaviours.add(os);
 					cyclicBehaviours.add(rp);
+					
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
 				}
 				else {

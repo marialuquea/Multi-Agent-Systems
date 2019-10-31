@@ -40,7 +40,7 @@ public class Manufacturer extends Agent
 		System.out.println("setup() in Manufacturer");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-		
+
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -56,7 +56,7 @@ public class Manufacturer extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
-		//addBehaviour(new ReceiveOrderRequests());
+		//addBehaviour(new ReceiveOrderRequests(this));
 	}
 
 	@Override
@@ -85,8 +85,6 @@ public class Manufacturer extends Agent
 			ACLMessage msg = myAgent.receive(mt); 
 			if(msg != null) 
 			{
-				//System.out.println("msg received in manufacturer: "+msg.getContent());
-
 				if(tickerAgent == null) 
 					tickerAgent = msg.getSender();
 
@@ -94,15 +92,20 @@ public class Manufacturer extends Agent
 				{
 					customers.clear();
 					
-					//spawn new sequential behaviour for day's activities
-					SequentialBehaviour dailyActivity = new SequentialBehaviour();
-					//sub-behaviours will execute in the order they are added
-					
+					myAgent.addBehaviour(new FindCustomers(myAgent));
+
 					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
 					myAgent.addBehaviour(ror);
 					
-					dailyActivity.addSubBehaviour(new EndDay(myAgent));
-					myAgent.addBehaviour(dailyActivity);
+					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
+					cyclicBehaviours.add(ror);
+
+					//SequentialBehaviour dailyActivity = new SequentialBehaviour();
+					
+					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
+					
+					//myAgent.addBehaviour(dailyActivity);
+
 				}
 				else {
 					//termination message to end simulation
@@ -116,110 +119,129 @@ public class Manufacturer extends Agent
 
 	}
 
-	
-	// behaviour to receive customer requests
-		private class ReceiveOrderRequests extends CyclicBehaviour
-		{
-			public ReceiveOrderRequests(Agent a) {
-				super(a);
-			}
+	public class FindCustomers extends OneShotBehaviour 
+	{
+		public FindCustomers(Agent a) { super(a); }
+		@Override
+		public void action() {
 
-			@Override
-			public void action() 
-			{
-				// respond to REQUEST messages
-				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-				ACLMessage msg = receive(mt);
-				if(msg != null)
-				{
-					customers.add(msg.getSender());
-					//System.out.println("customers: "+customers.size()+" "+customers);
-					
-					try
-					{	
-						ContentElement ce = null;
-						
-						// Let JADE convert from String to Java objects
-						// Output will be a ContentElement
-						ce = getContentManager().extractContent(msg);
-						 
-						Action available = (Action) ce;
-						order = (Order) available.getAction(); // this is the order requested
-						smartphone = order.getSpecification();
-						
-						System.out.print("order received from "
-								+order.getCustomer().getLocalName()+": "
-								+"£"+order.getPenalty()+" per day, "
-								+order.getQuantity()+"units, "
-								+"£"+order.getPrice()+" each"
-								);
-						System.out.println(", smartphone: "
-								+smartphone.getBattery()+"mAh, "
-								+smartphone.getRAM()+"Gb, "
-								+smartphone.getScreen()+"', "
-								+smartphone.getStorage()+"Gb, "
-								);
-						
-						
-						// calculate cost of making offer from supplier 1
-						int total = 0;
-						
-						if (smartphone.getScreen() == 5)
-							total += 100;
-						if (smartphone.getScreen() == 7)
-							total += 150;
-						
-						if (smartphone.getBattery() == 2000)
-							total += 70;
-						if (smartphone.getBattery() == 3000)
-							total += 100;
-						
-						if (smartphone.getStorage() == 64)
-							total += 25;
-						if (smartphone.getStorage() == 256)
-							total += 50;
-						
-						if (smartphone.getRAM() == 4)
-							total += 30;
-						if (smartphone.getStorage() == 64)
-							total += 25;
-						
-						// how much it is going to sell for 
-						int sold = order.getPrice() * order.getQuantity();
-						System.out.println("price per unit: "+order.getPrice());
-						System.out.println("quantity: "+order.getQuantity());
-						System.out.println("sold: "+sold);
-						System.out.println("total: "+total);
-
-					}
-					catch (CodecException ce) { ce.printStackTrace(); }
-					catch (OntologyException oe) { oe.printStackTrace(); }
-				}
-				else
-					block();
+			DFAgentDescription sellerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("customer");
+			sellerTemplate.addServices(sd);
+			try{
+				customers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
+				for(int i=0; i<agentsType1.length; i++){ customers.add(agentsType1[i].getName()); }
+				System.out.println("customers size "+customers.size());
 			}
-			
+			catch(FIPAException e) { e.printStackTrace(); }
 		}
-	
-	
-	public class EndDay extends OneShotBehaviour {
+	}
 
-		public EndDay(Agent a) {
+
+	// behaviour to receive customer requests
+	private class ReceiveOrderRequests extends CyclicBehaviour
+	{
+		public ReceiveOrderRequests(Agent a) {
 			super(a);
 		}
 
 		@Override
-		public void action() {
-			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-			msg.addReceiver(tickerAgent);
-			msg.setContent("done");
-			myAgent.send(msg);
-			
+		public void action() 
+		{
+			// respond to REQUEST messages
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			ACLMessage msg = receive(mt);
+			if(msg != null)
+			{
+				//customers.add(msg.getSender());
+				//System.out.println("customers: "+customers.size()+" "+customers);
+
+				try
+				{	
+					ContentElement ce = null;
+
+					// Let JADE convert from String to Java objects
+					// Output will be a ContentElement
+					ce = getContentManager().extractContent(msg);
+
+					Action available = (Action) ce;
+					order = (Order) available.getAction(); // this is the order requested
+					smartphone = order.getSpecification();
+
+					System.out.print("order received from "
+							+order.getCustomer().getLocalName()+": "
+							//+order.getPenalty()+" per day, "
+							+order.getQuantity()+" units, "
+							//+order.getPrice()+" each"
+							);
+					/*
+							System.out.println(", smartphone: "
+									+smartphone.getBattery()+"mAh, "
+									+smartphone.getRAM()+"Gb, "
+									+smartphone.getScreen()+"', "
+									+smartphone.getStorage()+"Gb, "
+									);
+					 */
+
+					// calculate cost of making offer from supplier 1
+					int total = 0;
+
+					if (smartphone.getScreen() == 5)
+						total += 100;
+					if (smartphone.getScreen() == 7)
+						total += 150;
+
+					if (smartphone.getBattery() == 2000)
+						total += 70;
+					if (smartphone.getBattery() == 3000)
+						total += 100;
+
+					if (smartphone.getStorage() == 64)
+						total += 25;
+					if (smartphone.getStorage() == 256)
+						total += 50;
+
+					if (smartphone.getRAM() == 4)
+						total += 30;
+					if (smartphone.getStorage() == 64)
+						total += 25;
+
+					// how much it is going to sell for 
+					int sold = order.getPrice() * order.getQuantity();
+					//System.out.println("price per unit: "+order.getPrice());
+					System.out.println("quantity: "+order.getQuantity());
+
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
+			}
+			else
+				block();
 		}
 
 	}
-	
+
 	/*
+	public class EndDay extends OneShotBehaviour 
+	{
+		public EndDay(Agent a) {super(a);}
+		@Override
+		public void action() {
+			if (finished) {
+				System.out.println("EndDay finished = "+finished);
+				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+				msg.addReceiver(tickerAgent);
+				msg.setContent("done");
+				myAgent.send(msg);
+				System.out.println("done msg sent from manufacturer");
+			}
+		}
+
+	}
+	*/
+	
 	public class EndDayListener extends CyclicBehaviour {
 		private int customersFinished = 0;
 		private List<Behaviour> toRemove;
@@ -239,7 +261,7 @@ public class Manufacturer extends Agent
 			else {
 				block();
 			}
-			if(customersFinished == buyers.size()) {
+			if(customersFinished == customers.size()) {
 				//we are finished
 				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 				tick.setContent("done");
@@ -254,6 +276,6 @@ public class Manufacturer extends Agent
 		}
 
 	}
-	*/
+
 
 }
