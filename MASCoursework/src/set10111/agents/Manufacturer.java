@@ -56,7 +56,6 @@ public class Manufacturer extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
-		//addBehaviour(new ReceiveOrderRequests(this));
 	}
 
 	@Override
@@ -100,12 +99,8 @@ public class Manufacturer extends Agent
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
 					cyclicBehaviours.add(ror);
 
-					//SequentialBehaviour dailyActivity = new SequentialBehaviour();
-					
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
 					
-					//myAgent.addBehaviour(dailyActivity);
-
 				}
 				else {
 					//termination message to end simulation
@@ -155,9 +150,6 @@ public class Manufacturer extends Agent
 			ACLMessage msg = receive(mt);
 			if(msg != null)
 			{
-				//customers.add(msg.getSender());
-				//System.out.println("customers: "+customers.size()+" "+customers);
-
 				try
 				{	
 					ContentElement ce = null;
@@ -222,25 +214,6 @@ public class Manufacturer extends Agent
 		}
 
 	}
-
-	/*
-	public class EndDay extends OneShotBehaviour 
-	{
-		public EndDay(Agent a) {super(a);}
-		@Override
-		public void action() {
-			if (finished) {
-				System.out.println("EndDay finished = "+finished);
-				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-				msg.addReceiver(tickerAgent);
-				msg.setContent("done");
-				myAgent.send(msg);
-				System.out.println("done msg sent from manufacturer");
-			}
-		}
-
-	}
-	*/
 	
 	public class EndDayListener extends CyclicBehaviour {
 		private int customersFinished = 0;
