@@ -31,6 +31,7 @@ public class Manufacturer extends Agent
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommerceOntology.getInstance();
 	private ArrayList<AID> customers = new ArrayList<>();
+	private ArrayList<AID> suppliers = new ArrayList<>();
 	private int numOrdersReceived = 0;
 	private AID tickerAgent;
 	Order order = new Order();
@@ -93,8 +94,9 @@ public class Manufacturer extends Agent
 					customers.clear();
 					numOrdersReceived = 0;
 					
-					// find customers
+					// find customers and suppliers
 					myAgent.addBehaviour(new FindCustomers(myAgent));
+					myAgent.addBehaviour(new FindSuppliers(myAgent));
 					
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
 					
@@ -133,6 +135,26 @@ public class Manufacturer extends Agent
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
 				for(int i=0; i<agentsType1.length; i++){ customers.add(agentsType1[i].getName()); }
 				//System.out.println("customers size "+customers.size());
+			}
+			catch(FIPAException e) { e.printStackTrace(); }
+		}
+	}
+	
+	private class FindSuppliers extends OneShotBehaviour 
+	{
+		public FindSuppliers(Agent a) { super(a); }
+		@Override
+		public void action() {
+
+			DFAgentDescription sellerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("supplier");
+			sellerTemplate.addServices(sd);
+			try{
+				suppliers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
+				for(int i=0; i<agentsType1.length; i++){ suppliers.add(agentsType1[i].getName()); }
+				System.out.println("suppliers size "+suppliers.size());
 			}
 			catch(FIPAException e) { e.printStackTrace(); }
 		}
@@ -226,6 +248,8 @@ public class Manufacturer extends Agent
 					System.out.println("All orders received, now ordering parts");
 					
 					//TODO: order parts from supplier
+					
+					
 					
 				}
 				
