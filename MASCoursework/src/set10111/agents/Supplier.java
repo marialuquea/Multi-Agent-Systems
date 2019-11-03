@@ -30,15 +30,17 @@ public class Supplier extends Agent
 {
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommerceOntology.getInstance();
-	private AID sellerAID;
 	private AID tickerAgent;
+
+	private Order order = new Order();
+	private Smartphone smartphone = new Smartphone();
 
 	protected void setup()
 	{
 		System.out.println("setup() in Supplier");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-		
+
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -54,6 +56,7 @@ public class Supplier extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
+		addBehaviour(new ReceiveOrderRequests(this));
 	}
 
 	@Override
@@ -104,7 +107,54 @@ public class Supplier extends Agent
 
 	}
 
-	
+	private class ReceiveOrderRequests extends CyclicBehaviour
+	{
+		private int step = 0;
+
+		public ReceiveOrderRequests(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() 
+		{
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			ACLMessage msg = receive(mt);
+			if(msg != null)
+			{
+				try
+				{	
+					ContentElement ce = null;
+
+					ce = getContentManager().extractContent(msg);
+
+					Action available = (Action) ce;
+					order = (Order) available.getAction(); // this is the order requested
+					smartphone = order.getSpecification();
+					
+					System.out.print("order received in supplier "
+							+order.getCustomer().getLocalName()+": "
+							//+order.getPenalty()+" per day, "
+							+order.getQuantity()+" units, "
+							//+order.getPrice()+" each"
+							);
+
+						System.out.println(", smartphone: "
+								+smartphone.getBattery()+"mAh, "
+								+smartphone.getRAM()+"Gb, "
+								+smartphone.getScreen()+"', "
+								+smartphone.getStorage()+"Gb, "
+								);
+
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
+			}
+			else
+				block();
+		}
+
+	}
 
 	public class EndDay extends OneShotBehaviour {
 

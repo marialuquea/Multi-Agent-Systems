@@ -34,8 +34,9 @@ public class Manufacturer extends Agent
 	private ArrayList<AID> suppliers = new ArrayList<>();
 	private int numOrdersReceived = 0;
 	private AID tickerAgent;
-	Order order = new Order();
-	Smartphone smartphone = new Smartphone();
+	private Order order = new Order();
+	private Smartphone smartphone = new Smartphone();
+	private ArrayList<Order> orders = new ArrayList<>();
 
 	protected void setup()
 	{
@@ -91,8 +92,10 @@ public class Manufacturer extends Agent
 
 				if(msg.getContent().equals("new day")) 
 				{
+					// reset values for new day
 					customers.clear();
 					numOrdersReceived = 0;
+					orders.clear();
 					
 					// find customers and suppliers
 					myAgent.addBehaviour(new FindCustomers(myAgent));
@@ -154,7 +157,7 @@ public class Manufacturer extends Agent
 				suppliers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
 				for(int i=0; i<agentsType1.length; i++){ suppliers.add(agentsType1[i].getName()); }
-				System.out.println("suppliers size "+suppliers.size());
+				//System.out.println("suppliers size "+suppliers.size());
 			}
 			catch(FIPAException e) { e.printStackTrace(); }
 		}
@@ -191,7 +194,9 @@ public class Manufacturer extends Agent
 						Action available = (Action) ce;
 						order = (Order) available.getAction(); // this is the order requested
 						smartphone = order.getSpecification();
-
+						
+						orders.add(order);
+						
 						System.out.println("order received from "+order.getCustomer().getLocalName()+": "+order.getQuantity()+" units");
 
 						// calculate cost of making offer from supplier 1
@@ -242,13 +247,52 @@ public class Manufacturer extends Agent
 					block();
 				
 				
+				
+				
+				
 			case 1:
 				if (step == 1)
 				{
 					System.out.println("All orders received, now ordering parts");
 					
 					//TODO: order parts from supplier
-					
+					for (Order order : orders)
+					{
+						ACLMessage msgParts = new ACLMessage(ACLMessage.REQUEST);
+						msgParts.addReceiver(suppliers.get(0));
+						msgParts.setLanguage(codec.getName());
+						msgParts.setOntology(ontology.getName());
+						
+						System.out.println("-----");
+						System.out.println("screens: "+order.getSpecification().getScreen());
+						System.out.println("storage: "+order.getSpecification().getStorage());
+						System.out.println("RAM: "+order.getSpecification().getRAM());
+						System.out.println("battery: "+order.getSpecification().getBattery());
+						
+						//WHAT
+						Smartphone orderParts = new Smartphone();
+						orderParts.setBattery(order.getSpecification().getBattery());
+						orderParts.setRAM(order.getSpecification().getRAM());
+						orderParts.setScreen(order.getSpecification().getScreen());
+						orderParts.setStorage(order.getSpecification().getStorage());
+						
+						//HOW MANY
+						Order orderPartsO = new Order();
+						orderPartsO.setSpecification(orderParts);
+						orderPartsO.setCustomer(order.getCustomer());
+						orderPartsO.setQuantity(order.getQuantity());
+						
+						Action request = new Action();
+						request.setAction(order);
+						request.setActor(suppliers.get(0));
+						try
+						{
+							getContentManager().fillContent(msgParts, request); //send the wrapper object
+							send(msgParts);
+						}
+						catch (CodecException ce) { ce.printStackTrace(); }
+						catch (OntologyException oe) { oe.printStackTrace(); } 
+					}
 					
 					
 				}

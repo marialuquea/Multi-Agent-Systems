@@ -186,22 +186,6 @@ public class Customer extends Agent
 			order.setDaysDue((int)Math.floor(1 + 10 * Math.random()));
 			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
 
-			/*
-			System.out.print("order sent from "
-					+order.getCustomer().getLocalName()+": "
-					//+order.getPenalty()+" per day, "
-					+order.getQuantity()+" units, "
-					//+order.getPrice()+" each"
-					);
-
-				System.out.println(", smartphone: "
-						+smartphone.getBattery()+"mAh, "
-						+smartphone.getRAM()+"Gb, "
-						+smartphone.getScreen()+"', "
-						+smartphone.getStorage()+"Gb, "
-						);
-			 */
-
 			Action request = new Action();
 			request.setAction(order);
 			request.setActor(manufacturerAID); // the agent that you request to perform the action
@@ -210,12 +194,8 @@ public class Customer extends Agent
 				getContentManager().fillContent(msg, request); //send the wrapper object
 				send(msg);
 			}
-			catch (CodecException ce) {
-				ce.printStackTrace();
-			}
-			catch (OntologyException oe) {
-				oe.printStackTrace();
-			} 
+			catch (CodecException ce) { ce.printStackTrace(); }
+			catch (OntologyException oe) { oe.printStackTrace(); } 
 		}
 	}
 
