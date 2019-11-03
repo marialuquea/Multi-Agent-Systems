@@ -31,6 +31,7 @@ public class Manufacturer extends Agent
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommerceOntology.getInstance();
 	private ArrayList<AID> customers = new ArrayList<>();
+	private int numOrdersReceived = 0;
 	private AID tickerAgent;
 	Order order = new Order();
 	Smartphone smartphone = new Smartphone();
@@ -70,7 +71,7 @@ public class Manufacturer extends Agent
 	}
 
 	//behaviour to wait for a new day
-	public class TickerWaiter extends CyclicBehaviour 
+	private class TickerWaiter extends CyclicBehaviour 
 	{
 		public TickerWaiter(Agent a) {
 			super(a);
@@ -90,13 +91,16 @@ public class Manufacturer extends Agent
 				if(msg.getContent().equals("new day")) 
 				{
 					customers.clear();
+					numOrdersReceived = 0;
 					
+					// find customers
 					myAgent.addBehaviour(new FindCustomers(myAgent));
-
-					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
-					myAgent.addBehaviour(ror);
 					
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
+					
+					//receive order requests
+					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
+					myAgent.addBehaviour(ror);
 					cyclicBehaviours.add(ror);
 
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
@@ -114,7 +118,7 @@ public class Manufacturer extends Agent
 
 	}
 
-	public class FindCustomers extends OneShotBehaviour 
+	private class FindCustomers extends OneShotBehaviour 
 	{
 		public FindCustomers(Agent a) { super(a); }
 		@Override
@@ -128,16 +132,17 @@ public class Manufacturer extends Agent
 				customers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
 				for(int i=0; i<agentsType1.length; i++){ customers.add(agentsType1[i].getName()); }
-				System.out.println("customers size "+customers.size());
+				//System.out.println("customers size "+customers.size());
 			}
 			catch(FIPAException e) { e.printStackTrace(); }
 		}
 	}
 
-
 	// behaviour to receive customer requests
 	private class ReceiveOrderRequests extends CyclicBehaviour
 	{
+		private int step = 0;
+		
 		public ReceiveOrderRequests(Agent a) {
 			super(a);
 		}
@@ -145,72 +150,93 @@ public class Manufacturer extends Agent
 		@Override
 		public void action() 
 		{
-			// respond to REQUEST messages
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-			ACLMessage msg = receive(mt);
-			if(msg != null)
+			switch (step)
 			{
-				try
-				{	
-					ContentElement ce = null;
+			case 0:
+				// respond to REQUEST messages
+				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+				ACLMessage msg = receive(mt);
+				if(msg != null)
+				{
+					try
+					{	
+						ContentElement ce = null;
 
-					// Let JADE convert from String to Java objects
-					// Output will be a ContentElement
-					ce = getContentManager().extractContent(msg);
+						// Let JADE convert from String to Java objects
+						// Output will be a ContentElement
+						ce = getContentManager().extractContent(msg);
 
-					Action available = (Action) ce;
-					order = (Order) available.getAction(); // this is the order requested
-					smartphone = order.getSpecification();
+						Action available = (Action) ce;
+						order = (Order) available.getAction(); // this is the order requested
+						smartphone = order.getSpecification();
 
-					System.out.print("order received from "
-							+order.getCustomer().getLocalName()+": "
-							//+order.getPenalty()+" per day, "
-							+order.getQuantity()+" units, "
-							//+order.getPrice()+" each"
-							);
-					/*
-							System.out.println(", smartphone: "
-									+smartphone.getBattery()+"mAh, "
-									+smartphone.getRAM()+"Gb, "
-									+smartphone.getScreen()+"', "
-									+smartphone.getStorage()+"Gb, "
-									);
-					 */
+						System.out.println("order received from "+order.getCustomer().getLocalName()+": "+order.getQuantity()+" units");
 
-					// calculate cost of making offer from supplier 1
-					int total = 0;
+						// calculate cost of making offer from supplier 1
+						int total = 0;
 
-					if (smartphone.getScreen() == 5)
-						total += 100;
-					if (smartphone.getScreen() == 7)
-						total += 150;
+						if (smartphone.getScreen() == 5)
+							total += 100;
+						if (smartphone.getScreen() == 7)
+							total += 150;
 
-					if (smartphone.getBattery() == 2000)
-						total += 70;
-					if (smartphone.getBattery() == 3000)
-						total += 100;
+						if (smartphone.getBattery() == 2000)
+							total += 70;
+						if (smartphone.getBattery() == 3000)
+							total += 100;
 
-					if (smartphone.getStorage() == 64)
-						total += 25;
-					if (smartphone.getStorage() == 256)
-						total += 50;
+						if (smartphone.getStorage() == 64)
+							total += 25;
+						if (smartphone.getStorage() == 256)
+							total += 50;
 
-					if (smartphone.getRAM() == 4)
-						total += 30;
-					if (smartphone.getStorage() == 64)
-						total += 25;
+						if (smartphone.getRAM() == 4)
+							total += 30;
+						if (smartphone.getStorage() == 64)
+							total += 25;
 
-					// how much it is going to sell for 
-					int sold = order.getPrice() * order.getQuantity();
-					//System.out.println("price per unit: "+order.getPrice());
-					System.out.println("quantity: "+order.getQuantity());
-
+						// how much it is going to sell for 
+						int sold = order.getPrice() * order.getQuantity();
+						
+						
+						//TODO: if sold > x then sell, else refuse
+						
+						// send accept proposal message to customer
+						ACLMessage reply = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+						reply.setContent("order accepted");
+						reply.addReceiver(order.getCustomer());
+						myAgent.send(reply);
+						
+						numOrdersReceived++;
+						
+						//System.out.println(numOrdersReceived+" - "+customers.size());
+						if (numOrdersReceived >= customers.size())
+							step = 1;
+					}
+					catch (CodecException ce) { ce.printStackTrace(); }
+					catch (OntologyException oe) { oe.printStackTrace(); }
 				}
-				catch (CodecException ce) { ce.printStackTrace(); }
-				catch (OntologyException oe) { oe.printStackTrace(); }
+				else
+					block();
+				
+				
+			case 1:
+				if (step == 1)
+				{
+					System.out.println("All orders received, now ordering parts");
+					
+					//TODO: order parts from supplier
+					
+				}
+				
+			case 2:
+				
+				
+				
+			case 3:
+				break;
 			}
-			else
-				block();
+			
 		}
 
 	}

@@ -198,18 +198,6 @@ public class SellerAgent extends Agent {
 				block();
 			}
 
-			// receive rejected messages
-			/*
-			MessageTemplate rp = MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL);
-			ACLMessage msgNo = myAgent.receive(mt);
-			if(msgNo != null) {
-				System.out.println("REJECT msg from buyer received: "+ msgNo);
-			}
-			else {
-				block();
-			}
-			*/
-
 		}
 	}
 

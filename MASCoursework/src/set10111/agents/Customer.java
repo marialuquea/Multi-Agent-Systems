@@ -57,6 +57,7 @@ public class Customer extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
+		addBehaviour(new OrderConfirmed(this));
 	}
 
 	@Override
@@ -184,7 +185,7 @@ public class Customer extends Agent
 			order.setPrice((int)Math.floor(100 + 500 * Math.random()));
 			order.setDaysDue((int)Math.floor(1 + 10 * Math.random()));
 			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
-			
+
 			/*
 			System.out.print("order sent from "
 					+order.getCustomer().getLocalName()+": "
@@ -192,7 +193,7 @@ public class Customer extends Agent
 					+order.getQuantity()+" units, "
 					//+order.getPrice()+" each"
 					);
-			
+
 				System.out.println(", smartphone: "
 						+smartphone.getBattery()+"mAh, "
 						+smartphone.getRAM()+"Gb, "
@@ -216,6 +217,26 @@ public class Customer extends Agent
 				oe.printStackTrace();
 			} 
 		}
+	}
+
+	// confirm accepted order
+	public class OrderConfirmed extends CyclicBehaviour
+	{
+		public OrderConfirmed(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() 
+		{
+			MessageTemplate mt = MessageTemplate.MatchContent("order accepted");
+			ACLMessage msg = myAgent.receive(mt);
+			if(msg != null) 
+				System.out.println("order was accepted, msg received in customer");
+			else
+				block();
+		}
+
 	}
 
 	//behaviour to go on to the next day of the simulation
