@@ -1,7 +1,8 @@
 package set10111.agents;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -12,7 +13,6 @@ import jade.content.onto.OntologyException;
 import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
@@ -32,8 +32,8 @@ public class Supplier extends Agent
 	private AID tickerAgent;
 	private ArrayList<AID> manufacturers = new ArrayList<>();
 	private Order order = new Order();
-	private ArrayList<Order> orders = new ArrayList<>();
 	private Smartphone smartphone = new Smartphone();
+	private HashMap<Order, Integer> orders = new HashMap<>(); 
 
 	protected void setup()
 	{
@@ -112,15 +112,26 @@ public class Supplier extends Agent
 
 				if(msg.getContent().equals("new day")) 
 				{
-					/*
-					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
-					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
-					myAgent.addBehaviour(ror);
-					cyclicBehaviours.add(ror);
-					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
-					 */
+					// new day - reset values
+					
+					// decrease day in order to send parts to manufacturer
+					for (Entry<Order, Integer> entry : orders.entrySet()) 
+					{	
+						Order order1 = new Order();
+						int days = 0;
+						
+						order1 = entry.getKey();
+						days = entry.getValue();
+						
+						orders.put(order1, orders.get(order1) - 1);
+						//System.out.println(entry.getKey().getCustomer().getLocalName() + " = " + entry.getValue());	
+					}
+
+					//System.out.println("----");
 
 
+
+					// activities for the day
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
@@ -164,7 +175,14 @@ public class Supplier extends Agent
 						smartphone = order.getSpecification();
 
 						System.out.println("parts battery: "+smartphone.getBattery());
-						
+
+						int supplier1_days = 1;
+						int supplier2_days = 4;
+
+						//TODO: if supplier 1 then 1 day, if supplier 2 then 4 days
+
+						orders.put(order, 1);
+
 						order_count++;
 						//System.out.println("count: "+order_count);
 

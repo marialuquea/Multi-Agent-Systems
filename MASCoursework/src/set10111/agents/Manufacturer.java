@@ -263,7 +263,7 @@ public class Manufacturer extends Agent
 						msgParts.setLanguage(codec.getName());
 						msgParts.setOntology(ontology.getName());
 						
-						System.out.println("-----");
+						//System.out.println("-----");
 						System.out.println("battery: "+order.getSpecification().getBattery());
 						
 						//WHAT
