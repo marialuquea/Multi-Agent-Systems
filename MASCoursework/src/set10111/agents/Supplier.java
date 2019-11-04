@@ -16,7 +16,6 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -31,8 +30,9 @@ public class Supplier extends Agent
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommerceOntology.getInstance();
 	private AID tickerAgent;
-
+	private ArrayList<AID> manufacturers = new ArrayList<>();
 	private Order order = new Order();
+	private ArrayList<Order> orders = new ArrayList<>();
 	private Smartphone smartphone = new Smartphone();
 
 	protected void setup()
@@ -56,7 +56,7 @@ public class Supplier extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new ReceiveOrderRequests(this));
+		//addBehaviour(new ReceiveOrderRequests(this));
 	}
 
 	@Override
@@ -67,6 +67,26 @@ public class Supplier extends Agent
 		}
 		catch(FIPAException e){
 			e.printStackTrace();
+		}
+	}
+
+	private class FindManufacturer extends OneShotBehaviour 
+	{
+		public FindManufacturer(Agent a) { super(a); }
+		@Override
+		public void action() {
+
+			DFAgentDescription sellerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("manufacturer");
+			sellerTemplate.addServices(sd);
+			try{
+				manufacturers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
+				for(int i=0; i<agentsType1.length; i++){ manufacturers.add(agentsType1[i].getName()); }
+				//System.out.println("manufacturers size "+manufacturers.size());
+			}
+			catch(FIPAException e) { e.printStackTrace(); }
 		}
 	}
 
@@ -92,11 +112,21 @@ public class Supplier extends Agent
 
 				if(msg.getContent().equals("new day")) 
 				{
-					//spawn new sequential behaviour for day's activities
+					/*
+					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
+					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
+					myAgent.addBehaviour(ror);
+					cyclicBehaviours.add(ror);
+					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
+					 */
+
+
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
-					//sub-behaviours will execute in the order they are added
+					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
+
 				}
 				else 
 					myAgent.doDelete();
@@ -107,9 +137,9 @@ public class Supplier extends Agent
 
 	}
 
-	private class ReceiveOrderRequests extends CyclicBehaviour
+	private class ReceiveOrderRequests extends OneShotBehaviour
 	{
-		private int step = 0;
+		private int order_count = 0;
 
 		public ReceiveOrderRequests(Agent a) {
 			super(a);
@@ -118,42 +148,36 @@ public class Supplier extends Agent
 		@Override
 		public void action() 
 		{
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-			ACLMessage msg = receive(mt);
-			if(msg != null)
+			do 
 			{
-				try
-				{	
-					ContentElement ce = null;
+				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+				ACLMessage msg = receive(mt);
+				if(msg != null)
+				{
+					try
+					{	
+						ContentElement ce = null;
+						ce = getContentManager().extractContent(msg);
 
-					ce = getContentManager().extractContent(msg);
+						Action available = (Action) ce;
+						order = (Order) available.getAction(); // this is the order requested
+						smartphone = order.getSpecification();
 
-					Action available = (Action) ce;
-					order = (Order) available.getAction(); // this is the order requested
-					smartphone = order.getSpecification();
-					
-					System.out.print("order received in supplier "
-							+order.getCustomer().getLocalName()+": "
-							//+order.getPenalty()+" per day, "
-							+order.getQuantity()+" units, "
-							//+order.getPrice()+" each"
-							);
+						System.out.println("parts battery: "+smartphone.getBattery());
+						
+						order_count++;
+						//System.out.println("count: "+order_count);
 
-						System.out.println(", smartphone: "
-								+smartphone.getBattery()+"mAh, "
-								+smartphone.getRAM()+"Gb, "
-								+smartphone.getScreen()+"', "
-								+smartphone.getStorage()+"Gb, "
-								);
-
+					}
+					catch (CodecException ce) { ce.printStackTrace(); }
+					catch (OntologyException oe) { oe.printStackTrace(); }
 				}
-				catch (CodecException ce) { ce.printStackTrace(); }
-				catch (OntologyException oe) { oe.printStackTrace(); }
+				else
+					block();
 			}
-			else
-				block();
+			while (order_count < 3);
+			//System.out.println("while loop finished");
 		}
-
 	}
 
 	public class EndDay extends OneShotBehaviour {
@@ -164,6 +188,7 @@ public class Supplier extends Agent
 
 		@Override
 		public void action() {
+			//System.out.println("end day supplier");
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");

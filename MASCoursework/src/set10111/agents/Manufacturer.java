@@ -264,9 +264,6 @@ public class Manufacturer extends Agent
 						msgParts.setOntology(ontology.getName());
 						
 						System.out.println("-----");
-						System.out.println("screens: "+order.getSpecification().getScreen());
-						System.out.println("storage: "+order.getSpecification().getStorage());
-						System.out.println("RAM: "+order.getSpecification().getRAM());
 						System.out.println("battery: "+order.getSpecification().getBattery());
 						
 						//WHAT
