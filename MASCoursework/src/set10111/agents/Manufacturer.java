@@ -107,6 +107,10 @@ public class Manufacturer extends Agent
 					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
 					myAgent.addBehaviour(ror);
 					cyclicBehaviours.add(ror);
+					
+					CyclicBehaviour rp = new ReceiveParts(myAgent);
+					myAgent.addBehaviour(rp);
+					cyclicBehaviours.add(rp);
 
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
 					
@@ -304,6 +308,20 @@ public class Manufacturer extends Agent
 			
 		}
 
+	}
+	
+	private class ReceiveParts extends CyclicBehaviour
+	{
+		public ReceiveParts(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	}
 	
 	public class EndDayListener extends CyclicBehaviour {
