@@ -118,16 +118,10 @@ public class Supplier extends Agent
 					for (Entry<Order, Integer> entry : orders.entrySet()) 
 					{	
 						Order order1 = new Order();
-						int days = 0;
-						
 						order1 = entry.getKey();
-						days = entry.getValue();
-						
 						orders.put(order1, orders.get(order1) - 1);
 						//System.out.println(entry.getKey().getCustomer().getLocalName() + " = " + entry.getValue());	
 					}
-
-					//System.out.println("----");
 
 
 
@@ -135,6 +129,7 @@ public class Supplier extends Agent
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
+					dailyActivity.addSubBehaviour(new SendParts(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 
@@ -180,8 +175,9 @@ public class Supplier extends Agent
 						int supplier2_days = 4;
 
 						//TODO: if supplier 1 then 1 day, if supplier 2 then 4 days
+						// maybe add private int supplier in Order and manufacturer sets it
 
-						orders.put(order, 1);
+						orders.put(order, 1); 
 
 						order_count++;
 						//System.out.println("count: "+order_count);
@@ -198,6 +194,36 @@ public class Supplier extends Agent
 		}
 	}
 
+	private class SendParts extends OneShotBehaviour
+	{
+		public SendParts(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() 
+		{
+			// Send parts that have day 0 to manufacturer
+			for (Entry<Order, Integer> entry : orders.entrySet()) 
+			{	
+				Order order1 = new Order();
+				int days = 0;
+				
+				order1 = entry.getKey();
+				days = entry.getValue();
+				
+				if (days == 0)
+				{
+					System.out.println(entry.getKey().getCustomer().getLocalName() + " = " + entry.getValue());	
+					// send order back to manufacturer
+					
+				}
+			}
+			
+		}
+		
+	}
+	
 	public class EndDay extends OneShotBehaviour {
 
 		public EndDay(Agent a) {
