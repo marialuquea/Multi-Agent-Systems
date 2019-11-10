@@ -15,8 +15,6 @@ import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -37,10 +35,12 @@ public class Manufacturer extends Agent
 	private Order order = new Order();
 	private Smartphone smartphone = new Smartphone();
 	private ArrayList<Order> orders = new ArrayList<>();
+	private int parts_count = 0;
+	private int partsComingToday = 0;
 
 	protected void setup()
 	{
-		System.out.println("setup() in Manufacturer");
+		//System.out.println("setup() in Manufacturer");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 
@@ -96,33 +96,31 @@ public class Manufacturer extends Agent
 					customers.clear();
 					numOrdersReceived = 0;
 					orders.clear();
-					
+					partsComingToday = 0;
+
+
 					// find customers and suppliers
 					myAgent.addBehaviour(new FindCustomers(myAgent));
 					myAgent.addBehaviour(new FindSuppliers(myAgent));
-					
+
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
-					
-					//receive order requests
+
 					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
 					myAgent.addBehaviour(ror);
 					cyclicBehaviours.add(ror);
-					
-					CyclicBehaviour rp = new ReceiveParts(myAgent);
-					myAgent.addBehaviour(rp);
-					cyclicBehaviours.add(rp);
+
+					//CyclicBehaviour rp = new ReceiveParts(myAgent);
+					//myAgent.addBehaviour(rp);
+					//cyclicBehaviours.add(rp);
 
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
-					
+
 				}
-				else {
-					//termination message to end simulation
+				else 
 					myAgent.doDelete();
-				}
 			}
-			else{
+			else
 				block();
-			}
 		}
 
 	}
@@ -146,7 +144,7 @@ public class Manufacturer extends Agent
 			catch(FIPAException e) { e.printStackTrace(); }
 		}
 	}
-	
+
 	private class FindSuppliers extends OneShotBehaviour 
 	{
 		public FindSuppliers(Agent a) { super(a); }
@@ -167,14 +165,14 @@ public class Manufacturer extends Agent
 		}
 	}
 
+	
+
 	// behaviour to receive customer requests
 	private class ReceiveOrderRequests extends CyclicBehaviour
 	{
 		private int step = 0;
-		
-		public ReceiveOrderRequests(Agent a) {
-			super(a);
-		}
+
+		public ReceiveOrderRequests(Agent a) { super(a); }
 
 		@Override
 		public void action() 
@@ -182,7 +180,7 @@ public class Manufacturer extends Agent
 			switch (step)
 			{
 			case 0:
-				// respond to REQUEST messages
+				// respond to REQUEST messages from customers
 				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 				ACLMessage msg = receive(mt);
 				if(msg != null)
@@ -198,10 +196,10 @@ public class Manufacturer extends Agent
 						Action available = (Action) ce;
 						order = (Order) available.getAction(); // this is the order requested
 						smartphone = order.getSpecification();
-						
+
 						orders.add(order);
-						
-						System.out.println("order received from "+order.getCustomer().getLocalName()+": "+order.getQuantity()+" units");
+
+						System.out.println("orders received _m: "+orders.size());
 
 						// calculate cost of making offer from supplier 1
 						int total = 0;
@@ -228,18 +226,18 @@ public class Manufacturer extends Agent
 
 						// how much it is going to sell for 
 						int sold = order.getPrice() * order.getQuantity();
-						
-						
+
+
 						//TODO: if sold > x then sell, else refuse
-						
+
 						// send accept proposal message to customer
 						ACLMessage reply = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 						reply.setContent("order accepted");
 						reply.addReceiver(order.getCustomer());
 						myAgent.send(reply);
-						
+
 						numOrdersReceived++;
-						
+
 						//System.out.println(numOrdersReceived+" - "+customers.size());
 						if (numOrdersReceived >= customers.size())
 							step = 1;
@@ -249,40 +247,39 @@ public class Manufacturer extends Agent
 				}
 				else
 					block();
-				
-				
-				
-				
-				
+
+
+
+
+
 			case 1:
 				if (step == 1)
 				{
-					System.out.println("All orders received, now ordering parts");
-					
-					//TODO: order parts from supplier
+					//System.out.println("All orders received, now ordering parts");
+
+					//order parts from supplier
 					for (Order order : orders)
 					{
 						ACLMessage msgParts = new ACLMessage(ACLMessage.REQUEST);
 						msgParts.addReceiver(suppliers.get(0));
 						msgParts.setLanguage(codec.getName());
 						msgParts.setOntology(ontology.getName());
-						
-						//System.out.println("-----");
-						System.out.println("battery: "+order.getSpecification().getBattery());
-						
-						//WHAT
+
+						System.out.println("battery ordered from manufacturer: "+order.getSpecification().getBattery());
+
+						//Smartphone specification
 						Smartphone orderParts = new Smartphone();
 						orderParts.setBattery(order.getSpecification().getBattery());
 						orderParts.setRAM(order.getSpecification().getRAM());
 						orderParts.setScreen(order.getSpecification().getScreen());
 						orderParts.setStorage(order.getSpecification().getStorage());
-						
-						//HOW MANY
+
+						//Order specification
 						Order orderPartsO = new Order();
 						orderPartsO.setSpecification(orderParts);
 						orderPartsO.setCustomer(order.getCustomer());
 						orderPartsO.setQuantity(order.getQuantity());
-						
+
 						Action request = new Action();
 						request.setAction(order);
 						request.setActor(suppliers.get(0));
@@ -294,22 +291,89 @@ public class Manufacturer extends Agent
 						catch (CodecException ce) { ce.printStackTrace(); }
 						catch (OntologyException oe) { oe.printStackTrace(); } 
 					}
-					
-					
+					System.out.println("step: "+step);
+					step = 2;
 				}
+
+				
+				
 				
 			case 2:
+				// receive information about how many parts the supplier is going to send today
+				if (step == 2)
+				{
+					int messages = 0;
+					while (messages <= 1) 
+					{
+						System.out.println("messages: "+messages);
+						MessageTemplate info = MessageTemplate.MatchConversationId("parts");
+						ACLMessage infomsg = myAgent.receive(info);
+						if(infomsg != null) 
+						{
+							partsComingToday = Integer.parseInt(infomsg.getContent(), 10);
+							System.out.println("partsComingToday: "+partsComingToday);
+							messages++;
+							break;
+						}
+						else 
+							block();
+					}
+					step = 3;
+				}
+				
+				
 				
 				
 				
 			case 3:
+				//receive parts from supplier
+				if (step == 3)
+				{
+					System.out.println("step c3: "+step);
+					int parts = 0;
+
+					do
+					{
+						// does not receive this message in day 1 bc there are no orders with 0 days
+						MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
+						ACLMessage msg2 = receive(mt2);
+						if(msg2 != null)
+						{
+							System.out.println("msg received: "+msg2);
+							try
+							{	
+								ContentElement ce = null;
+								ce = getContentManager().extractContent(msg2);
+
+								Action available = (Action) ce;
+								order = (Order) available.getAction(); // this is the order requested
+								smartphone = order.getSpecification();
+
+								parts_count++;
+								System.out.println("batteries received count: "+parts_count);
+								parts++;
+							}
+							catch (CodecException ce) { ce.printStackTrace(); }
+							catch (OntologyException oe) { oe.printStackTrace(); }
+							System.out.println("parts count: "+parts);
+						}
+						else
+							block();
+					}
+					while (parts < partsComingToday);
+					System.out.println("hi");
+				}
+
+
+			case 4:
 				break;
 			}
-			
+
 		}
 
 	}
-	
+
+	/*
 	private class ReceiveParts extends CyclicBehaviour
 	{
 		public ReceiveParts(Agent a) {
@@ -317,13 +381,39 @@ public class Manufacturer extends Agent
 		}
 
 		@Override
-		public void action() {
-			// TODO Auto-generated method stub
-			
+		public void action() 
+		{
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
+			ACLMessage msg = receive(mt);
+			if(msg != null)
+			{
+				System.out.println("msg received: "+msg);
+				try
+				{	
+
+
+					ContentElement ce = null;
+					ce = getContentManager().extractContent(msg);
+
+					Action available = (Action) ce;
+					order = (Order) available.getAction(); // this is the order requested
+					smartphone = order.getSpecification();
+
+					parts_count++;
+					System.out.println("batteries received count: "+parts_count);
+
+
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
+			}
+			else
+				block();
 		}
-		
+
 	}
-	
+	 */
+
 	public class EndDayListener extends CyclicBehaviour {
 		private int customersFinished = 0;
 		private List<Behaviour> toRemove;

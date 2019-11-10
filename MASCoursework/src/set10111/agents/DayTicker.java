@@ -127,12 +127,6 @@ public class DayTicker extends Agent
 					numFinReceived++;
 					if(numFinReceived >= simulationAgents.size()) 
 						step++;
-					/*
-					System.out.println("numFinReceived: "+numFinReceived+", step: "+step);
-					System.out.println("simulationAgents size: "+simulationAgents.size());
-					for (AID agent : simulationAgents)
-						System.out.println(agent.getLocalName());
-					*/
 				}
 				else 
 					block();

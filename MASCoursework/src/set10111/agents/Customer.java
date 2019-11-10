@@ -36,7 +36,7 @@ public class Customer extends Agent
 
 	protected void setup()
 	{
-		System.out.println("setup() in Customer");
+		//System.out.println("setup() in Customer");
 
 		// register codec
 		getContentManager().registerLanguage(codec);
@@ -211,8 +211,9 @@ public class Customer extends Agent
 		{
 			MessageTemplate mt = MessageTemplate.MatchContent("order accepted");
 			ACLMessage msg = myAgent.receive(mt);
-			if(msg != null) 
-				System.out.println("order was accepted, msg received in customer");
+			if(msg != null) {
+				//System.out.println("order was accepted, msg received in customer");
+			}
 			else
 				block();
 		}

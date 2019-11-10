@@ -34,10 +34,11 @@ public class Supplier extends Agent
 	private Order order = new Order();
 	private Smartphone smartphone = new Smartphone();
 	private HashMap<Order, Integer> orders = new HashMap<>(); 
+	private int count = 0;
 
 	protected void setup()
 	{
-		System.out.println("setup() in Supplier");
+		//System.out.println("setup() in Supplier");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 
@@ -67,26 +68,6 @@ public class Supplier extends Agent
 		}
 		catch(FIPAException e){
 			e.printStackTrace();
-		}
-	}
-
-	private class FindManufacturer extends OneShotBehaviour 
-	{
-		public FindManufacturer(Agent a) { super(a); }
-		@Override
-		public void action() {
-
-			DFAgentDescription sellerTemplate = new DFAgentDescription();
-			ServiceDescription sd = new ServiceDescription();
-			sd.setType("manufacturer");
-			sellerTemplate.addServices(sd);
-			try{
-				manufacturers.clear();
-				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
-				for(int i=0; i<agentsType1.length; i++){ manufacturers.add(agentsType1[i].getName()); }
-				//System.out.println("manufacturers size "+manufacturers.size());
-			}
-			catch(FIPAException e) { e.printStackTrace(); }
 		}
 	}
 
@@ -143,10 +124,48 @@ public class Supplier extends Agent
 
 	}
 
+	private class FindManufacturer extends OneShotBehaviour 
+	{
+		public FindManufacturer(Agent a) { super(a); }
+		@Override
+		public void action() {
+
+			DFAgentDescription sellerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("manufacturer");
+			sellerTemplate.addServices(sd);
+			try{
+				manufacturers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
+				for(int i=0; i<agentsType1.length; i++){ manufacturers.add(agentsType1[i].getName()); }
+				//System.out.println("manufacturers size "+manufacturers.size());
+			}
+			catch(FIPAException e) { e.printStackTrace(); }
+			
+			//count how many orders will be sent to manufacturer today
+			int count1 = 0;
+			for (Entry<Order, Integer> entry : orders.entrySet()) 
+			{	
+				int days = 0;
+				days = entry.getValue();
+				if (days == 0)
+					count1++;
+			}
+			
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.setConversationId("parts");
+			msg.setContent(String.valueOf(count1));
+			msg.addReceiver(manufacturers.get(0));
+			myAgent.send(msg);
+			System.out.println("msg info sent: "+msg);
+		}
+	}
+
+	
 	private class ReceiveOrderRequests extends OneShotBehaviour
 	{
 		private int order_count = 0;
-
+		
 		public ReceiveOrderRequests(Agent a) {
 			super(a);
 		}
@@ -162,6 +181,7 @@ public class Supplier extends Agent
 				{
 					try
 					{	
+						
 						ContentElement ce = null;
 						ce = getContentManager().extractContent(msg);
 
@@ -169,10 +189,11 @@ public class Supplier extends Agent
 						order = (Order) available.getAction(); // this is the order requested
 						smartphone = order.getSpecification();
 
-						System.out.println("parts battery: "+smartphone.getBattery());
+						count++;
+						//System.out.println("supplier count received: "+count);
 
-						int supplier1_days = 1;
-						int supplier2_days = 4;
+						//int supplier1_days = 1;
+						//int supplier2_days = 4;
 
 						//TODO: if supplier 1 then 1 day, if supplier 2 then 4 days
 						// maybe add private int supplier in Order and manufacturer sets it
@@ -214,9 +235,27 @@ public class Supplier extends Agent
 				
 				if (days == 0)
 				{
-					System.out.println(entry.getKey().getCustomer().getLocalName() + " = " + entry.getValue());	
-					// send order back to manufacturer
+					//System.out.println("battery part sent: " + order1.getSpecification().getBattery());	
 					
+					// send order back to manufacturer
+					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+					msg.addReceiver(manufacturers.get(0));
+					msg.setLanguage(codec.getName());
+					msg.setOntology(ontology.getName());
+					
+					Action request = new Action();
+					request.setAction(order1);
+					request.setActor(manufacturers.get(0));
+					try
+					{
+						getContentManager().fillContent(msg, request); //send the wrapper object
+						send(msg);
+						System.out.println("msg sent: "+msg);
+					}
+					catch (CodecException ce) { ce.printStackTrace(); }
+					catch (OntologyException oe) { oe.printStackTrace(); } 
+					
+					//TODO: delete order from orders hashmap
 				}
 			}
 			
