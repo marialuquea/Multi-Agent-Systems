@@ -86,6 +86,7 @@ public class Supplier extends Agent
 			ACLMessage msg = myAgent.receive(mt); 
 			if(msg != null) 
 			{
+				System.out.println("orders _s size: "+orders.size());
 				//System.out.println("msg received in supplier: "+msg.getContent());
 
 				if(tickerAgent == null) 
@@ -220,6 +221,7 @@ public class Supplier extends Agent
 			// Send parts that have day 0 to manufacturer
 			for (Entry<Order, Integer> entry : orders.entrySet()) 
 			{	
+				
 				Order order1 = new Order();
 				int days = 0;
 				
@@ -248,8 +250,10 @@ public class Supplier extends Agent
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
 					
-					//TODO: delete order from orders hashmap
+					//delete order from orders hashmap
+					orders.remove(entry);
 				}
+				
 			}
 			
 		}

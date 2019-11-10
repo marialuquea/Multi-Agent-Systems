@@ -361,6 +361,7 @@ public class Manufacturer extends Agent
 
 
 			case 4:
+				//TODO: manufacture phone!! and sell
 				break;
 			}
 
