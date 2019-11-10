@@ -35,7 +35,7 @@ public class Manufacturer extends Agent
 	private Order order = new Order();
 	private Smartphone smartphone = new Smartphone();
 	private ArrayList<Order> orders = new ArrayList<>();
-	private int parts_count = 0;
+	private int partsTotal = 0;
 	private int partsComingToday = 0;
 
 	protected void setup()
@@ -108,10 +108,6 @@ public class Manufacturer extends Agent
 					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
 					myAgent.addBehaviour(ror);
 					cyclicBehaviours.add(ror);
-
-					//CyclicBehaviour rp = new ReceiveParts(myAgent);
-					//myAgent.addBehaviour(rp);
-					//cyclicBehaviours.add(rp);
 
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
 
@@ -291,7 +287,7 @@ public class Manufacturer extends Agent
 						catch (CodecException ce) { ce.printStackTrace(); }
 						catch (OntologyException oe) { oe.printStackTrace(); } 
 					}
-					System.out.println("step: "+step);
+					//System.out.println("step: "+step);
 					step = 2;
 				}
 
@@ -305,13 +301,13 @@ public class Manufacturer extends Agent
 					int messages = 0;
 					while (messages <= 1) 
 					{
-						System.out.println("messages: "+messages);
+						//System.out.println("messages: "+messages);
 						MessageTemplate info = MessageTemplate.MatchConversationId("parts");
 						ACLMessage infomsg = myAgent.receive(info);
 						if(infomsg != null) 
 						{
 							partsComingToday = Integer.parseInt(infomsg.getContent(), 10);
-							System.out.println("partsComingToday: "+partsComingToday);
+							System.out.println(partsComingToday + " order parts from supplier coming in today");
 							messages++;
 							break;
 						}
@@ -329,9 +325,7 @@ public class Manufacturer extends Agent
 				//receive parts from supplier
 				if (step == 3)
 				{
-					System.out.println("step c3: "+step);
-					int parts = 0;
-
+					int partsPerDay = 0;
 					do
 					{
 						// does not receive this message in day 1 bc there are no orders with 0 days
@@ -339,7 +333,7 @@ public class Manufacturer extends Agent
 						ACLMessage msg2 = receive(mt2);
 						if(msg2 != null)
 						{
-							System.out.println("msg received: "+msg2);
+							//System.out.println("msg received: "+msg2);
 							try
 							{	
 								ContentElement ce = null;
@@ -349,19 +343,20 @@ public class Manufacturer extends Agent
 								order = (Order) available.getAction(); // this is the order requested
 								smartphone = order.getSpecification();
 
-								parts_count++;
-								System.out.println("batteries received count: "+parts_count);
-								parts++;
+								partsTotal++;
+								
+								System.out.println("battery received: "+smartphone.getBattery());
+								partsPerDay++;
 							}
 							catch (CodecException ce) { ce.printStackTrace(); }
 							catch (OntologyException oe) { oe.printStackTrace(); }
-							System.out.println("parts count: "+parts);
+							//System.out.println("parts count: "+partsPerDay);
 						}
 						else
 							block();
 					}
-					while (parts < partsComingToday);
-					System.out.println("hi");
+					while (partsPerDay < partsComingToday);
+					System.out.println("batteries received count: "+partsTotal);
 				}
 
 
@@ -373,46 +368,6 @@ public class Manufacturer extends Agent
 
 	}
 
-	/*
-	private class ReceiveParts extends CyclicBehaviour
-	{
-		public ReceiveParts(Agent a) {
-			super(a);
-		}
-
-		@Override
-		public void action() 
-		{
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
-			ACLMessage msg = receive(mt);
-			if(msg != null)
-			{
-				System.out.println("msg received: "+msg);
-				try
-				{	
-
-
-					ContentElement ce = null;
-					ce = getContentManager().extractContent(msg);
-
-					Action available = (Action) ce;
-					order = (Order) available.getAction(); // this is the order requested
-					smartphone = order.getSpecification();
-
-					parts_count++;
-					System.out.println("batteries received count: "+parts_count);
-
-
-				}
-				catch (CodecException ce) { ce.printStackTrace(); }
-				catch (OntologyException oe) { oe.printStackTrace(); }
-			}
-			else
-				block();
-		}
-
-	}
-	 */
 
 	public class EndDayListener extends CyclicBehaviour {
 		private int customersFinished = 0;

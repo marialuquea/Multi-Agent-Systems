@@ -142,7 +142,7 @@ public class Supplier extends Agent
 			}
 			catch(FIPAException e) { e.printStackTrace(); }
 			
-			//count how many orders will be sent to manufacturer today
+			//let manufacturer know how many orders will be sent to him today
 			int count1 = 0;
 			for (Entry<Order, Integer> entry : orders.entrySet()) 
 			{	
@@ -151,24 +151,20 @@ public class Supplier extends Agent
 				if (days == 0)
 					count1++;
 			}
-			
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.setConversationId("parts");
 			msg.setContent(String.valueOf(count1));
 			msg.addReceiver(manufacturers.get(0));
 			myAgent.send(msg);
-			System.out.println("msg info sent: "+msg);
+			//System.out.println("msg info sent: "+msg);
 		}
 	}
 
-	
 	private class ReceiveOrderRequests extends OneShotBehaviour
 	{
 		private int order_count = 0;
 		
-		public ReceiveOrderRequests(Agent a) {
-			super(a);
-		}
+		public ReceiveOrderRequests(Agent a) { super(a); }
 
 		@Override
 		public void action() 
@@ -217,10 +213,7 @@ public class Supplier extends Agent
 
 	private class SendParts extends OneShotBehaviour
 	{
-		public SendParts(Agent a) {
-			super(a);
-		}
-
+		public SendParts(Agent a) { super(a); }
 		@Override
 		public void action() 
 		{
@@ -250,7 +243,7 @@ public class Supplier extends Agent
 					{
 						getContentManager().fillContent(msg, request); //send the wrapper object
 						send(msg);
-						System.out.println("msg sent: "+msg);
+						//System.out.println("msg sent: "+msg);
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 

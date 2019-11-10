@@ -19,7 +19,7 @@ public class DayTicker extends Agent
 	@Override
 	protected void setup() 
 	{
-		System.out.println("setup() in DayTicker");
+		//System.out.println("setup() in DayTicker");
 		// Register with DF agent (yellow pages)
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
