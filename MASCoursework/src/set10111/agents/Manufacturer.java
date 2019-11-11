@@ -288,9 +288,9 @@ public class Manufacturer extends Agent
 					step = 2;
 				}
 
-				
-				
-				
+
+
+
 			case 2:
 				// receive information about how many parts the supplier is going to send today
 				if (step == 2)
@@ -313,11 +313,11 @@ public class Manufacturer extends Agent
 					}
 					step = 3;
 				}
-				
-				
-				
-				
-				
+
+
+
+
+
 			case 3:
 				//receive parts from supplier
 				if (step == 3)
@@ -325,7 +325,6 @@ public class Manufacturer extends Agent
 					int partsPerDay = 0;
 					do
 					{
-						// does not receive this message in day 1 bc there are no orders with 0 days
 						MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
 						ACLMessage msg2 = receive(mt2);
 						if(msg2 != null)
@@ -339,11 +338,104 @@ public class Manufacturer extends Agent
 								Action available = (Action) ce;
 								order = (Order) available.getAction(); // this is the order requested
 								smartphone = order.getSpecification();
+								int q = order.getQuantity();
+								System.out.println("q: "+q);
 
 								partsTotal++;
-								
+
 								System.out.println("battery received: "+smartphone.getBattery());
 								partsPerDay++;
+
+								//TODO: place parts in warehouse
+								System.out.println(smartphone.getScreen());
+
+								//SCREENS
+								if (smartphone.getScreen() == 5) {
+									if (warehouse.get("screen5") == null )
+										warehouse.put("screen5", q);
+									else {
+										int before = warehouse.get("screen5");
+										warehouse.remove("screen5");
+										warehouse.put("screen5", before+q); 
+									}
+								}
+								else if (smartphone.getScreen() == 7) {
+									if (warehouse.get("screen7") == null )
+										warehouse.put("screen7", q);
+									else {
+										int before = warehouse.get("screen7");
+										warehouse.remove("screen7");
+										warehouse.put("screen7", before+q); 
+									}
+								}
+
+								// STORAGE
+								if (smartphone.getStorage() == 64) {
+									if (warehouse.get("storage64") == null )
+										warehouse.put("storage64", q);
+									else {
+										int before = warehouse.get("storage64");
+										warehouse.remove("storage64");
+										warehouse.put("storage64", before+q); 
+									}
+								}
+								if (smartphone.getStorage() == 256) {
+									if (warehouse.get("storage256") == null )
+										warehouse.put("storage256", q);
+									else {
+										int before = warehouse.get("storage256");
+										warehouse.remove("storage256");
+										warehouse.put("storage256", before+q);
+									}
+								}
+
+								// RAM
+								if (smartphone.getRAM() == 4) {
+									if (warehouse.get("ram4") == null )
+										warehouse.put("ram4", q);
+									else {
+										int before = warehouse.get("ram4");
+										warehouse.remove("ram4");
+										warehouse.put("ram4", before+q);
+									}
+								}
+								if (smartphone.getRAM() == 8) {
+									if (warehouse.get("ram8") == null )
+										warehouse.put("ram8", q);
+									else {
+										int before = warehouse.get("ram8");
+										warehouse.remove("ram8");
+										warehouse.put("ram8", before+q);
+									}
+								}
+
+
+								// BATTERY
+								if (smartphone.getBattery() == 2000) {
+									if (warehouse.get("battery2000") == null )
+										warehouse.put("battery2000", q);
+									else {
+										int before = warehouse.get("battery2000");
+										warehouse.remove("battery2000");
+										warehouse.put("battery2000", before+q);
+									}	
+								}
+								if (smartphone.getBattery() == 3000) {
+									if (warehouse.get("battery3000") == null )
+										warehouse.put("battery3000", q);
+									else {
+										int before = warehouse.get("battery3000");
+										warehouse.remove("battery3000");
+										warehouse.put("battery3000", before+q);
+									}	
+								}
+
+								for (String i : warehouse.keySet()) {
+									System.out.println(i + " - " + warehouse.get(i));
+								}
+
+
+
 							}
 							catch (CodecException ce) { ce.printStackTrace(); }
 							catch (OntologyException oe) { oe.printStackTrace(); }
@@ -361,7 +453,7 @@ public class Manufacturer extends Agent
 				//TODO: assemble phone!! and sell
 				if (step == 4)
 				{
-					
+
 				}
 				break;
 			}
