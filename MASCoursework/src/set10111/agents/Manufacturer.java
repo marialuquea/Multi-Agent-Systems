@@ -1,6 +1,7 @@
 package set10111.agents;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import jade.content.ContentElement;
@@ -35,6 +36,7 @@ public class Manufacturer extends Agent
 	private Order order = new Order();
 	private Smartphone smartphone = new Smartphone();
 	private ArrayList<Order> orders = new ArrayList<>();
+	private HashMap<String, Integer> warehouse = new HashMap<>();
 	private int partsTotal = 0;
 	private int partsComingToday = 0;
 
@@ -75,9 +77,7 @@ public class Manufacturer extends Agent
 	//behaviour to wait for a new day
 	private class TickerWaiter extends CyclicBehaviour 
 	{
-		public TickerWaiter(Agent a) {
-			super(a);
-		}
+		public TickerWaiter(Agent a) { super(a); }
 
 		@Override
 		public void action() 
@@ -161,13 +161,10 @@ public class Manufacturer extends Agent
 		}
 	}
 
-	
-
 	// behaviour to receive customer requests
 	private class ReceiveOrderRequests extends CyclicBehaviour
 	{
 		private int step = 0;
-
 		public ReceiveOrderRequests(Agent a) { super(a); }
 
 		@Override
@@ -361,7 +358,11 @@ public class Manufacturer extends Agent
 
 
 			case 4:
-				//TODO: manufacture phone!! and sell
+				//TODO: assemble phone!! and sell
+				if (step == 4)
+				{
+					
+				}
 				break;
 			}
 
@@ -369,12 +370,13 @@ public class Manufacturer extends Agent
 
 	}
 
-
-	public class EndDayListener extends CyclicBehaviour {
+	public class EndDayListener extends CyclicBehaviour 
+	{
 		private int customersFinished = 0;
 		private List<Behaviour> toRemove;
 
-		public EndDayListener(Agent a, List<Behaviour> toRemove) {
+		public EndDayListener(Agent a, List<Behaviour> toRemove) 
+		{
 			super(a);
 			this.toRemove = toRemove;
 		}
