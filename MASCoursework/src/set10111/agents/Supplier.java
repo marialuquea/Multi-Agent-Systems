@@ -31,9 +31,9 @@ public class Supplier extends Agent
 	private Ontology ontology = CommerceOntology.getInstance();
 	private AID tickerAgent;
 	private ArrayList<AID> manufacturers = new ArrayList<>();
-	private Order order = new Order();
+	private SupplierOrder order = new SupplierOrder();
 	private Smartphone smartphone = new Smartphone();
-	private HashMap<Order, Integer> orders = new HashMap<>(); 
+	private HashMap<SupplierOrder, Integer> orders = new HashMap<>(); 
 	private int count = 0;
 
 	protected void setup()
@@ -74,9 +74,7 @@ public class Supplier extends Agent
 	//behaviour to wait for a new day
 	public class TickerWaiter extends CyclicBehaviour 
 	{
-		public TickerWaiter(Agent a) {
-			super(a);
-		}
+		public TickerWaiter(Agent a) { super(a); }
 
 		@Override
 		public void action() 
@@ -97,11 +95,10 @@ public class Supplier extends Agent
 					// new day - reset values
 					
 					// decrease day in order to send parts to manufacturer
-					for (Entry<Order, Integer> entry : orders.entrySet()) 
+					for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 					{	
-						Order order1 = new Order();
-						order1 = entry.getKey();
-						orders.put(order1, orders.get(order1) - 1);
+						order = entry.getKey();
+						orders.put(order, orders.get(order) - 1);
 						//System.out.println(entry.getKey().getCustomer().getLocalName() + " = " + entry.getValue());	
 					}
 
@@ -145,7 +142,7 @@ public class Supplier extends Agent
 			
 			//let manufacturer know how many orders will be sent to him today
 			int count1 = 0;
-			for (Entry<Order, Integer> entry : orders.entrySet()) 
+			for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 			{	
 				int days = 0;
 				days = entry.getValue();
@@ -183,17 +180,12 @@ public class Supplier extends Agent
 						ce = getContentManager().extractContent(msg);
 
 						Action available = (Action) ce;
-						order = (Order) available.getAction(); // this is the order requested
-						smartphone = order.getSpecification();
+						order = (SupplierOrder) available.getAction(); // this is the order requested
 
 						count++;
-						//System.out.println("supplier count received: "+count);
-
-						//int supplier1_days = 1;
-						//int supplier2_days = 4;
+						System.out.println("supplier count received: "+count);
 
 						//TODO: if supplier 1 then 1 day, if supplier 2 then 4 days
-						// maybe add private int supplier in Order and manufacturer sets it
 
 						orders.put(order, 1); 
 
@@ -219,10 +211,10 @@ public class Supplier extends Agent
 		public void action() 
 		{
 			// Send parts that have day 0 to manufacturer
-			for (Entry<Order, Integer> entry : orders.entrySet()) 
+			for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 			{	
 				
-				Order order1 = new Order();
+				SupplierOrder order1 = new SupplierOrder();
 				int days = 0;
 				
 				order1 = entry.getKey();

@@ -250,16 +250,41 @@ public class Manufacturer extends Agent
 				{
 					//System.out.println("All orders received, now ordering parts");
 
+					//order PARTS from supplier everyday
+					ACLMessage msgParts = new ACLMessage(ACLMessage.REQUEST);
+					msgParts.addReceiver(suppliers.get(0));
+					msgParts.setLanguage(codec.getName());
+					msgParts.setOntology(ontology.getName());
+					
+					SupplierOrder o = new SupplierOrder();
+					o.setBattery(2000, 50);
+					o.setRAM(4, 50);
+					o.setScreen(5, 50);
+					o.setStorage(64, 50);
+					o.setSupplier(1);
+					
+					Action request = new Action();
+					request.setAction(order);
+					request.setActor(suppliers.get(0));
+					try
+					{
+						getContentManager().fillContent(msgParts, request); //send the wrapper object
+						send(msgParts);
+					}
+					catch (CodecException ce) { ce.printStackTrace(); }
+					catch (OntologyException oe) { oe.printStackTrace(); } 
+					
+					/*
 					//order parts from supplier
 					for (Order order : orders)
 					{
-						ACLMessage msgParts = new ACLMessage(ACLMessage.REQUEST);
-						msgParts.addReceiver(suppliers.get(0));
-						msgParts.setLanguage(codec.getName());
-						msgParts.setOntology(ontology.getName());
+						ACLMessage msgParts1 = new ACLMessage(ACLMessage.REQUEST);
+						msgParts1.addReceiver(suppliers.get(0));
+						msgParts1.setLanguage(codec.getName());
+						msgParts1.setOntology(ontology.getName());
 
 						System.out.println("battery ordered from manufacturer: "+order.getSpecification().getBattery());
-
+						
 						//Smartphone specification
 						Smartphone orderParts = new Smartphone();
 						orderParts.setBattery(order.getSpecification().getBattery());
@@ -284,6 +309,7 @@ public class Manufacturer extends Agent
 						catch (CodecException ce) { ce.printStackTrace(); }
 						catch (OntologyException oe) { oe.printStackTrace(); } 
 					}
+					*/
 					//System.out.println("step: "+step);
 					step = 2;
 				}
@@ -339,15 +365,14 @@ public class Manufacturer extends Agent
 								order = (Order) available.getAction(); // this is the order requested
 								smartphone = order.getSpecification();
 								int q = order.getQuantity();
-								System.out.println("q: "+q);
+								//System.out.println("q: "+q);
 
 								partsTotal++;
 
-								System.out.println("battery received: "+smartphone.getBattery());
 								partsPerDay++;
 
-								//TODO: place parts in warehouse
-								System.out.println(smartphone.getScreen());
+								// Place parts in warehouse
+								//System.out.println(smartphone.getScreen());
 
 								//SCREENS
 								if (smartphone.getScreen() == 5) {
@@ -430,12 +455,15 @@ public class Manufacturer extends Agent
 									}	
 								}
 
+								// YEA BOI IT WORKS
+								
+								/*
 								for (String i : warehouse.keySet()) {
 									System.out.println(i + " - " + warehouse.get(i));
 								}
+								*/
 
-
-
+								System.out.println("all parts received from supplier and stored in warehouse");
 							}
 							catch (CodecException ce) { ce.printStackTrace(); }
 							catch (OntologyException oe) { oe.printStackTrace(); }
@@ -445,7 +473,7 @@ public class Manufacturer extends Agent
 							block();
 					}
 					while (partsPerDay < partsComingToday);
-					System.out.println("batteries received count: "+partsTotal);
+					//System.out.println("batteries received count: "+partsTotal);
 				}
 
 
@@ -453,7 +481,7 @@ public class Manufacturer extends Agent
 				//TODO: assemble phone!! and sell
 				if (step == 4)
 				{
-
+					
 				}
 				break;
 			}

@@ -1,8 +1,6 @@
 package set10111.elements;
 
-import java.util.Date;
 import jade.content.AgentAction;
-import jade.content.onto.annotations.Slot;
 import jade.core.AID;
 
 public class Order implements AgentAction
