@@ -242,9 +242,6 @@ public class Manufacturer extends Agent
 					block();
 
 
-
-
-
 			case 1:
 				if (step == 1)
 				{

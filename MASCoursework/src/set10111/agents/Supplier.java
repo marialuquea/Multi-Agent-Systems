@@ -214,8 +214,8 @@ public class Supplier extends Agent
 			for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 			{	
 				
-				SupplierOrder order1 = new SupplierOrder();
-				int days = 0;
+				SupplierOrder order1;
+				int days;
 				
 				order1 = entry.getKey();
 				days = entry.getValue();
