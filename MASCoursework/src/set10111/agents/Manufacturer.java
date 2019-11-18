@@ -34,6 +34,7 @@ public class Manufacturer extends Agent
 	private int numOrdersReceived = 0;
 	private AID tickerAgent;
 	private Order order = new Order();
+	private SupplierOrder supOrder = new SupplierOrder();
 	private Smartphone smartphone = new Smartphone();
 	private ArrayList<Order> orders = new ArrayList<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
@@ -261,7 +262,7 @@ public class Manufacturer extends Agent
 					o.setSupplier(1);
 					
 					Action request = new Action();
-					request.setAction(order);
+					request.setAction(o);
 					request.setActor(suppliers.get(0));
 					try
 					{
@@ -271,42 +272,28 @@ public class Manufacturer extends Agent
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
 					
-					/*
-					//order parts from supplier
-					for (Order order : orders)
+					
+					
+					// other parts
+					o.setBattery(3000, 50);
+					o.setRAM(8, 50);
+					o.setScreen(7, 50);
+					o.setStorage(256, 50);
+					o.setSupplier(1);
+					
+					System.out.println("-----"+o.getBatteryQuantity());
+					
+					request.setAction(o);
+					request.setActor(suppliers.get(0));
+					try
 					{
-						ACLMessage msgParts1 = new ACLMessage(ACLMessage.REQUEST);
-						msgParts1.addReceiver(suppliers.get(0));
-						msgParts1.setLanguage(codec.getName());
-						msgParts1.setOntology(ontology.getName());
-
-						System.out.println("battery ordered from manufacturer: "+order.getSpecification().getBattery());
-						
-						//Smartphone specification
-						Smartphone orderParts = new Smartphone();
-						orderParts.setBattery(order.getSpecification().getBattery());
-						orderParts.setRAM(order.getSpecification().getRAM());
-						orderParts.setScreen(order.getSpecification().getScreen());
-						orderParts.setStorage(order.getSpecification().getStorage());
-
-						//Order specification
-						Order orderPartsO = new Order();
-						orderPartsO.setSpecification(orderParts);
-						orderPartsO.setCustomer(order.getCustomer());
-						orderPartsO.setQuantity(order.getQuantity());
-
-						Action request = new Action();
-						request.setAction(order);
-						request.setActor(suppliers.get(0));
-						try
-						{
-							getContentManager().fillContent(msgParts, request); //send the wrapper object
-							send(msgParts);
-						}
-						catch (CodecException ce) { ce.printStackTrace(); }
-						catch (OntologyException oe) { oe.printStackTrace(); } 
+						getContentManager().fillContent(msgParts, request); //send the wrapper object
+						send(msgParts);
+						System.out.println("msgParts: "+msgParts);
 					}
-					*/
+					catch (CodecException ce) { ce.printStackTrace(); }
+					catch (OntologyException oe) { oe.printStackTrace(); } 
+					
 					//System.out.println("step: "+step);
 					step = 2;
 				}
@@ -352,82 +339,80 @@ public class Manufacturer extends Agent
 						ACLMessage msg2 = receive(mt2);
 						if(msg2 != null)
 						{
-							//System.out.println("msg received: "+msg2);
+							System.out.println("msg received: "+msg2);
 							try
 							{	
 								ContentElement ce = null;
 								ce = getContentManager().extractContent(msg2);
 
 								Action available = (Action) ce;
-								order = (Order) available.getAction(); // this is the order requested
-								smartphone = order.getSpecification();
-								int q = order.getQuantity();
-								//System.out.println("q: "+q);
-
+								supOrder = (SupplierOrder) available.getAction(); // this is the order requested
+							
 								partsTotal++;
-
 								partsPerDay++;
 
 								// Place parts in warehouse
-								//System.out.println(smartphone.getScreen());
+								
+								System.out.println("warehouse storage64: "+warehouse.get("storage64"));
+								System.out.println("supOrder ram quantity: "+supOrder.getRamQuantity());
 
 								//SCREENS
-								if (smartphone.getScreen() == 5) {
-									if (warehouse.get("screen5") == null )
-										warehouse.put("screen5", q);
+								if (supOrder.getScreen() == 5) {
+									if (warehouse.get("screen5") == null)
+										warehouse.put("screen5", supOrder.getScreenQuantity());
 									else {
 										int before = warehouse.get("screen5");
 										warehouse.remove("screen5");
-										warehouse.put("screen5", before+q); 
+										warehouse.put("screen5", before+supOrder.getScreenQuantity()); 
 									}
 								}
-								else if (smartphone.getScreen() == 7) {
-									if (warehouse.get("screen7") == null )
-										warehouse.put("screen7", q);
+								else if (supOrder.getScreen() == 7) {
+									if (warehouse.get("screen7") == null)
+										warehouse.put("screen7", supOrder.getScreenQuantity());
 									else {
 										int before = warehouse.get("screen7");
 										warehouse.remove("screen7");
-										warehouse.put("screen7", before+q); 
+										warehouse.put("screen7", before+supOrder.getScreenQuantity()); 
 									}
 								}
 
 								// STORAGE
 								if (smartphone.getStorage() == 64) {
-									if (warehouse.get("storage64") == null )
-										warehouse.put("storage64", q);
+									if (warehouse.get("storage64") == null)
+										warehouse.put("storage64", supOrder.getStorageQuantity());
 									else {
 										int before = warehouse.get("storage64");
 										warehouse.remove("storage64");
-										warehouse.put("storage64", before+q); 
+										warehouse.put("storage64", before+supOrder.getStorageQuantity()); 
 									}
 								}
 								if (smartphone.getStorage() == 256) {
 									if (warehouse.get("storage256") == null )
-										warehouse.put("storage256", q);
+										warehouse.put("storage256", supOrder.getStorageQuantity());
 									else {
 										int before = warehouse.get("storage256");
 										warehouse.remove("storage256");
-										warehouse.put("storage256", before+q);
+										warehouse.put("storage256", before+supOrder.getStorageQuantity());
 									}
 								}
 
 								// RAM
 								if (smartphone.getRAM() == 4) {
 									if (warehouse.get("ram4") == null )
-										warehouse.put("ram4", q);
+										warehouse.put("ram4", supOrder.getRamQuantity());
 									else {
 										int before = warehouse.get("ram4");
 										warehouse.remove("ram4");
-										warehouse.put("ram4", before+q);
+										warehouse.put("ram4", before+supOrder.getRamQuantity());
 									}
 								}
 								if (smartphone.getRAM() == 8) {
 									if (warehouse.get("ram8") == null )
-										warehouse.put("ram8", q);
+										warehouse.put("ram8", supOrder.getRamQuantity());
 									else {
 										int before = warehouse.get("ram8");
 										warehouse.remove("ram8");
-										warehouse.put("ram8", before+q);
+										warehouse.put("ram8", before+supOrder.getRamQuantity());
 									}
 								}
 
@@ -435,30 +420,30 @@ public class Manufacturer extends Agent
 								// BATTERY
 								if (smartphone.getBattery() == 2000) {
 									if (warehouse.get("battery2000") == null )
-										warehouse.put("battery2000", q);
+										warehouse.put("battery2000", supOrder.getBatteryQuantity());
 									else {
 										int before = warehouse.get("battery2000");
 										warehouse.remove("battery2000");
-										warehouse.put("battery2000", before+q);
+										warehouse.put("battery2000", before+supOrder.getBatteryQuantity());
 									}	
 								}
 								if (smartphone.getBattery() == 3000) {
 									if (warehouse.get("battery3000") == null )
-										warehouse.put("battery3000", q);
+										warehouse.put("battery3000", supOrder.getBatteryQuantity());
 									else {
 										int before = warehouse.get("battery3000");
 										warehouse.remove("battery3000");
-										warehouse.put("battery3000", before+q);
+										warehouse.put("battery3000", before+supOrder.getBatteryQuantity());
 									}	
 								}
 
 								// YEA BOI IT WORKS
 								
-								/*
+								
 								for (String i : warehouse.keySet()) {
 									System.out.println(i + " - " + warehouse.get(i));
 								}
-								*/
+								
 
 								System.out.println("all parts received from supplier and stored in warehouse");
 							}

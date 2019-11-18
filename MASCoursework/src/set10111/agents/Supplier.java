@@ -188,9 +188,10 @@ public class Supplier extends Agent
 						//TODO: if supplier 1 then 1 day, if supplier 2 then 4 days
 
 						orders.put(order, 1); 
+						System.out.println("order received: "+order.getBatteryQuantity());
 
 						order_count++;
-						//System.out.println("count: "+order_count);
+						System.out.println("count: "+order_count);
 
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
@@ -199,7 +200,7 @@ public class Supplier extends Agent
 				else
 					block();
 			}
-			while (order_count < 3);
+			while (order_count < 2);
 			//System.out.println("while loop finished");
 		}
 	}
@@ -222,7 +223,13 @@ public class Supplier extends Agent
 				
 				if (days == 0)
 				{
-					//System.out.println("battery part sent: " + order1.getSpecification().getBattery());	
+					//System.out.println("days == 0");
+					System.out.println("order1: " + order1.getBatteryQuantity());
+					System.out.println("order1: "+order1.getBattery());
+					System.out.println("order1: "+order1.getRamQuantity());
+					System.out.println("order1: "+order1.getRAM());
+					System.out.println("order1: "+order1.getStorageQuantity());
+					System.out.println("order1: "+order1.getStorage());
 					
 					// send order back to manufacturer
 					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
@@ -237,7 +244,7 @@ public class Supplier extends Agent
 					{
 						getContentManager().fillContent(msg, request); //send the wrapper object
 						send(msg);
-						//System.out.println("msg sent: "+msg);
+						System.out.println("msg sent: "+msg);
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
