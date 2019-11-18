@@ -32,9 +32,7 @@ public class Supplier extends Agent
 	private AID tickerAgent;
 	private ArrayList<AID> manufacturers = new ArrayList<>();
 	private SupplierOrder order = new SupplierOrder();
-	private Smartphone smartphone = new Smartphone();
 	private HashMap<SupplierOrder, Integer> orders = new HashMap<>(); 
-	private int count = 0;
 
 	protected void setup()
 	{
@@ -182,16 +180,13 @@ public class Supplier extends Agent
 						Action available = (Action) ce;
 						order = (SupplierOrder) available.getAction(); // this is the order requested
 
-						count++;
-						System.out.println("supplier count received: "+count);
-
 						//TODO: if supplier 1 then 1 day, if supplier 2 then 4 days
 
 						orders.put(order, 1); 
-						System.out.println("order received: "+order.getBatteryQuantity());
+						//System.out.println("order received: "+order.getBatteryQuantity());
 
 						order_count++;
-						System.out.println("count: "+order_count);
+						//System.out.println("count: "+order_count);
 
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
