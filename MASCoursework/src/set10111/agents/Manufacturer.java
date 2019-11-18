@@ -35,11 +35,11 @@ public class Manufacturer extends Agent
 	private AID tickerAgent;
 	private Order order = new Order();
 	private SupplierOrder supOrder = new SupplierOrder();
-	private Smartphone smartphone = new Smartphone();
+	private Smartphone phone = new Smartphone();
 	private ArrayList<Order> orders = new ArrayList<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
-	private int partsTotal = 0;
 	private int partsComingToday = 0;
+	private int day;
 
 	protected void setup()
 	{
@@ -98,6 +98,8 @@ public class Manufacturer extends Agent
 					numOrdersReceived = 0;
 					orders.clear();
 					partsComingToday = 0;
+					day++;
+					System.out.println("Day "+ day);
 
 
 					// find customers and suppliers
@@ -189,7 +191,7 @@ public class Manufacturer extends Agent
 
 						Action available = (Action) ce;
 						order = (Order) available.getAction(); // this is the order requested
-						smartphone = order.getSpecification();
+						phone = order.getSpecification();
 
 						orders.add(order);
 
@@ -198,24 +200,24 @@ public class Manufacturer extends Agent
 						// calculate cost of making offer from supplier 1
 						int total = 0;
 
-						if (smartphone.getScreen() == 5)
+						if (phone.getScreen() == 5)
 							total += 100;
-						if (smartphone.getScreen() == 7)
+						if (phone.getScreen() == 7)
 							total += 150;
 
-						if (smartphone.getBattery() == 2000)
+						if (phone.getBattery() == 2000)
 							total += 70;
-						if (smartphone.getBattery() == 3000)
+						if (phone.getBattery() == 3000)
 							total += 100;
 
-						if (smartphone.getStorage() == 64)
+						if (phone.getStorage() == 64)
 							total += 25;
-						if (smartphone.getStorage() == 256)
+						if (phone.getStorage() == 256)
 							total += 50;
 
-						if (smartphone.getRAM() == 4)
+						if (phone.getRAM() == 4)
 							total += 30;
-						if (smartphone.getStorage() == 64)
+						if (phone.getStorage() == 64)
 							total += 25;
 
 						// how much it is going to sell for 
@@ -238,35 +240,36 @@ public class Manufacturer extends Agent
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); }
+					System.out.println("orders received from customers: "+numOrdersReceived);
 				}
 				else
 					block();
 
 
 			case 1:
+				//order PARTS from supplier everyday
 				if (step == 1)
 				{
 					//System.out.println("All orders received, now ordering parts");
 
-					//order PARTS from supplier everyday
 					ACLMessage msgParts = new ACLMessage(ACLMessage.REQUEST);
 					msgParts.addReceiver(suppliers.get(0));
 					msgParts.setLanguage(codec.getName());
 					msgParts.setOntology(ontology.getName());
-					
+
 					SupplierOrder o = new SupplierOrder();
 					o.setBattery(2000);
 					o.setRAM(4);
 					o.setScreen(5);
 					o.setStorage(64);
 					// quantity
-					o.setBatteryQuantity(50);
-					o.setRamQuantity(50);
-					o.setScreenQuantity(50);
-					o.setStorageQuantity(50);
+					o.setBatteryQuantity(150);
+					o.setRamQuantity(150);
+					o.setScreenQuantity(150);
+					o.setStorageQuantity(150);
 					// supplier
 					o.setSupplier(1);
-					
+
 					Action request = new Action();
 					request.setAction(o);
 					request.setActor(suppliers.get(0));
@@ -277,22 +280,22 @@ public class Manufacturer extends Agent
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
-					
-					
-					
+
+
+
 					// other parts
 					o.setBattery(3000);
 					o.setRAM(8);
 					o.setScreen(7);
 					o.setStorage(256);
 					// quantity
-					o.setBatteryQuantity(50);
-					o.setRamQuantity(50);
-					o.setScreenQuantity(50);
-					o.setStorageQuantity(50);
+					o.setBatteryQuantity(150);
+					o.setRamQuantity(150);
+					o.setScreenQuantity(150);
+					o.setStorageQuantity(150);
 					// supplier
 					o.setSupplier(1);
-					
+
 					request.setAction(o);
 					request.setActor(suppliers.get(0));
 					try
@@ -303,7 +306,7 @@ public class Manufacturer extends Agent
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
-					
+
 					//System.out.println("step: "+step);
 					step = 2;
 				}
@@ -342,6 +345,7 @@ public class Manufacturer extends Agent
 				//receive parts from supplier
 				if (step == 3)
 				{
+					System.out.println("Receiving parts from suppliers");
 					int partsPerDay = 0;
 					do
 					{
@@ -357,12 +361,11 @@ public class Manufacturer extends Agent
 
 								Action available = (Action) ce;
 								supOrder = (SupplierOrder) available.getAction(); // this is the order requested
-							
-								partsTotal++;
+
 								partsPerDay++;
 
 								// Place parts in warehouse
-								
+
 								//SCREENS
 								if (supOrder.getScreen() == 5) {
 									if (warehouse.get("screen5") == null)
@@ -384,7 +387,7 @@ public class Manufacturer extends Agent
 								}
 
 								// STORAGE
-								if (smartphone.getStorage() == 64) {
+								if (supOrder.getStorage() == 64) {
 									if (warehouse.get("storage64") == null)
 										warehouse.put("storage64", supOrder.getStorageQuantity());
 									else {
@@ -393,7 +396,7 @@ public class Manufacturer extends Agent
 										warehouse.put("storage64", before+supOrder.getStorageQuantity()); 
 									}
 								}
-								if (smartphone.getStorage() == 256) {
+								if (supOrder.getStorage() == 256) {
 									if (warehouse.get("storage256") == null )
 										warehouse.put("storage256", supOrder.getStorageQuantity());
 									else {
@@ -404,7 +407,7 @@ public class Manufacturer extends Agent
 								}
 
 								// RAM
-								if (smartphone.getRAM() == 4) {
+								if (supOrder.getRAM() == 4) {
 									if (warehouse.get("ram4") == null )
 										warehouse.put("ram4", supOrder.getRamQuantity());
 									else {
@@ -413,7 +416,7 @@ public class Manufacturer extends Agent
 										warehouse.put("ram4", before+supOrder.getRamQuantity());
 									}
 								}
-								if (smartphone.getRAM() == 8) {
+								if (supOrder.getRAM() == 8) {
 									if (warehouse.get("ram8") == null )
 										warehouse.put("ram8", supOrder.getRamQuantity());
 									else {
@@ -425,7 +428,7 @@ public class Manufacturer extends Agent
 
 
 								// BATTERY
-								if (smartphone.getBattery() == 2000) {
+								if (supOrder.getBattery() == 2000) {
 									if (warehouse.get("battery2000") == null )
 										warehouse.put("battery2000", supOrder.getBatteryQuantity());
 									else {
@@ -434,7 +437,7 @@ public class Manufacturer extends Agent
 										warehouse.put("battery2000", before+supOrder.getBatteryQuantity());
 									}	
 								}
-								if (smartphone.getBattery() == 3000) {
+								if (supOrder.getBattery() == 3000) {
 									if (warehouse.get("battery3000") == null )
 										warehouse.put("battery3000", supOrder.getBatteryQuantity());
 									else {
@@ -443,16 +446,7 @@ public class Manufacturer extends Agent
 										warehouse.put("battery3000", before+supOrder.getBatteryQuantity());
 									}	
 								}
-
-								// YEA BOI IT WORKS
-								/*
-								System.out.println("--WAREHOUSE--");
-								for (String i : warehouse.keySet()) {
-									System.out.println(i + " - " + warehouse.get(i));
-								}
-								*/
-
-								System.out.println("all parts received from supplier and stored in warehouse");
+								//System.out.println("all parts received from supplier and stored in warehouse");
 							}
 							catch (CodecException ce) { ce.printStackTrace(); }
 							catch (OntologyException oe) { oe.printStackTrace(); }
@@ -463,14 +457,52 @@ public class Manufacturer extends Agent
 					}
 					while (partsPerDay < partsComingToday);
 					//System.out.println("batteries received count: "+partsTotal);
+
+					// YEA BOI IT WORKS
+					System.out.println("--WAREHOUSE--");
+					for (String i : warehouse.keySet()) {
+						System.out.println(i + " - " + warehouse.get(i));
+					}
+					step = 4;
 				}
 
 
 			case 4:
 				//TODO: assemble phone!! and sell
-				if (step == 4)
+				if (step == 4 && day >= 2)
 				{
-					
+					System.out.println("Assemblying phones if parts are in warehouse");
+					// System.out.println("warehouse is empty: "+warehouse.get("battery2000"));
+					System.out.println("order size: "+orders.size());
+					//System.out.println((phone.getBattery() == 2000) && (warehouse.get("battery2000") > order.getQuantity()));
+					for (Order order : orders) 
+					{
+						System.out.println(order.getQuantity());
+						
+						phone = order.getSpecification();
+						int count = 0;
+						
+						do {
+							if ((phone.getBattery() == 2000) && (warehouse.get("battery2000") > order.getQuantity()))
+								count++;
+							else if ((phone.getBattery() == 3000) && (warehouse.get("battery3000") > order.getQuantity()))
+								count++;
+							if ((phone.getRAM() == 4) && (warehouse.get("ram4") > order.getQuantity()))
+								count++;
+							else if ((phone.getRAM() == 8) && (warehouse.get("ram8") > order.getQuantity()))
+								count++;
+							if ((phone.getScreen() == 5) && (warehouse.get("screen5") > order.getQuantity()))
+								count++;
+							else if ((phone.getScreen() == 7) && (warehouse.get("screen7") > order.getQuantity()))
+								count++;
+							if ((phone.getStorage() == 64) && (warehouse.get("storage64") > order.getQuantity()))
+								count++;
+							if ((phone.getStorage() == 256) && (warehouse.get("storage256") > order.getQuantity()))
+								count++;
+							System.out.println("count: "+count);
+						}
+						while (count < 4);
+					}
 				}
 				break;
 			}
