@@ -224,12 +224,6 @@ public class Supplier extends Agent
 				if (days == 0)
 				{
 					//System.out.println("days == 0");
-					System.out.println("order1: " + order1.getBatteryQuantity());
-					System.out.println("order1: "+order1.getBattery());
-					System.out.println("order1: "+order1.getRamQuantity());
-					System.out.println("order1: "+order1.getRAM());
-					System.out.println("order1: "+order1.getStorageQuantity());
-					System.out.println("order1: "+order1.getStorage());
 					
 					// send order back to manufacturer
 					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
@@ -244,7 +238,7 @@ public class Supplier extends Agent
 					{
 						getContentManager().fillContent(msg, request); //send the wrapper object
 						send(msg);
-						System.out.println("msg sent: "+msg);
+						// System.out.println("msg sent: "+msg);
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 

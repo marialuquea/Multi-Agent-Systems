@@ -193,7 +193,7 @@ public class Manufacturer extends Agent
 
 						orders.add(order);
 
-						System.out.println("orders received _m: "+orders.size());
+						//System.out.println("orders received _m: "+orders.size());
 
 						// calculate cost of making offer from supplier 1
 						int total = 0;
@@ -255,10 +255,16 @@ public class Manufacturer extends Agent
 					msgParts.setOntology(ontology.getName());
 					
 					SupplierOrder o = new SupplierOrder();
-					o.setBattery(2000, 50);
-					o.setRAM(4, 50);
-					o.setScreen(5, 50);
-					o.setStorage(64, 50);
+					o.setBattery(2000);
+					o.setRAM(4);
+					o.setScreen(5);
+					o.setStorage(64);
+					// quantity
+					o.setBatteryQuantity(50);
+					o.setRamQuantity(50);
+					o.setScreenQuantity(50);
+					o.setStorageQuantity(50);
+					// supplier
 					o.setSupplier(1);
 					
 					Action request = new Action();
@@ -275,13 +281,17 @@ public class Manufacturer extends Agent
 					
 					
 					// other parts
-					o.setBattery(3000, 50);
-					o.setRAM(8, 50);
-					o.setScreen(7, 50);
-					o.setStorage(256, 50);
+					o.setBattery(3000);
+					o.setRAM(8);
+					o.setScreen(7);
+					o.setStorage(256);
+					// quantity
+					o.setBatteryQuantity(50);
+					o.setRamQuantity(50);
+					o.setScreenQuantity(50);
+					o.setStorageQuantity(50);
+					// supplier
 					o.setSupplier(1);
-					
-					System.out.println("-----"+o.getBatteryQuantity());
 					
 					request.setAction(o);
 					request.setActor(suppliers.get(0));
@@ -289,7 +299,7 @@ public class Manufacturer extends Agent
 					{
 						getContentManager().fillContent(msgParts, request); //send the wrapper object
 						send(msgParts);
-						System.out.println("msgParts: "+msgParts);
+						//System.out.println("msgParts: "+msgParts);
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
@@ -339,7 +349,7 @@ public class Manufacturer extends Agent
 						ACLMessage msg2 = receive(mt2);
 						if(msg2 != null)
 						{
-							System.out.println("msg received: "+msg2);
+							//System.out.println("msg received: "+msg2);
 							try
 							{	
 								ContentElement ce = null;
@@ -353,9 +363,6 @@ public class Manufacturer extends Agent
 
 								// Place parts in warehouse
 								
-								System.out.println("warehouse storage64: "+warehouse.get("storage64"));
-								System.out.println("supOrder ram quantity: "+supOrder.getRamQuantity());
-
 								//SCREENS
 								if (supOrder.getScreen() == 5) {
 									if (warehouse.get("screen5") == null)
@@ -438,12 +445,12 @@ public class Manufacturer extends Agent
 								}
 
 								// YEA BOI IT WORKS
-								
-								
+								/*
+								System.out.println("--WAREHOUSE--");
 								for (String i : warehouse.keySet()) {
 									System.out.println(i + " - " + warehouse.get(i));
 								}
-								
+								*/
 
 								System.out.println("all parts received from supplier and stored in warehouse");
 							}
