@@ -5,6 +5,7 @@ import jade.core.AID;
 
 public class Order implements AgentAction
 {
+	private int id;
 	private AID customer; 
 	private int price; // price set by the customer
 	private int penalty; // per-day penalty for late delivery
@@ -12,7 +13,13 @@ public class Order implements AgentAction
 	private int quantity; // how many smartphones ordered
 	private int daysDue;
 	private boolean accepted;
-	
+
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
 	public AID getCustomer() {
 		return customer;
 	}

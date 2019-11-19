@@ -40,6 +40,8 @@ public class Manufacturer extends Agent
 	private HashMap<String, Integer> warehouse = new HashMap<>();
 	private int partsComingToday = 0;
 	private int day;
+	private int orderID = 0;
+	int phoneAssembledCount = 0;
 
 	protected void setup()
 	{
@@ -96,8 +98,8 @@ public class Manufacturer extends Agent
 					// reset values for new day
 					customers.clear();
 					numOrdersReceived = 0;
-					orders.clear();
 					partsComingToday = 0;
+					phoneAssembledCount = 0;
 					day++;
 					System.out.println("Day "+ day);
 
@@ -192,10 +194,11 @@ public class Manufacturer extends Agent
 						Action available = (Action) ce;
 						order = (Order) available.getAction(); // this is the order requested
 						phone = order.getSpecification();
-
+						
+						order.setId(++orderID);
 						orders.add(order);
-
-						//System.out.println("orders received _m: "+orders.size());
+						//System.out.println("orderID: "+order.getId());
+						//System.out.println("orders.size(): "+orders.size());
 
 						// calculate cost of making offer from supplier 1
 						int total = 0;
@@ -221,7 +224,7 @@ public class Manufacturer extends Agent
 							total += 25;
 
 						// how much it is going to sell for 
-						int sold = order.getPrice() * order.getQuantity();
+						// int sold = order.getPrice() * order.getQuantity();
 
 
 						//TODO: if sold > x then sell, else refuse
@@ -240,7 +243,7 @@ public class Manufacturer extends Agent
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); }
-					System.out.println("orders received from customers: "+numOrdersReceived);
+					
 				}
 				else
 					block();
@@ -263,10 +266,10 @@ public class Manufacturer extends Agent
 					o.setScreen(5);
 					o.setStorage(64);
 					// quantity
-					o.setBatteryQuantity(150);
-					o.setRamQuantity(150);
-					o.setScreenQuantity(150);
-					o.setStorageQuantity(150);
+					o.setBatteryQuantity(100);
+					o.setRamQuantity(100);
+					o.setScreenQuantity(100);
+					o.setStorageQuantity(100);
 					// supplier
 					o.setSupplier(1);
 
@@ -289,10 +292,10 @@ public class Manufacturer extends Agent
 					o.setScreen(7);
 					o.setStorage(256);
 					// quantity
-					o.setBatteryQuantity(150);
-					o.setRamQuantity(150);
-					o.setScreenQuantity(150);
-					o.setStorageQuantity(150);
+					o.setBatteryQuantity(100);
+					o.setRamQuantity(100);
+					o.setScreenQuantity(100);
+					o.setStorageQuantity(100);
 					// supplier
 					o.setSupplier(1);
 
@@ -327,7 +330,7 @@ public class Manufacturer extends Agent
 						if(infomsg != null) 
 						{
 							partsComingToday = Integer.parseInt(infomsg.getContent(), 10);
-							System.out.println(partsComingToday + " order parts from supplier coming in today");
+							//System.out.println(partsComingToday + " order parts from supplier coming in today");
 							messages++;
 							break;
 						}
@@ -472,37 +475,47 @@ public class Manufacturer extends Agent
 				if (step == 4 && day >= 2)
 				{
 					System.out.println("Assemblying phones if parts are in warehouse");
-					// System.out.println("warehouse is empty: "+warehouse.get("battery2000"));
-					System.out.println("order size: "+orders.size());
-					//System.out.println((phone.getBattery() == 2000) && (warehouse.get("battery2000") > order.getQuantity()));
+					
+					
 					for (Order order : orders) 
 					{
-						System.out.println(order.getQuantity());
-						
+						System.out.println("order quantity: "+order.getQuantity());
+
 						phone = order.getSpecification();
 						int count = 0;
+
+						if ((phone.getBattery() == 2000) && (warehouse.get("battery2000") > order.getQuantity()))
+							count++;
+						else if ((phone.getBattery() == 3000) && (warehouse.get("battery3000") > order.getQuantity()))
+							count++;
+						if ((phone.getRAM() == 4) && (warehouse.get("ram4") > order.getQuantity()))
+							count++;
+						else if ((phone.getRAM() == 8) && (warehouse.get("ram8") > order.getQuantity()))
+							count++;
+						if ((phone.getScreen() == 5) && (warehouse.get("screen5") > order.getQuantity()))
+							count++;
+						else if ((phone.getScreen() == 7) && (warehouse.get("screen7") > order.getQuantity()))
+							count++;
+						if ((phone.getStorage() == 64) && (warehouse.get("storage64") > order.getQuantity()))
+							count++;
+						if ((phone.getStorage() == 256) && (warehouse.get("storage256") > order.getQuantity()))
+							count++;
+						System.out.println("count: "+count);
 						
-						do {
-							if ((phone.getBattery() == 2000) && (warehouse.get("battery2000") > order.getQuantity()))
-								count++;
-							else if ((phone.getBattery() == 3000) && (warehouse.get("battery3000") > order.getQuantity()))
-								count++;
-							if ((phone.getRAM() == 4) && (warehouse.get("ram4") > order.getQuantity()))
-								count++;
-							else if ((phone.getRAM() == 8) && (warehouse.get("ram8") > order.getQuantity()))
-								count++;
-							if ((phone.getScreen() == 5) && (warehouse.get("screen5") > order.getQuantity()))
-								count++;
-							else if ((phone.getScreen() == 7) && (warehouse.get("screen7") > order.getQuantity()))
-								count++;
-							if ((phone.getStorage() == 64) && (warehouse.get("storage64") > order.getQuantity()))
-								count++;
-							if ((phone.getStorage() == 256) && (warehouse.get("storage256") > order.getQuantity()))
-								count++;
-							System.out.println("count: "+count);
+						//TODO: assemble and remove from order list
+						if (count == 4)
+						{
+							phoneAssembledCount 
+							
+							// send phones to customer
+							
+							// max 50 phones assembled per day
+							
+							// delete parts from warehouse
 						}
-						while (count < 4);
+						
 					}
+					
 				}
 				break;
 			}
@@ -534,6 +547,8 @@ public class Manufacturer extends Agent
 			}
 			if(customersFinished == customers.size()) {
 				//we are finished
+				System.out.println("orders received from customers: "+numOrdersReceived);
+				
 				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 				tick.setContent("done");
 				tick.addReceiver(tickerAgent);
