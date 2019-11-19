@@ -194,7 +194,7 @@ public class Manufacturer extends Agent
 						Action available = (Action) ce;
 						order = (Order) available.getAction(); // this is the order requested
 						phone = order.getSpecification();
-						
+
 						order.setId(++orderID);
 						orders.add(order);
 						//System.out.println("orderID: "+order.getId());
@@ -243,7 +243,7 @@ public class Manufacturer extends Agent
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); }
-					
+
 				}
 				else
 					block();
@@ -266,10 +266,10 @@ public class Manufacturer extends Agent
 					o.setScreen(5);
 					o.setStorage(64);
 					// quantity
-					o.setBatteryQuantity(100);
-					o.setRamQuantity(100);
-					o.setScreenQuantity(100);
-					o.setStorageQuantity(100);
+					o.setBatteryQuantity(50);
+					o.setRamQuantity(50);
+					o.setScreenQuantity(50);
+					o.setStorageQuantity(50);
 					// supplier
 					o.setSupplier(1);
 
@@ -292,10 +292,10 @@ public class Manufacturer extends Agent
 					o.setScreen(7);
 					o.setStorage(256);
 					// quantity
-					o.setBatteryQuantity(100);
-					o.setRamQuantity(100);
-					o.setScreenQuantity(100);
-					o.setStorageQuantity(100);
+					o.setBatteryQuantity(50);
+					o.setRamQuantity(50);
+					o.setScreenQuantity(50);
+					o.setStorageQuantity(50);
 					// supplier
 					o.setSupplier(1);
 
@@ -466,6 +466,7 @@ public class Manufacturer extends Agent
 					for (String i : warehouse.keySet()) {
 						System.out.println(i + " - " + warehouse.get(i));
 					}
+					System.out.println("-------------");
 					step = 4;
 				}
 
@@ -477,45 +478,67 @@ public class Manufacturer extends Agent
 					System.out.println("Assemblying phones if parts are in warehouse");
 					
 					
-					for (Order order : orders) 
+					int orderCount = 0;
+					
+					for (int i = orders.size() - 1; i >= 0; i--)
 					{
-						System.out.println("order quantity: "+order.getQuantity());
-
-						phone = order.getSpecification();
+						ArrayList<String> specification = new ArrayList<>();
+						specification.clear();
+						
+						phone = orders.get(i).getSpecification();
+						
 						int count = 0;
 
-						if ((phone.getBattery() == 2000) && (warehouse.get("battery2000") > order.getQuantity()))
-							count++;
-						else if ((phone.getBattery() == 3000) && (warehouse.get("battery3000") > order.getQuantity()))
-							count++;
-						if ((phone.getRAM() == 4) && (warehouse.get("ram4") > order.getQuantity()))
-							count++;
-						else if ((phone.getRAM() == 8) && (warehouse.get("ram8") > order.getQuantity()))
-							count++;
-						if ((phone.getScreen() == 5) && (warehouse.get("screen5") > order.getQuantity()))
-							count++;
-						else if ((phone.getScreen() == 7) && (warehouse.get("screen7") > order.getQuantity()))
-							count++;
-						if ((phone.getStorage() == 64) && (warehouse.get("storage64") > order.getQuantity()))
-							count++;
-						if ((phone.getStorage() == 256) && (warehouse.get("storage256") > order.getQuantity()))
-							count++;
-						System.out.println("count: "+count);
+						if ((phone.getBattery() == 2000) && (warehouse.get("battery2000") > orders.get(i).getQuantity())) {
+							count++; specification.add("battery2000"); }
+						else if ((phone.getBattery() == 3000) && (warehouse.get("battery3000") > orders.get(i).getQuantity())) {
+							count++; specification.add("battery3000"); }
+						if ((phone.getRAM() == 4) && (warehouse.get("ram4") > orders.get(i).getQuantity())) {
+							count++; specification.add("ram4"); }
+						else if ((phone.getRAM() == 8) && (warehouse.get("ram8") > orders.get(i).getQuantity())) {
+							count++; specification.add("ram8"); }
+						if ((phone.getScreen() == 5) && (warehouse.get("screen5") > orders.get(i).getQuantity())) {
+							count++; specification.add("screen5"); }
+						else if ((phone.getScreen() == 7) && (warehouse.get("screen7") > orders.get(i).getQuantity())) {
+							count++; specification.add("screen7"); }
+						if ((phone.getStorage() == 64) && (warehouse.get("storage64") > orders.get(i).getQuantity())) {
+							count++; specification.add("storage64"); }
+						if ((phone.getStorage() == 256) && (warehouse.get("storage256") > orders.get(i).getQuantity())) {
+							count++; specification.add("storage256"); }
+						//System.out.println("count: "+count);
+
 						
 						//TODO: assemble and remove from order list
-						if (count == 4)
+						if ((count == 4) && (phoneAssembledCount + orders.get(i).getQuantity() <= 50))
 						{
-							phoneAssembledCount 
+							//System.out.println("order quantity: "+orders.get(i).getQuantity());
+							//for (String s : specification)
+							//	System.out.println("specification: "+s);
 							
 							// send phones to customer
 							
-							// max 50 phones assembled per day
 							
-							// delete parts from warehouse
+							// remove parts from warehouse
+							for (String s : specification)
+							{
+								int before = warehouse.get(s);
+								warehouse.remove(s);
+								warehouse.put(s, before-orders.get(i).getQuantity());
+							}
+							phoneAssembledCount += orders.get(i).getQuantity();
+							
+							
+							//remove order from order list
+							orderCount++;
+							
+							orders.remove(i);
 						}
-						
+
 					}
 					
+					System.out.println(phoneAssembledCount+" phones assembled today");
+					System.out.println("orders assembled today: "+orderCount);
+					System.out.println("orders left to assemble: "+orders.size());	
 				}
 				break;
 			}
@@ -548,7 +571,7 @@ public class Manufacturer extends Agent
 			if(customersFinished == customers.size()) {
 				//we are finished
 				System.out.println("orders received from customers: "+numOrdersReceived);
-				
+
 				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 				tick.setContent("done");
 				tick.addReceiver(tickerAgent);

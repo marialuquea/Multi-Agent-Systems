@@ -152,7 +152,7 @@ public class DayTicker extends Agent
 		
 		@Override
 		public int onEnd() {
-			System.out.println("------- End of day " + day + " -------");
+			System.out.println("------------ End of day " + day + " ------------");
 			if(day == NUM_DAYS) {
 				//send termination message to each agent
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
