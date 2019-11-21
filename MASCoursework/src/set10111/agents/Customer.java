@@ -3,6 +3,7 @@ package set10111.agents;
 import java.util.ArrayList;
 import java.util.List;
 
+import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
@@ -33,6 +34,7 @@ public class Customer extends Agent
 	private AID tickerAgent;
 	private Order order = new Order();
 	private Smartphone smartphone = new Smartphone();
+	private int orderID = 0;
 
 	protected void setup()
 	{
@@ -58,6 +60,7 @@ public class Customer extends Agent
 
 		addBehaviour(new TickerWaiter(this));
 		addBehaviour(new OrderConfirmed(this));
+		addBehaviour(new ReceiveOrder(this));
 	}
 
 	@Override
@@ -74,10 +77,7 @@ public class Customer extends Agent
 	// activities to do every day
 	private class TickerWaiter extends CyclicBehaviour 
 	{
-		public TickerWaiter(Agent a) {
-			super(a);
-		}
-
+		public TickerWaiter(Agent a) { super(a); }
 		@Override
 		public void action() 
 		{	
@@ -98,6 +98,7 @@ public class Customer extends Agent
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
+					//dailyActivity.addSubBehaviour(new ReceiveOrder(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -142,9 +143,7 @@ public class Customer extends Agent
 	// send offer
 	public class SendEnquiries extends OneShotBehaviour 
 	{
-		public SendEnquiries(Agent a) {
-			super(a);
-		}
+		public SendEnquiries(Agent a) { super(a); }
 
 		@Override
 		public void action() 
@@ -185,7 +184,7 @@ public class Customer extends Agent
 			order.setPrice((int)Math.floor(100 + 500 * Math.random()));
 			order.setDaysDue((int)Math.floor(1 + 10 * Math.random()));
 			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
-
+			
 			Action request = new Action();
 			request.setAction(order);
 			request.setActor(manufacturerAID); // the agent that you request to perform the action
@@ -202,9 +201,7 @@ public class Customer extends Agent
 	// confirm accepted order
 	public class OrderConfirmed extends CyclicBehaviour
 	{
-		public OrderConfirmed(Agent a) {
-			super(a);
-		}
+		public OrderConfirmed(Agent a) { super(a); }
 
 		@Override
 		public void action() 
@@ -220,12 +217,46 @@ public class Customer extends Agent
 
 	}
 
+	public class ReceiveOrder extends CyclicBehaviour
+	{
+
+		public ReceiveOrder(Agent a) { super(a); }
+
+		@Override
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.AGREE);
+			ACLMessage msg = receive(mt);
+			if(msg != null)
+			{
+				try
+				{	
+					ContentElement ce = null;
+					ce = getContentManager().extractContent(msg);
+
+					Action available = (Action) ce;
+					order = (Order) available.getAction(); // this is the order received
+					smartphone = order.getSpecification();
+
+
+					
+					//System.out.println("order received in c: \t"+msg);
+					System.out.println("                  Order: "+order.getId()
+						+" received by "+order.getCustomer().getLocalName());
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
+
+			}
+			else
+				block();
+		}
+		
+	}
+	
 	//behaviour to go on to the next day of the simulation
 	private class EndDay extends OneShotBehaviour {
 
-		public EndDay(Agent a) {
-			super(a);
-		}
+		public EndDay(Agent a) { super(a); }
 
 		@Override
 		public void action() {

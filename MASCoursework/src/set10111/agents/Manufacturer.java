@@ -40,8 +40,8 @@ public class Manufacturer extends Agent
 	private HashMap<String, Integer> warehouse = new HashMap<>();
 	private int partsComingToday = 0;
 	private int day;
+	private int phoneAssembledCount = 0;
 	private int orderID = 0;
-	int phoneAssembledCount = 0;
 
 	protected void setup()
 	{
@@ -178,7 +178,7 @@ public class Manufacturer extends Agent
 			switch (step)
 			{
 			case 0:
-				// respond to REQUEST messages from customers
+				// receive and respond to order REQUEST messages from customers
 				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 				ACLMessage msg = receive(mt);
 				if(msg != null)
@@ -196,6 +196,7 @@ public class Manufacturer extends Agent
 						phone = order.getSpecification();
 
 						order.setId(++orderID);
+						System.out.println("Order request: \t "+order.getId());
 						orders.add(order);
 						//System.out.println("orderID: "+order.getId());
 						//System.out.println("orders.size(): "+orders.size());
@@ -462,11 +463,11 @@ public class Manufacturer extends Agent
 					//System.out.println("batteries received count: "+partsTotal);
 
 					// YEA BOI IT WORKS
-					System.out.println("--WAREHOUSE--");
+					System.out.println("        -----WAREHOUSE------");
 					for (String i : warehouse.keySet()) {
-						System.out.println(i + " - " + warehouse.get(i));
+						System.out.println("        "+i + " \t " + warehouse.get(i));
 					}
-					System.out.println("-------------");
+					System.out.println("        --------------------");
 					step = 4;
 				}
 
@@ -475,7 +476,6 @@ public class Manufacturer extends Agent
 				//TODO: assemble phone!! and sell
 				if (step == 4 && day >= 2)
 				{
-					System.out.println("Assemblying phones if parts are in warehouse");
 					
 					
 					int orderCount = 0;
@@ -486,6 +486,7 @@ public class Manufacturer extends Agent
 						specification.clear();
 						
 						phone = orders.get(i).getSpecification();
+						
 						
 						int count = 0;
 
@@ -515,7 +516,7 @@ public class Manufacturer extends Agent
 							//for (String s : specification)
 							//	System.out.println("specification: "+s);
 							
-							
+							System.out.println("Assemblying order "+orders.get(i).getId());
 							
 							// send phones to customer
 							ACLMessage msgA = new ACLMessage(ACLMessage.AGREE);
@@ -530,7 +531,8 @@ public class Manufacturer extends Agent
 							{
 								getContentManager().fillContent(msgA, request); //send the wrapper object
 								send(msgA);
-								System.out.println("msgA sent: "+msgA);
+								System.out.println("               order "+orders.get(i).getId()
+										+" sent to "+orders.get(i).getCustomer().getLocalName());
 							}
 							catch (CodecException ce) { ce.printStackTrace(); }
 							catch (OntologyException oe) { oe.printStackTrace(); } 
