@@ -515,7 +515,26 @@ public class Manufacturer extends Agent
 							//for (String s : specification)
 							//	System.out.println("specification: "+s);
 							
+							
+							
 							// send phones to customer
+							ACLMessage msgA = new ACLMessage(ACLMessage.AGREE);
+							msgA.addReceiver(orders.get(i).getCustomer());
+							msgA.setLanguage(codec.getName());
+							msgA.setOntology(ontology.getName());
+							
+							Action request = new Action();
+							request.setAction(orders.get(i));
+							request.setActor(orders.get(i).getCustomer());
+							try
+							{
+								getContentManager().fillContent(msgA, request); //send the wrapper object
+								send(msgA);
+								System.out.println("msgA sent: "+msgA);
+							}
+							catch (CodecException ce) { ce.printStackTrace(); }
+							catch (OntologyException oe) { oe.printStackTrace(); } 
+							
 							
 							
 							// remove parts from warehouse
@@ -570,7 +589,7 @@ public class Manufacturer extends Agent
 			}
 			if(customersFinished == customers.size()) {
 				//we are finished
-				System.out.println("orders received from customers: "+numOrdersReceived);
+				// System.out.println("orders received from customers: "+numOrdersReceived);
 
 				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 				tick.setContent("done");
