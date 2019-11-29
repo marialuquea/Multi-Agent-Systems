@@ -1,55 +1,77 @@
 package set10111.elements;
 
+import java.util.ArrayList;
+
 import jade.content.Concept;
 import jade.content.onto.annotations.Slot;
+import set10111.elements.concepts.*;
 
 public class Smartphone implements Concept
 {
 	private int serialNumber;
-	private int screen;
-	private int battery;
-	private int storage;
-	private int ram;
+	
+	private Screen screen;
+	private Battery battery;
+	private Storage storage;
+	private Ram ram;
 
 	@Slot (mandatory = true)
 	public int getSerialNumber() {
 		return serialNumber;
 	}
-
 	public void setSerialNumber(int serialNumber) {
 		this.serialNumber = serialNumber;
 	}
 
-	public int getScreen() {
+	@Slot (mandatory = true)
+	public Screen getScreen() {
 		return screen;
 	}
-
-	public void setScreen(int screen) {
+	public void setScreen(Screen screen) {
 		this.screen = screen;
 	}
 
-	public int getBattery() {
+	@Slot (mandatory=true)
+	public Battery getBattery() {
 		return battery;
 	}
-
-	public void setBattery(int battery) {
+	public void setBattery(Battery battery) {
 		this.battery = battery;
 	}
 
-	public int getStorage() {
+	@Slot (mandatory=true)
+	public Storage getStorage() {
 		return storage;
 	}
-
-	public void setStorage(int storage) {
+	public void setStorage(Storage storage) {
 		this.storage = storage;
 	}
 
-	public int getRAM() {
+	@Slot (mandatory=true)
+	public Ram getRAM() {
 		return ram;
 	}
-
-	public void setRAM(int ram) {
+	public void setRAM(Ram ram) {
 		this.ram = ram;
+	}
+	
+	public ArrayList<SmartphoneComponent> getComponents() {
+		ArrayList<SmartphoneComponent> components = new ArrayList<>();
+		components.add(screen);
+		components.add(battery);
+		components.add(storage);
+		components.add(ram);
+		return components;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("(\n\t"
+		        + "screen: %s, \n\t"
+		        + "battery: %s, \n\t"
+		        + "storage: %s, \n\t"
+		        + "ram: %s,",
+		        screen, battery, storage, ram);
 	}
 
 }

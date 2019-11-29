@@ -5,6 +5,8 @@ import jade.content.onto.annotations.Slot;
 import jade.core.AID;
 import napier.ac.uk_ontology.concepts.Order;
 
+// NO NEED BECAUSE ORDER ALREADY HAS CUSTOMER AID
+
 public class MakeOrder implements AgentAction {
   private static final long serialVersionUID = 1L;
   

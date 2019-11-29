@@ -35,7 +35,7 @@ import napier.ac.uk_ontology.actions.BuyComponents;
 import napier.ac.uk_ontology.actions.MakeOrder;
 import napier.ac.uk_ontology.concepts.ComputerComponent;
 import napier.ac.uk_ontology.concepts.Order;
-import napier.ac.uk_ontology.predicates.CanManufacture;
+import napier.ac.uk_ontology.predicates.OrderQuery;
 import napier.ac.uk_ontology.predicates.OwnsComponents;
 import napier.ac.uk_ontology.predicates.SendsPayment;
 import napier.ac.uk_ontology.predicates.SendsSuppInfo;
@@ -327,8 +327,8 @@ public class ManufactAgent extends Agent {
           ContentElement ce = null;
           ce = getContentManager().extractContent(msg);
           
-          if (ce instanceof CanManufacture) {
-            CanManufacture canManifacture = (CanManufacture) ce;
+          if (ce instanceof OrderQuery) {
+            OrderQuery canManifacture = (OrderQuery) ce;
             Order order = canManifacture.getOrder();
             orderWpr = new OrderWrapper(order);
             orderWpr.setCustomer(msg.getSender());            

@@ -3,28 +3,28 @@ package set10111.elements.concepts;
 import jade.content.onto.annotations.Slot;
 import set10111.elements.Smartphone;
 
-public class Phablet extends Smartphone
+public class SmallPhone extends Smartphone
 {
-	private BatteryPhablet battery;
-	private ScreenPhablet screen;
+	private BatterySmall battery;
+	private ScreenSmall screen;
 	
-	public Phablet() {
-		this.battery = new BatteryPhablet();
-		this.screen = new ScreenPhablet();
+	public SmallPhone() {
+		this.battery = new BatterySmall();
+		this.screen = new ScreenSmall();
 	}
 	
 	@Slot(mandatory = true)
-	  public BatteryPhablet getBatteryPhablet() {
+	  public BatterySmall getBatterySmall() {
 	    return battery;
 	  }
-	  public void setBatteryPhablet(BatteryPhablet battery) {
+	  public void setBatterySmall(BatterySmall battery) {
 	    this.battery = battery;
 	  }
 	  @Slot(mandatory = true)
-	  public ScreenPhablet getScreenPhablet() {
+	  public ScreenSmall getScreenSmall() {
 	    return screen;
 	  }
-	  public void setScreenPhablet(ScreenPhablet screen) {
+	  public void setScreenSmall(ScreenSmall screen) {
 	    this.screen = screen;
 	  }
 	  

@@ -2,7 +2,6 @@ package set10111.agents;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -12,11 +11,7 @@ import jade.content.onto.OntologyException;
 import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.*;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -25,6 +20,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
 import set10111.elements.*;
+import set10111.elements.concepts.*;
 
 public class Customer extends Agent
 {
@@ -149,34 +145,42 @@ public class Customer extends Agent
 		public void action() 
 		{
 			// Prepare the message
-			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+			ACLMessage msg = new ACLMessage(ACLMessage.QUERY_IF);
 			msg.addReceiver(manufacturerAID);
 			msg.setLanguage(codec.getName());
 			msg.setOntology(ontology.getName());
+			msg.setConversationId("customer-order-query");
+			
+			Screen screen;
+			Battery battery;
+			Ram ram;
+			Storage storage;
 
 			//Prepare the content - the order
 			if (Math.random() < 0.5)
 			{
 				//small smartphone
-				smartphone.setScreen(5);
-				smartphone.setBattery(2000);
+				smartphone = new SmallPhone();
+				//smartphone.setScreen(5);
+				//smartphone.setBattery(2000);
 			}
 			else
 			{
 				//phablet
-				smartphone.setScreen(7);
-				smartphone.setBattery(3000);
+				smartphone = new Phablet();
+				//smartphone.setScreen(7);
+				//smartphone.setBattery(3000);
 			}
 
 			if (Math.random() < 0.5)
-				smartphone.setRAM(4);
+				ram = new Ram("4GB");
 			else
-				smartphone.setRAM(8);
+				ram = new Ram("8GB");
 
 			if (Math.random() < 0.5)
-				smartphone.setStorage(64);
+				storage = new Storage("64GB");
 			else
-				smartphone.setStorage(256);
+				storage = new Storage("256GB");
 
 			order.setCustomer(myAgent.getAID());
 			order.setSpecification(smartphone);

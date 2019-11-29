@@ -12,7 +12,7 @@ import napier.ac.uk_ontology.concepts.Order;
 //message, while would make no sense if used as the content of a REQUEST message. 
 
 // The customer asks the manufacturer if they can accept this order
-public class CanManufacture implements Predicate {
+public class OrderQuery implements Predicate {
   private static final long serialVersionUID = 1L;
   
   private AID manufacturer;

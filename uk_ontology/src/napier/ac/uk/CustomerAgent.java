@@ -33,7 +33,7 @@ import napier.ac.uk_ontology.concepts.Computer;
 import napier.ac.uk_ontology.concepts.Desktop;
 import napier.ac.uk_ontology.concepts.Laptop;
 import napier.ac.uk_ontology.concepts.Order;
-import napier.ac.uk_ontology.predicates.CanManufacture;
+import napier.ac.uk_ontology.predicates.OrderQuery;
 import napier.ac.uk_ontology.predicates.SendsPayment;
 import napier.ac.uk_ontology.predicates.ShipsOrder;
 
@@ -223,7 +223,7 @@ public class CustomerAgent extends Agent
       msg.setConversationId("customer-order-ask");
       msg.addReceiver(manufacturer);
       
-      CanManufacture canManufacture = new CanManufacture();
+      OrderQuery canManufacture = new OrderQuery();
       canManufacture.setManufacturer(manufacturer);
       canManufacture.setOrder(order);
       
