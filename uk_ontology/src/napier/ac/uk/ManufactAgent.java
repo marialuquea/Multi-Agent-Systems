@@ -43,7 +43,8 @@ import napier.ac.uk_ontology.predicates.ShipsComponents;
 import napier.ac.uk_ontology.predicates.ShipsOrder;
 
 // A manufacturer is both a buyer and a seller
-public class ManufactAgent extends Agent {
+public class ManufactAgent extends Agent 
+{
   private static final long serialVersionUID = 1L;
   private static final AtomicInteger orderIds = new AtomicInteger(0); 
   
@@ -166,7 +167,6 @@ public class ManufactAgent extends Agent {
     }
   }
   
-  
   public class FindSuppliers extends OneShotBehaviour {
     private static final long serialVersionUID = 1L;
 
@@ -196,10 +196,9 @@ public class ManufactAgent extends Agent {
     }
   }
   
-  
   // Get price lists from all suppliers
-  public class GetInfoFromSuppliers extends Behaviour {
-    private static final long serialVersionUID = 1L;
+  public class GetInfoFromSuppliers extends Behaviour 
+  {
     MessageTemplate mt;
     private ACLMessage msg;
     private int step = 0;
@@ -296,7 +295,6 @@ public class ManufactAgent extends Agent {
       return supplierListReceived == suppliers.size();
     }
   }
-  
   
   // Thought process:
   // 1 - Get price lists from all suppliers - done in previous function
@@ -410,7 +408,6 @@ public class ManufactAgent extends Agent {
       return repliesSent == customers.size();
     }
   }
-  
   
   // This behaviour accepts the requests for the orders approved in the previous query_if
   public class ManageOrderRequests extends Behaviour{
@@ -589,7 +586,6 @@ public class ManufactAgent extends Agent {
     }
   }
   
-  
   // Receive the components that we are awaiting from the supplier
   public class ReceiveComponents extends Behaviour { 
     private static final long serialVersionUID = 1L;
@@ -656,7 +652,6 @@ public class ManufactAgent extends Agent {
       return orderCompsReceived == ordersIncoming.size();
     }
   }
-  
   
   public class ManufactureAndSend extends Behaviour {
     private static final long serialVersionUID = 1L;
@@ -757,7 +752,6 @@ public class ManufactAgent extends Agent {
       return paymentsToReceive == 0;
     }
   }
-  
   
   public class EndDay extends OneShotBehaviour {
     private static final long serialVersionUID = 1L;

@@ -2,7 +2,7 @@ package napier.ac.uk_ontology.computerComponents;
 
 import java.util.Objects;
 
-public class BatteryPhablet extends Cpu {
+public class Battery extends Cpu {
   private static final long serialVersionUID = 1L;
 
 	@Override
@@ -12,11 +12,11 @@ public class BatteryPhablet extends Cpu {
 	
   @Override
   public boolean equals(Object other) {
-      if (!(other instanceof BatteryPhablet)) {
+      if (!(other instanceof Battery)) {
           return false;
       }
 
-      BatteryPhablet that = (BatteryPhablet) other;
+      Battery that = (Battery) other;
 
       // Custom equality check here.
       return this.toString().equals(that.toString());

@@ -4,7 +4,7 @@ import jade.content.onto.annotations.Slot;
 
 public class Battery extends SmartphoneComponent
 {
-	private String specification;
+private String specification;
 	
 	public Battery() {}
 	

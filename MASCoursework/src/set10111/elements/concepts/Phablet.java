@@ -5,35 +5,37 @@ import set10111.elements.Smartphone;
 
 public class Phablet extends Smartphone
 {
-	private BatteryPhablet battery;
-	private ScreenPhablet screen;
+	private Battery battery;
+	private Screen screen;
 	
-	public Phablet() {
-		this.battery = new BatteryPhablet();
-		this.screen = new ScreenPhablet();
+	public Phablet(String bat, String screen) {
+		if (bat.equals("BATTERY_3000") & screen.equals("SCREEN_7")) {
+			this.battery = new Battery();
+			this.screen = new Screen();
+		}
 	}
 	
 	@Slot(mandatory = true)
-	  public BatteryPhablet getBatteryPhablet() {
-	    return battery;
-	  }
-	  public void setBatteryPhablet(BatteryPhablet battery) {
+	public Battery getBattery() {
+		return battery;
+	}
+	public void setBattery(Battery battery) {
 	    this.battery = battery;
-	  }
-	  @Slot(mandatory = true)
-	  public ScreenPhablet getScreenPhablet() {
+	}
+	@Slot(mandatory = true)
+	public Screen getScreen() {
 	    return screen;
-	  }
-	  public void setScreenPhablet(ScreenPhablet screen) {
+	}
+	public void setScreen(Screen screen) {
 	    this.screen = screen;
-	  }
+	}
 	  
-	  @Override
-	  public String toString() {
-	    return super.toString() + 
-			String.format("\n\t"
+	@Override
+	public String toString() {
+	  return super.toString() + 
+			  String.format("\n\t"
 		        + "screen: %s, \n\t"
 		        + "battery: %s, \n\t)",
 		        screen, battery);
-	  }
+	}
 }

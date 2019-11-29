@@ -18,6 +18,7 @@ public class CommerceOntology extends BeanOntology
 			add("set10111.elements");
 			add("set10111.agents");
 			add("set10111.elements.concepts");
+			add("set10111.predicates");
 		} catch (BeanOntologyException e) {
 			e.printStackTrace();
 		}

@@ -4,6 +4,7 @@ import jade.core.*;
 import jade.core.Runtime;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
+import set10111.elements.SupplierPrices;
 
 
 public class Main 
@@ -25,16 +26,18 @@ public class Main
 				customer.start();
 			}
 			
-			AgentController manufacturer = myContainer.createNewAgent("manufacturer", Manufacturer.class.getCanonicalName(),
-					null);
+			AgentController manufacturer = myContainer.createNewAgent("manufacturer", Manufacturer.class.getCanonicalName(), null);
 			manufacturer.start();
 			
-			AgentController supplier = myContainer.createNewAgent("supplier", Supplier.class.getCanonicalName(),
-					null);
-			supplier.start();
+			AgentController supplier1 = myContainer.createNewAgent("supplier1",
+					Supplier.class.getCanonicalName(), new Object[] { SupplierPrices.getPricesSupplier1(), 1});
+			supplier1.start();
 			
-			AgentController dayTicker = myContainer.createNewAgent("dayTicker", DayTicker.class.getCanonicalName(),
-					null);
+			AgentController supplier2 = myContainer.createNewAgent("supplier2",
+					Supplier.class.getCanonicalName(), new Object[] { SupplierPrices.getPricesSupplier2(), 4});
+			supplier2.start();
+			
+			AgentController dayTicker = myContainer.createNewAgent("dayTicker", DayTicker.class.getCanonicalName(), null);
 			dayTicker.start();
 			
 		}

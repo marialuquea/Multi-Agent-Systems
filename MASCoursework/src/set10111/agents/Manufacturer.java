@@ -16,6 +16,7 @@ import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -24,6 +25,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
 import set10111.elements.*;
+import set10111.elements.concepts.SmartphoneComponent;
 
 public class Manufacturer extends Agent
 {
@@ -38,6 +40,8 @@ public class Manufacturer extends Agent
 	private Smartphone phone = new Smartphone();
 	private ArrayList<CustomerOrder> orders = new ArrayList<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
+	private HashMap<SmartphoneComponent, Integer> supplier1prices = new HashMap<>();
+	private HashMap<SmartphoneComponent, Integer> supplier2prices = new HashMap<>();
 	private int partsComingToday = 0;
 	private int day;
 	private int phoneAssembledCount = 0;
@@ -45,7 +49,7 @@ public class Manufacturer extends Agent
 
 	protected void setup()
 	{
-		//System.out.println("setup() in Manufacturer");
+		System.out.println("setup() in "+this.getLocalName());
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 
@@ -62,7 +66,7 @@ public class Manufacturer extends Agent
 		catch(FIPAException e){
 			e.printStackTrace();
 		}
-
+		
 		addBehaviour(new TickerWaiter(this));
 	}
 
@@ -117,9 +121,10 @@ public class Manufacturer extends Agent
 							+ ", penalty: "+o.getPenalty()
 							+ ", profit: "+o.getProfit());
 					}
-					// find customers and suppliers
+					
 					myAgent.addBehaviour(new FindCustomers(myAgent));
 					myAgent.addBehaviour(new FindSuppliers(myAgent));
+					myAgent.addBehaviour(new AskSupInfo(myAgent));
 
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
 
@@ -179,6 +184,62 @@ public class Manufacturer extends Agent
 		}
 	}
 
+	private class AskSupInfo extends OneShotBehaviour
+	{
+
+		public AskSupInfo(Agent a) { super(a); }
+		
+		@Override
+		public void action() 
+		{
+			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+			msg.setConversationId("parts-prices");
+			for (AID sup : suppliers) {
+				msg.addReceiver(sup);
+				myAgent.send(msg);
+			}
+		}
+	}
+	
+	private class ReceivePartsPrices extends OneShotBehaviour
+	{
+		public ReceivePartsPrices(Agent a) { super(a); }
+		int received = 0;
+		
+		@Override
+		public void action()
+		{
+			while (received <= 2)
+			{
+				MessageTemplate mt = MessageTemplate.and(
+						MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+			            MessageTemplate.MatchConversationId("price-list"));
+				ACLMessage msg = receive(mt);
+				
+				if (msg != null)
+				{
+					try 
+					{
+						ContentElement ce = null;
+						ce = getContentManager().extractContent(msg);
+						
+						if (ce instanceof SupplierPrices) 
+						{
+							SupplierPrices supPrices = (SupplierPrices) ce;
+							AID supplier = supPrices.getSupplier();
+							System.out.println("SUPPLIER: "+supplier.getLocalName());
+							supplier1prices = supPrices.getPricesSupplier1();
+							supplier2prices = supPrices.getPricesSupplier2();
+							// CHECK IF IT GET'S ADDED TO HASHMAP
+						}
+					}
+					catch (CodecException ce) { ce.printStackTrace(); } 
+					catch (OntologyException oe) { oe.printStackTrace(); }
+				}
+			}
+		}
+	}
+	
 	// behaviour to receive customer requests
 	private class ReceiveOrderRequests extends CyclicBehaviour
 	{
@@ -218,7 +279,7 @@ public class Manufacturer extends Agent
 
 						// calculate cost of making offer from supplier 1
 						int cost = 0;
-
+						/*
 						if (phone.getScreen() == 5)
 							cost += 100;
 						if (phone.getScreen() == 7)
@@ -239,7 +300,7 @@ public class Manufacturer extends Agent
 						if (phone.getStorage() == 64)
 							cost += 25;
 						
-
+						*/
 						// how much it is going to sell for 
 						int sold = order.getPrice() * order.getQuantity();
 						order.setProfit(sold - cost);
@@ -517,7 +578,7 @@ public class Manufacturer extends Agent
 						
 						
 						int count = 0;
-
+						/*
 						if ((phone.getBattery() == 2000) && (warehouse.get("battery2000") > orders.get(i).getQuantity())) {
 							count++; specification.add("battery2000"); }
 						else if ((phone.getBattery() == 3000) && (warehouse.get("battery3000") > orders.get(i).getQuantity())) {
@@ -536,7 +597,7 @@ public class Manufacturer extends Agent
 							count++; specification.add("storage256"); }
 						//System.out.println("count: "+count);
 
-						
+						*/
 						// assemble and remove from order list
 						if ((count == 4) && (phoneAssembledCount + orders.get(i).getQuantity() <= 50))
 						{

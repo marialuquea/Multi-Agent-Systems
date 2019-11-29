@@ -19,6 +19,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
+import set10111.predicates.*;
 import set10111.elements.*;
 import set10111.elements.concepts.*;
 
@@ -29,12 +30,12 @@ public class Customer extends Agent
 	private AID manufacturerAID;
 	private AID tickerAgent;
 	private CustomerOrder order = new CustomerOrder();
-	private Smartphone smartphone = new Smartphone();
+	Smartphone smartphone = new Smartphone();
 	private int orderID = 0;
 
 	protected void setup()
 	{
-		//System.out.println("setup() in Customer");
+		System.out.println("setup() in "+this.getLocalName());
 
 		// register codec
 		getContentManager().registerLanguage(codec);
@@ -136,7 +137,7 @@ public class Customer extends Agent
 		}
 	}
 
-	// send offer
+	// send offer inquiry
 	public class SendEnquiries extends OneShotBehaviour 
 	{
 		public SendEnquiries(Agent a) { super(a); }
@@ -151,37 +152,40 @@ public class Customer extends Agent
 			msg.setOntology(ontology.getName());
 			msg.setConversationId("customer-order-query");
 			
-			Screen screen;
-			Battery battery;
 			Ram ram;
 			Storage storage;
+			Battery battery;
+			Screen screen;
+			
+			ComponentType ct = ComponentType.getInstance();
 
 			//Prepare the content - the order
-			if (Math.random() < 0.5)
-			{
-				//small smartphone
-				smartphone = new SmallPhone();
-				//smartphone.setScreen(5);
-				//smartphone.setBattery(2000);
+			if (Math.random() < 0.5) {
+				battery = new Battery(ct.BATTERY_2000);
+				screen = new Screen(ct.SCREEN_5);
 			}
-			else
-			{
-				//phablet
-				smartphone = new Phablet();
-				//smartphone.setScreen(7);
-				//smartphone.setBattery(3000);
+			else {
+				battery = new Battery(ct.BATTERY_3000);
+				screen = new Screen(ct.SCREEN_7);
 			}
 
 			if (Math.random() < 0.5)
-				ram = new Ram("4GB");
+				ram = new Ram(ct.RAM_4);
 			else
-				ram = new Ram("8GB");
+				ram = new Ram(ct.RAM_8);
 
 			if (Math.random() < 0.5)
-				storage = new Storage("64GB");
+				storage = new Storage(ct.STORAGE_64);
 			else
-				storage = new Storage("256GB");
-
+				storage = new Storage(ct.STORAGE_256);
+			
+			smartphone.setRAM(ram);
+			smartphone.setStorage(storage);
+			smartphone.setBattery(battery);
+			smartphone.setScreen(screen);
+			
+			System.out.println(smartphone.toString());
+			
 			order.setCustomer(myAgent.getAID());
 			order.setSpecification(smartphone);
 			order.setQuantity((int)Math.floor(1 + 50 * Math.random()));
@@ -189,38 +193,76 @@ public class Customer extends Agent
 			order.setDaysDue((int)Math.floor(1 + 10 * Math.random()));
 			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
 			
-			Action request = new Action();
-			request.setAction(order);
-			request.setActor(manufacturerAID); // the agent that you request to perform the action
-			try
-			{
-				getContentManager().fillContent(msg, request); //send the wrapper object
-				send(msg);
-			}
-			catch (CodecException ce) { ce.printStackTrace(); }
-			catch (OntologyException oe) { oe.printStackTrace(); } 
+			OrderQuery orderQuery = new OrderQuery();
+			orderQuery.setManufacturer(manufacturerAID);
+			orderQuery.setOrder(order);
+			
+			try {
+		        getContentManager().fillContent(msg, orderQuery);
+		        send(msg);
+		        System.out.println(msg);
+		    }
+	       catch (CodecException ce) { ce.printStackTrace(); }
+	       catch (OntologyException oe) { oe.printStackTrace(); } 
 		}
 	}
 
-	// confirm accepted order
-	public class OrderConfirmed extends CyclicBehaviour
+	// confirm accepted order and request actual order
+	public class OrderConfirmed extends Behaviour
 	{
 		public OrderConfirmed(Agent a) { super(a); }
+		
+		private Boolean accepted = false;
 
 		@Override
 		public void action() 
 		{
-			MessageTemplate mt = MessageTemplate.MatchContent("order accepted");
+			MessageTemplate mt = MessageTemplate.and(
+					MessageTemplate.MatchConversationId("customer-order-reply"), 
+					MessageTemplate.or(
+							MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),
+							MessageTemplate.MatchPerformative(ACLMessage.DISCONFIRM)));
+			//MessageTemplate mt = MessageTemplate.MatchContent("order accepted");
+			
 			ACLMessage msg = myAgent.receive(mt);
-			if(msg != null) {
-				//System.out.println("order was accepted, msg received in customer");
+			if(msg != null) 
+			{
+				accepted = true;
+				if(msg.getPerformative() == ACLMessage.CONFIRM) 
+				{
+					System.out.println("order was accepted, msg received in customer");
+					
+					ACLMessage orderReq = new ACLMessage(ACLMessage.REQUEST);
+			        orderReq.setLanguage(codec.getName());
+			        orderReq.setOntology(ontology.getName()); 
+			        orderReq.setConversationId("customer-order-req");
+			        orderReq.addReceiver(manufacturerAID);
+					
+					Action request = new Action();
+					request.setAction(order);
+					request.setActor(manufacturerAID); // the agent that you request to perform the action
+					try
+					{
+						getContentManager().fillContent(orderReq, request); //send the wrapper object
+						send(orderReq);
+					}
+					catch (CodecException ce) { ce.printStackTrace(); }
+					catch (OntologyException oe) { oe.printStackTrace(); } 
+				}
+				else 
+					System.out.println("\nThe order was not accepted! Costumer " + myAgent.getLocalName() + " is done.");			
 			}
 			else
 				block();
 		}
+		@Override
+	    public boolean done() {
+	      return accepted;
+	    }
 
 	}
-
+	
+	// NOT EDITED YET
 	public class ReceiveOrder extends CyclicBehaviour
 	{
 

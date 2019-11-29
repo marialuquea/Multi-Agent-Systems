@@ -8,20 +8,10 @@ import set10111.elements.concepts.*;
 
 public class Smartphone implements Concept
 {
-	private int serialNumber;
-	
 	private Screen screen;
 	private Battery battery;
 	private Storage storage;
 	private Ram ram;
-
-	@Slot (mandatory = true)
-	public int getSerialNumber() {
-		return serialNumber;
-	}
-	public void setSerialNumber(int serialNumber) {
-		this.serialNumber = serialNumber;
-	}
 
 	@Slot (mandatory = true)
 	public Screen getScreen() {

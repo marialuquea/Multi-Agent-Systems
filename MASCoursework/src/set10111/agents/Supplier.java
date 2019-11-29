@@ -2,6 +2,7 @@ package set10111.agents;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import jade.content.ContentElement;
@@ -24,6 +25,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
 import set10111.elements.*;
+import set10111.elements.concepts.SmartphoneComponent;
 
 public class Supplier extends Agent
 {
@@ -33,10 +35,12 @@ public class Supplier extends Agent
 	private ArrayList<AID> manufacturers = new ArrayList<>();
 	private SupplierOrder order = new SupplierOrder();
 	private HashMap<SupplierOrder, Integer> orders = new HashMap<>(); 
+	private HashMap<SmartphoneComponent, Integer> supplies;
+	private int deliveryDays;
 
 	protected void setup()
 	{
-		//System.out.println("setup() in Supplier");
+		System.out.println("setup() in "+this.getLocalName());
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 
@@ -53,6 +57,13 @@ public class Supplier extends Agent
 		catch(FIPAException e){
 			e.printStackTrace();
 		}
+		
+		// Get price list and delivery days
+	    Object[] args = getArguments();
+	    if (args != null && args.length > 1) {
+	    supplies = (HashMap<SmartphoneComponent, Integer>) args[0];
+	    deliveryDays = (int) args[1];
+	    }
 
 		addBehaviour(new TickerWaiter(this));
 		//addBehaviour(new ReceiveOrderRequests(this));
@@ -156,6 +167,55 @@ public class Supplier extends Agent
 		}
 	}
 
+	private class PriceListRequest extends OneShotBehaviour
+	{
+		public PriceListRequest(Agent a) { super(a); }
+		
+		public void action()
+		{
+			MessageTemplate mt = MessageTemplate.and(
+					MessageTemplate.MatchPerformative(ACLMessage.REQUEST), 
+					MessageTemplate.MatchConversationId("parts-prices"));
+			ACLMessage msg = myAgent.receive(mt);
+			
+			if (msg != null) 
+			{
+				ACLMessage reply = msg.createReply(); 
+	            reply.setPerformative(ACLMessage.INFORM);
+	            reply.setConversationId("price-list");
+	              
+	            // separate hashmaps in 2 lists
+	            ArrayList<SmartphoneComponent> components = new ArrayList<>();
+	            ArrayList<Integer> componentQuantities = new ArrayList<>();
+	            
+	            for (Entry<SmartphoneComponent, Integer> part : supplies.entrySet())
+	            {
+	            	SmartphoneComponent comp = part.getKey();
+	            	int quantity = part.getValue();
+	            	components.add(comp);
+	            	componentQuantities.add(quantity);
+	            }
+	            
+	            SupplierPrices prices = new SupplierPrices();
+	            prices.setSupplier(this.getAgent().getAID());
+	            
+	            // Make message 
+	            Action request = new Action();
+				request.setAction(prices);
+				request.setActor(manufacturers.get(0));
+				try
+				{
+					getContentManager().fillContent(reply, request); //send the wrapper object
+					send(reply);
+					// System.out.println("msg sent: "+msg);
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); } 
+			
+			}
+		}
+	}
+	
 	private class ReceiveOrderRequests extends OneShotBehaviour
 	{
 		private int order_count = 0;

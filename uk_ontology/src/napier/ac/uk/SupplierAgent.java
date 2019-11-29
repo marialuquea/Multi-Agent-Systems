@@ -35,8 +35,7 @@ import napier.ac.uk_ontology.predicates.SendsPayment;
 import napier.ac.uk_ontology.predicates.ShipsComponents;
 
 public class SupplierAgent extends Agent {
-  private static final long serialVersionUID = 1L;
-  
+	
   private Codec codec = new SLCodec();
   private Ontology ontology = ShopOntology.getInstance();
 

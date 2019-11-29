@@ -147,6 +147,7 @@ public class CustomerAgent extends Agent
       // Randomly generate components
       if(rand.nextFloat() < 0.5) {
     	computer = new Desktop();
+    	System.out.println(computer.toString());
       } else {
     	computer = new Laptop();
       }
@@ -170,6 +171,8 @@ public class CustomerAgent extends Agent
       computer.setRam(ram);
       computer.setHardDrive(hardDrive);
       computer.setOs(os);
+      
+      System.out.println(computer.toString());
       
       
       int quantity = (int) Math.floor(1 + 50 * rand.nextFloat());
