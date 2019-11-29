@@ -2,7 +2,7 @@ package napier.ac.uk.helpers;
 
 import java.util.HashMap;
 
-import napier.ac.uk_ontology.computerComponents.CpuDesktop;
+import napier.ac.uk_ontology.computerComponents.BatteryPhablet;
 import napier.ac.uk_ontology.computerComponents.CpuLaptop;
 import napier.ac.uk_ontology.computerComponents.HardDrive;
 import napier.ac.uk_ontology.computerComponents.MotherboardDesktop;
@@ -19,7 +19,7 @@ public class SuppPriceLists {
   private static final HashMap<ComputerComponent, Integer> fastSuppComps = 
   new HashMap<ComputerComponent, Integer>() {{
     put(new CpuLaptop(), 200);
-    put(new CpuDesktop(), 150);
+    put(new BatteryPhablet(), 150);
     put(new MotherboardDesktop(), 125);
     put(new MotherboardLaptop(), 75);
     put(new Ram("8GB"), 50);
@@ -35,7 +35,7 @@ public class SuppPriceLists {
   private static final HashMap<ComputerComponent, Integer> medSuppComps = 
   new HashMap<ComputerComponent, Integer>() {{
     put(new CpuLaptop(), 175);
-    put(new CpuDesktop(), 130);
+    put(new BatteryPhablet(), 130);
     put(new MotherboardDesktop(), 115);
     put(new MotherboardLaptop(), 60);
     put(new Ram("8GB"), 40);
@@ -51,7 +51,7 @@ public class SuppPriceLists {
   private static final HashMap<ComputerComponent, Integer> slowSuppComps = 
   new HashMap<ComputerComponent, Integer>() {{
     put(new CpuLaptop(), 150);
-    put(new CpuDesktop(), 110);
+    put(new BatteryPhablet(), 110);
     put(new MotherboardDesktop(), 95);
     put(new MotherboardLaptop(), 50);
     put(new Ram("8GB"), 30);

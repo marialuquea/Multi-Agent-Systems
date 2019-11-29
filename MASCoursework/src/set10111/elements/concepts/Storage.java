@@ -2,13 +2,13 @@ package set10111.elements.concepts;
 
 import jade.content.onto.annotations.Slot;
 
-public class Screen extends SmartphoneComponent
+public class Storage extends SmartphoneComponent
 {
 	private String specification;
 	
-	public Screen() {}
+	public Storage() {}
 	
-	public Screen(String specification) { 
+	public Storage(String specification) { 
 		this.specification = specification;
 	}
 	
@@ -22,6 +22,6 @@ public class Screen extends SmartphoneComponent
 	
 	@Override
 	public String toString() {
-		return "Screen: " + this.specification;
+		return "Storage: " + this.specification;
 	}
 }

@@ -1,25 +1,25 @@
 package napier.ac.uk_ontology.concepts;
 
 import jade.content.onto.annotations.Slot;
-import napier.ac.uk_ontology.computerComponents.CpuDesktop;
+import napier.ac.uk_ontology.computerComponents.BatteryPhablet;
 import napier.ac.uk_ontology.computerComponents.MotherboardDesktop;
 
 public class Desktop extends Computer {
   private static final long serialVersionUID = 1L;
   
-  private CpuDesktop cpu;
+  private BatteryPhablet cpu;
   private MotherboardDesktop motherboard;
   
   public Desktop() {
-  	this.cpu = new CpuDesktop();
+  	this.cpu = new BatteryPhablet();
   	this.motherboard = new MotherboardDesktop();
   }
   
   @Slot(mandatory = true)
-  public CpuDesktop getCpu() {
+  public BatteryPhablet getCpu() {
     return cpu;
   }
-  public void setCpu(CpuDesktop deskCpu) {
+  public void setCpu(BatteryPhablet deskCpu) {
     this.cpu = deskCpu;
   }
   @Slot(mandatory = true)
