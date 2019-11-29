@@ -33,10 +33,10 @@ public class Manufacturer extends Agent
 	private ArrayList<AID> suppliers = new ArrayList<>();
 	private int numOrdersReceived = 0;
 	private AID tickerAgent;
-	private Order order = new Order();
+	private CustomerOrder order = new CustomerOrder();
 	private SupplierOrder supOrder = new SupplierOrder();
 	private Smartphone phone = new Smartphone();
-	private ArrayList<Order> orders = new ArrayList<>();
+	private ArrayList<CustomerOrder> orders = new ArrayList<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
 	private int partsComingToday = 0;
 	private int day;
@@ -102,8 +102,21 @@ public class Manufacturer extends Agent
 					phoneAssembledCount = 0;
 					day++;
 					System.out.println("Day "+ day);
-
-
+					for (CustomerOrder o : orders) 
+					{
+						o.setDaysDue(o.getDaysDue() - 1);
+						
+						if (o.getDaysDue() <= 0) 
+						{
+							o.setProfit(o.getProfit()-o.getPenalty());
+							System.out.println("- "+(o.getProfit()-o.getPenalty()));
+						}
+						
+						System.out.println("order "+o.getId()
+							+ ", daysDue: "+o.getDaysDue()
+							+ ", penalty: "+o.getPenalty()
+							+ ", profit: "+o.getProfit());
+					}
 					// find customers and suppliers
 					myAgent.addBehaviour(new FindCustomers(myAgent));
 					myAgent.addBehaviour(new FindSuppliers(myAgent));
@@ -192,44 +205,59 @@ public class Manufacturer extends Agent
 						ce = getContentManager().extractContent(msg);
 
 						Action available = (Action) ce;
-						order = (Order) available.getAction(); // this is the order requested
+						order = (CustomerOrder) available.getAction(); // this is the order requested
 						phone = order.getSpecification();
 
 						order.setId(++orderID);
 						System.out.println("Order request: \t "+order.getId());
-						orders.add(order);
+						
+						
+						
 						//System.out.println("orderID: "+order.getId());
 						//System.out.println("orders.size(): "+orders.size());
 
 						// calculate cost of making offer from supplier 1
-						int total = 0;
+						int cost = 0;
 
 						if (phone.getScreen() == 5)
-							total += 100;
+							cost += 100;
 						if (phone.getScreen() == 7)
-							total += 150;
+							cost += 150;
 
 						if (phone.getBattery() == 2000)
-							total += 70;
+							cost += 70;
 						if (phone.getBattery() == 3000)
-							total += 100;
+							cost += 100;
 
 						if (phone.getStorage() == 64)
-							total += 25;
+							cost += 25;
 						if (phone.getStorage() == 256)
-							total += 50;
+							cost += 50;
 
 						if (phone.getRAM() == 4)
-							total += 30;
+							cost += 30;
 						if (phone.getStorage() == 64)
-							total += 25;
+							cost += 25;
+						
 
 						// how much it is going to sell for 
-						// int sold = order.getPrice() * order.getQuantity();
-
+						int sold = order.getPrice() * order.getQuantity();
+						order.setProfit(sold - cost);
+						System.out.println("sold: "+sold+" - cost: "+cost);
+						//System.out.println("profit: "+order.getProfit());
+						//System.out.println("penalty costs: "+order.getPenalty());
 
 						//TODO: if sold > x then sell, else refuse
-
+						
+						// if late orders, no
+						
+						// check penalty costs
+						
+						// if profit >>> accept
+						
+						// order accepted and added to list of orders
+						orders.add(order);
+						
 						// send accept proposal message to customer
 						ACLMessage reply = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 						reply.setContent("order accepted");
@@ -463,7 +491,7 @@ public class Manufacturer extends Agent
 					//System.out.println("batteries received count: "+partsTotal);
 
 					// YEA BOI IT WORKS
-					System.out.println("        -----WAREHOUSE------");
+					System.out.println("        ------WAREHOUSE-----");
 					for (String i : warehouse.keySet()) {
 						System.out.println("        "+i + " \t " + warehouse.get(i));
 					}
@@ -509,7 +537,7 @@ public class Manufacturer extends Agent
 						//System.out.println("count: "+count);
 
 						
-						//TODO: assemble and remove from order list
+						// assemble and remove from order list
 						if ((count == 4) && (phoneAssembledCount + orders.get(i).getQuantity() <= 50))
 						{
 							//System.out.println("order quantity: "+orders.get(i).getQuantity());
@@ -531,8 +559,8 @@ public class Manufacturer extends Agent
 							{
 								getContentManager().fillContent(msgA, request); //send the wrapper object
 								send(msgA);
-								System.out.println("               order "+orders.get(i).getId()
-										+" sent to "+orders.get(i).getCustomer().getLocalName());
+								System.out.println("        SENT "+orders.get(i).getId()
+										+" - "+orders.get(i).getCustomer().getLocalName());
 							}
 							catch (CodecException ce) { ce.printStackTrace(); }
 							catch (OntologyException oe) { oe.printStackTrace(); } 
@@ -551,7 +579,6 @@ public class Manufacturer extends Agent
 							
 							//remove order from order list
 							orderCount++;
-							
 							orders.remove(i);
 						}
 

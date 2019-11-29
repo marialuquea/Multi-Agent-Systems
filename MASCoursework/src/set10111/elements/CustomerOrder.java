@@ -3,7 +3,7 @@ package set10111.elements;
 import jade.content.AgentAction;
 import jade.core.AID;
 
-public class Order implements AgentAction
+public class CustomerOrder implements AgentAction
 {
 	private int id;
 	private AID customer; 
@@ -13,6 +13,7 @@ public class Order implements AgentAction
 	private int quantity; // how many smartphones ordered
 	private int daysDue;
 	private boolean accepted;
+	private int profit;
 
 	public int getId() {
 		return id;
@@ -62,5 +63,10 @@ public class Order implements AgentAction
 	public void setAccepted(boolean accepted) {
 		this.accepted = accepted;
 	}
-	
+	public int getProfit() {
+		return profit;
+	}
+	public void setProfit(int profit) {
+		this.profit = profit;
+	}
 }

@@ -32,7 +32,7 @@ public class Customer extends Agent
 	private Ontology ontology = CommerceOntology.getInstance();
 	private AID manufacturerAID;
 	private AID tickerAgent;
-	private Order order = new Order();
+	private CustomerOrder order = new CustomerOrder();
 	private Smartphone smartphone = new Smartphone();
 	private int orderID = 0;
 
@@ -234,14 +234,14 @@ public class Customer extends Agent
 					ce = getContentManager().extractContent(msg);
 
 					Action available = (Action) ce;
-					order = (Order) available.getAction(); // this is the order received
+					order = (CustomerOrder) available.getAction(); // this is the order received
 					smartphone = order.getSpecification();
 
 
 					
 					//System.out.println("order received in c: \t"+msg);
-					System.out.println("                  Order: "+order.getId()
-						+" received by "+order.getCustomer().getLocalName());
+					System.out.println("       RECEIVED: "+order.getId()
+						+" - "+order.getCustomer().getLocalName());
 				}
 				catch (CodecException ce) { ce.printStackTrace(); }
 				catch (OntologyException oe) { oe.printStackTrace(); }

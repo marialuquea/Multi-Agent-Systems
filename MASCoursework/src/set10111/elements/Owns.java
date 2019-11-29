@@ -6,15 +6,15 @@ import jade.core.AID;
 
 public class Owns implements Predicate 
 {
-	private AID owner;
+	private AID supplier;
 	private Smartphone smartphone;
 	
 	public AID getOwner() {
-		return owner;
+		return supplier;
 	}
 	
 	public void setOwner(AID owner) {
-		this.owner = owner;
+		this.supplier = owner;
 	}
 	
 	public Smartphone getSmartphone() {
