@@ -125,6 +125,7 @@ public class Manufacturer extends Agent
 					myAgent.addBehaviour(new FindCustomers(myAgent));
 					myAgent.addBehaviour(new FindSuppliers(myAgent));
 					myAgent.addBehaviour(new AskSupInfo(myAgent));
+					myAgent.addBehaviour(new ReceiveOrderQuery(myAgent));
 
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
 
@@ -238,6 +239,36 @@ public class Manufacturer extends Agent
 				}
 			}
 		}
+	}
+	
+	// receive queryOrders from customer
+	private class ReceiveOrderQuery extends Behaviour
+	{
+
+		public ReceiveOrderQuery(Agent a) { super(a); }
+		
+		private int received = 0;
+		
+		public void action()
+		{
+			MessageTemplate mt = MessageTemplate.and(
+					MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF),
+					MessageTemplate.MatchConversationId("customer-order-query"));
+			ACLMessage msg = receive(mt);
+			
+			if (msg != null)
+			{
+				
+			}
+			else
+				block();
+		}
+		
+		@Override
+		public boolean done() {
+			return received == customers.size();
+		}
+		
 	}
 	
 	// behaviour to receive customer requests

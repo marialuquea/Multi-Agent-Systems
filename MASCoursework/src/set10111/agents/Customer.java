@@ -184,7 +184,7 @@ public class Customer extends Agent
 			smartphone.setBattery(battery);
 			smartphone.setScreen(screen);
 			
-			System.out.println(smartphone.toString());
+			//System.out.println(smartphone.toString());
 			
 			order.setCustomer(myAgent.getAID());
 			order.setSpecification(smartphone);
@@ -200,7 +200,7 @@ public class Customer extends Agent
 			try {
 		        getContentManager().fillContent(msg, orderQuery);
 		        send(msg);
-		        System.out.println(msg);
+		        //System.out.println(msg);
 		    }
 	       catch (CodecException ce) { ce.printStackTrace(); }
 	       catch (OntologyException oe) { oe.printStackTrace(); } 
@@ -222,12 +222,11 @@ public class Customer extends Agent
 					MessageTemplate.or(
 							MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),
 							MessageTemplate.MatchPerformative(ACLMessage.DISCONFIRM)));
-			//MessageTemplate mt = MessageTemplate.MatchContent("order accepted");
-			
 			ACLMessage msg = myAgent.receive(mt);
 			if(msg != null) 
 			{
 				accepted = true;
+				System.out.println(msg);
 				if(msg.getPerformative() == ACLMessage.CONFIRM) 
 				{
 					System.out.println("order was accepted, msg received in customer");
