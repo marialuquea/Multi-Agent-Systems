@@ -25,7 +25,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
-import set10111.predicates.OrderQuery;
+import set10111.predicates.*;
 import set10111.elements.*;
 import set10111.elements.concepts.SmartphoneComponent;
 
@@ -44,6 +44,8 @@ public class Manufacturer extends Agent
 	private HashMap<String, Integer> warehouse = new HashMap<>();
 	private HashMap<SmartphoneComponent, Integer> supplier1prices = new HashMap<>();
 	private HashMap<SmartphoneComponent, Integer> supplier2prices = new HashMap<>();
+	private int supplier1deliveryDays;
+	private int supplier2deliveryDays;
 	private int partsComingToday = 0;
 	private int day;
 	private int phoneAssembledCount = 0;
@@ -224,33 +226,57 @@ public class Manufacturer extends Agent
 			
 			if (msg != null)
 			{
+				//System.out.println("price list received:\n"+msg);
 				try 
 				{
 					ContentElement ce = null;
 					ce = getContentManager().extractContent(msg);
-					System.out.println("1");
 					
-					if (ce instanceof SupplierPrices) 
+					if (ce instanceof PriceList) 
 					{
-						System.out.println("2");
-						SupplierPrices supPrices = (SupplierPrices) ce;
+						PriceList supPrices = (PriceList) ce;
+						
+						HashMap<SmartphoneComponent, Integer> priceList = new HashMap<>();
+						ArrayList<SmartphoneComponent> keys = supPrices.getKeys();
+						ArrayList<Long> values = supPrices.getValues();
+						
+						for(int i = 0; i < keys.size(); i++)
+						{
+							SmartphoneComponent sc = keys.get(i);
+							int price = values.get(i).intValue();
+							priceList.put(sc, price);
+						}
+						
 						AID supplier = supPrices.getSupplier();
-						System.out.println("3");
-						System.out.println("SUPPLIER: "+supplier.getLocalName());
-						supplier1prices = supPrices.getPricesSupplier1();
-						supplier2prices = supPrices.getPricesSupplier2();
-						System.out.println("4");
-						// CHECK IF IT GET'S ADDED TO HASHMAP
+						int speed = supPrices.getSpeed();
+						if (supplier.getLocalName().equals("supplier1")) {
+							supplier1prices = priceList;
+							supplier1deliveryDays = speed;
+							System.out.println("3a: \t"
+									+supplier1prices + "\t"
+									+supplier1deliveryDays);
+						}
+						if (supplier.getLocalName().equals("supplier2")) {
+							supplier2prices = priceList;
+							supplier2deliveryDays = speed;
+							System.out.println("3b: \t"
+									+supplier2prices + "\t"
+									+supplier2deliveryDays);
+						}
 						received++;
 					}
+					else
+						System.out.println("Unknown predicate "+ce.getClass().getName());
 				}
 				catch (CodecException ce) { ce.printStackTrace(); } 
 				catch (OntologyException oe) { oe.printStackTrace(); }
-				System.out.println("5");
 			}
+			else
+				block();
 			
 		}
 		public boolean done() {
+			System.out.println("HI");
 			return (received >= 2);
 		}
 	}

@@ -2,7 +2,6 @@ package set10111.agents;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import jade.content.ContentElement;
@@ -25,6 +24,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
+import set10111.predicates.*;
 import set10111.elements.*;
 import set10111.elements.concepts.SmartphoneComponent;
 
@@ -199,7 +199,7 @@ public class Supplier extends Agent
 	            }
 	            
 	            
-	            SupplierPrices prices = new SupplierPrices();
+	            PriceList prices = new PriceList();
 	            prices.setSupplier(this.getAgent().getAID());
 	            prices.setSpeed(deliveryDays);
 	            prices.setKeys(components);
@@ -214,10 +214,10 @@ public class Supplier extends Agent
 				{      
 					getContentManager().fillContent(reply, prices); //send the wrapper object
 					send(reply);
-					System.out.println("\nPrice list sent to manufacturer from "
+					/* System.out.println("\nPrice list sent to manufacturer from "
 							+this.getAgent().getLocalName()
 							+": \n"
-							+reply);
+							+reply); */
 					received = true;
 				}
 				catch (CodecException ce) { ce.printStackTrace(); }

@@ -11,9 +11,6 @@ import set10111.elements.concepts.*;
 public class SupplierPrices implements AgentAction
 {
 	private AID supplier;
-	private int speed;
-	private ArrayList<SmartphoneComponent> keys;
-	private ArrayList<Long> values;
 	
 	@Slot (mandatory = true)
 	public AID getSupplier() {
@@ -52,24 +49,4 @@ public class SupplierPrices implements AgentAction
 		return supplier2;
 	}
 	
-	public int getSpeed() {
-		return speed;
-	}
-	public void setSpeed(int speed) {
-		this.speed = speed;
-	}
-	
-	public ArrayList<SmartphoneComponent> getKeys() {
-		return keys;
-	}
-	public void setKeys(ArrayList<SmartphoneComponent> keys) {
-		this.keys = keys;
-	}
-	
-	public ArrayList<Long> getValues() {
-		return values;
-	}
-	public void setValues(ArrayList<Long> values) {
-		this.values = values;
-	}
 }
