@@ -3,6 +3,7 @@ package set10111.agents;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -53,7 +54,7 @@ public class Manufacturer extends Agent
 
 	protected void setup()
 	{
-		System.out.println("setup() in "+this.getLocalName());
+		//System.out.println("setup() in "+this.getLocalName());
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 
@@ -205,7 +206,7 @@ public class Manufacturer extends Agent
 			{
 				msg.addReceiver(sup);
 				myAgent.send(msg);
-				System.out.println("REQUEST price list from "+sup.getLocalName()+" done");
+				//System.out.println("REQUEST price list from "+sup.getLocalName()+" done");
 				msg.removeReceiver(sup);
 			}
 		}
@@ -226,7 +227,6 @@ public class Manufacturer extends Agent
 			
 			if (msg != null)
 			{
-				//System.out.println("price list received:\n"+msg);
 				try 
 				{
 					ContentElement ce = null;
@@ -252,16 +252,10 @@ public class Manufacturer extends Agent
 						if (supplier.getLocalName().equals("supplier1")) {
 							supplier1prices = priceList;
 							supplier1deliveryDays = speed;
-							System.out.println("3a: \t"
-									+supplier1prices + "\t"
-									+supplier1deliveryDays);
 						}
 						if (supplier.getLocalName().equals("supplier2")) {
 							supplier2prices = priceList;
 							supplier2deliveryDays = speed;
-							System.out.println("3b: \t"
-									+supplier2prices + "\t"
-									+supplier2deliveryDays);
 						}
 						received++;
 					}
@@ -276,7 +270,6 @@ public class Manufacturer extends Agent
 			
 		}
 		public boolean done() {
-			System.out.println("HI");
 			return (received >= 2);
 		}
 	}
@@ -284,11 +277,11 @@ public class Manufacturer extends Agent
 	// receive OrderQuery from customer
 	private class ReceiveOrderQuery extends Behaviour
 	{
-
 		public ReceiveOrderQuery(Agent a) { super(a); }
 		
 		private int received = 0;
 		
+		@SuppressWarnings("unlikely-arg-type")
 		public void action()
 		{
 			MessageTemplate mt = MessageTemplate.and(
@@ -298,19 +291,24 @@ public class Manufacturer extends Agent
 			
 			if (msg != null)
 			{
+				System.out.println(msg);
 				try 
 				{
 					ContentElement ce = null;
 					ce = getContentManager().extractContent(msg);
+					System.out.println("oh no: "+ce.getClass().getName());
 					
 					if (ce instanceof OrderQuery)
 					{
+						System.out.println("1");
 						OrderQuery orderAccepted = (OrderQuery) ce;
 						CustomerOrder order = orderAccepted.getOrder();
 						order.setCustomer(msg.getSender());
 						
+						System.out.println("2");
+						
 						// choose best supplier for this order
-						AID supplier = null;
+						AID bestSupplier = null;
 						double maxProfit = 0; 
 						double expectedProfit = 0;
 						double bestSupplierCost = 0;
@@ -318,6 +316,40 @@ public class Manufacturer extends Agent
 						int daysLate = 0;
 						
 						
+						System.out.println("3\t"+supplier1prices.get(0));
+						
+						for (Entry<SmartphoneComponent, Integer> part : supplier1prices.entrySet())
+			            {
+							System.out.println(part.getKey()+" - "+part.getValue());
+			            }
+						
+						
+						
+						for (AID supplier : suppliers) 
+						{
+							
+							System.out.println("4");
+							
+							// calculate cost of order
+							double totalCost = 0;
+							for (SmartphoneComponent c : order.getSpecification().getComponents())
+							{
+								System.out.println("5\t"+supplier);
+								System.out.println("6\t"+c);
+								System.out.println("7\t"+(Integer)supplier1prices.get(c));
+								
+								if (supplier.getLocalName().equals("supplier1")) {
+									if (supplier1prices.get(c) != null)
+										totalCost += supplier1prices.get(c);
+								}
+								if (supplier.getLocalName().equals("supplier2"))
+									totalCost += supplier2prices.get(c);
+								
+								
+							}
+						}
+						
+						received++;
 					}
 				} 
 				catch (CodecException e) { e.printStackTrace(); } 
@@ -329,6 +361,7 @@ public class Manufacturer extends Agent
 		
 		@Override
 		public boolean done() {
+			System.out.println("\t"+received+" - "+customers.size());
 			return received == customers.size();
 		}
 		

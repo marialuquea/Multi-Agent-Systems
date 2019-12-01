@@ -35,7 +35,7 @@ public class Customer extends Agent
 
 	protected void setup()
 	{
-		System.out.println("setup() in "+this.getLocalName());
+		//System.out.println("setup() in "+this.getLocalName());
 
 		// register codec
 		getContentManager().registerLanguage(codec);
@@ -201,7 +201,7 @@ public class Customer extends Agent
 		        getContentManager().fillContent(msg, orderQuery);
 		        send(msg);
 		        //System.out.println(msg);
-		        System.out.println("order from "+this.getAgent().getLocalName()+" queried");
+		        //System.out.println("order from "+this.getAgent().getLocalName()+" queried");
 		    }
 	       catch (CodecException ce) { ce.printStackTrace(); }
 	       catch (OntologyException oe) { oe.printStackTrace(); } 

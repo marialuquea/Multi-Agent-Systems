@@ -41,7 +41,7 @@ public class Supplier extends Agent
 
 	protected void setup()
 	{
-		System.out.println("setup() in "+this.getLocalName());
+		//System.out.println("setup() in "+this.getLocalName());
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 
