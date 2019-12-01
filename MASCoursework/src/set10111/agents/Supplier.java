@@ -14,6 +14,7 @@ import jade.content.onto.OntologyException;
 import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
@@ -66,7 +67,6 @@ public class Supplier extends Agent
 	    }
 
 		addBehaviour(new TickerWaiter(this));
-		//addBehaviour(new ReceiveOrderRequests(this));
 	}
 
 	@Override
@@ -111,11 +111,10 @@ public class Supplier extends Agent
 						//System.out.println(entry.getKey().getCustomer().getLocalName() + " = " + entry.getValue());	
 					}
 
-
-
 					// activities for the day
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					dailyActivity.addSubBehaviour(new PriceListRequest(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
 					dailyActivity.addSubBehaviour(new SendParts(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
@@ -135,8 +134,8 @@ public class Supplier extends Agent
 	{
 		public FindManufacturer(Agent a) { super(a); }
 		@Override
-		public void action() {
-
+		public void action() 
+		{
 			DFAgentDescription sellerTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
 			sd.setType("manufacturer");
@@ -167,10 +166,12 @@ public class Supplier extends Agent
 		}
 	}
 
-	private class PriceListRequest extends OneShotBehaviour
+	// Send Price List to Manufacturer
+	private class PriceListRequest extends Behaviour
 	{
 		public PriceListRequest(Agent a) { super(a); }
-		
+		boolean received = false;
+		@Override
 		public void action()
 		{
 			MessageTemplate mt = MessageTemplate.and(
@@ -180,39 +181,52 @@ public class Supplier extends Agent
 			
 			if (msg != null) 
 			{
+				System.out.println("Price list request received in "+this.getAgent().getLocalName());
 				ACLMessage reply = msg.createReply(); 
 	            reply.setPerformative(ACLMessage.INFORM);
 	            reply.setConversationId("price-list");
 	              
-	            // separate hashmaps in 2 lists
+	            // separate hashmaps in 2 lists to send
 	            ArrayList<SmartphoneComponent> components = new ArrayList<>();
-	            ArrayList<Integer> componentQuantities = new ArrayList<>();
+	            ArrayList<Long> componentQuantities = new ArrayList<>();
 	            
 	            for (Entry<SmartphoneComponent, Integer> part : supplies.entrySet())
 	            {
 	            	SmartphoneComponent comp = part.getKey();
-	            	int quantity = part.getValue();
+	            	long quantity = part.getValue();
 	            	components.add(comp);
 	            	componentQuantities.add(quantity);
 	            }
 	            
+	            
 	            SupplierPrices prices = new SupplierPrices();
 	            prices.setSupplier(this.getAgent().getAID());
+	            prices.setSpeed(deliveryDays);
+	            prices.setKeys(components);
+	            prices.setValues(componentQuantities);
 	            
 	            // Make message 
+	            /*
 	            Action request = new Action();
 				request.setAction(prices);
-				request.setActor(manufacturers.get(0));
+				request.setActor(manufacturers.get(0)); */
 				try
-				{
-					getContentManager().fillContent(reply, request); //send the wrapper object
+				{      
+					getContentManager().fillContent(reply, prices); //send the wrapper object
 					send(reply);
-					// System.out.println("msg sent: "+msg);
+					System.out.println("\nPrice list sent to manufacturer from "
+							+this.getAgent().getLocalName()
+							+": \n"
+							+reply);
+					received = true;
 				}
 				catch (CodecException ce) { ce.printStackTrace(); }
 				catch (OntologyException oe) { oe.printStackTrace(); } 
-			
 			}
+			
+		}
+		public boolean done() {
+			return received;
 		}
 	}
 	

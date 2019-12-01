@@ -1,24 +1,25 @@
 package set10111.elements;
 
 import jade.content.AgentAction;
+import jade.core.AID;
 
 public class SupplierOrder implements AgentAction
 {
-	private int battery;
-	private int ram;
-	private int screen;
-	private int storage;
+	private String battery;
+	private String ram;
+	private String screen;
+	private String storage;
 	private int batteryQuantity;
 	private int ramQuantity;
 	private int screenQuantity;
 	private int storageQuantity;
-	private int supplier;
+	private AID supplier;
 	private int price;
 	
-	public int getBattery() {
+	public String getBattery() {
 		return battery;
 	}
-	public void setBattery(int battery) {
+	public void setBattery(String battery) {
 		this.battery = battery;
 	}
 	public int getBatteryQuantity() {
@@ -29,10 +30,10 @@ public class SupplierOrder implements AgentAction
 	}
 	
 	
-	public int getRAM() {
+	public String getRAM() {
 		return ram;
 	}
-	public void setRAM(int ram) {
+	public void setRAM(String ram) {
 		this.ram = ram;
 	}
 	public int getRamQuantity() {
@@ -43,10 +44,10 @@ public class SupplierOrder implements AgentAction
 	}
 	
 	
-	public int getScreen() {
+	public String getScreen() {
 		return screen;
 	}
-	public void setScreen(int screen) {
+	public void setScreen(String screen) {
 		this.screen = screen;
 	}
 	public int getScreenQuantity() {
@@ -57,10 +58,10 @@ public class SupplierOrder implements AgentAction
 	}
 	
 	
-	public int getStorage() {
+	public String getStorage() {
 		return storage;
 	}
-	public void setStorage(int storage) {
+	public void setStorage(String storage) {
 		this.storage = storage;
 	}
 	public int getStorageQuantity() {
@@ -70,11 +71,10 @@ public class SupplierOrder implements AgentAction
 		this.storageQuantity = storageQuantity;
 	}
 	
-	
-	public int getSupplier() {
+	public AID getSupplier() {
 		return supplier;
 	}
-	public void setSupplier(int supplier) {
+	public void setSupplier(AID supplier) {
 		this.supplier = supplier;
 	}
 	
@@ -85,5 +85,9 @@ public class SupplierOrder implements AgentAction
 	public void setPrice(int price) {
 		this.price = price;
 	}
+	
+	
+	
+	
 	
 }

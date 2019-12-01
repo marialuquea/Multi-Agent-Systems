@@ -10,6 +10,7 @@ import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
+import jade.content.onto.UngroundedException;
 import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
@@ -24,6 +25,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
+import set10111.predicates.OrderQuery;
 import set10111.elements.*;
 import set10111.elements.concepts.SmartphoneComponent;
 
@@ -122,17 +124,18 @@ public class Manufacturer extends Agent
 							+ ", profit: "+o.getProfit());
 					}
 					
-					myAgent.addBehaviour(new FindCustomers(myAgent));
-					myAgent.addBehaviour(new FindSuppliers(myAgent));
-					myAgent.addBehaviour(new AskSupInfo(myAgent));
-					myAgent.addBehaviour(new ReceiveOrderQuery(myAgent));
+					SequentialBehaviour dailyActivity = new SequentialBehaviour();
+					dailyActivity.addSubBehaviour(new FindCustomers(myAgent));
+					dailyActivity.addSubBehaviour(new FindSuppliers(myAgent));
+					dailyActivity.addSubBehaviour(new AskSupInfo(myAgent));
+					dailyActivity.addSubBehaviour(new ReceivePartsPrices(myAgent));
+					dailyActivity.addSubBehaviour(new ReceiveOrderQuery(myAgent));
+					myAgent.addBehaviour(dailyActivity);
 
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
-
 					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
 					myAgent.addBehaviour(ror);
 					cyclicBehaviours.add(ror);
-
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
 
 				}
@@ -187,22 +190,26 @@ public class Manufacturer extends Agent
 
 	private class AskSupInfo extends OneShotBehaviour
 	{
-
 		public AskSupInfo(Agent a) { super(a); }
 		
 		@Override
 		public void action() 
 		{
 			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+			msg.setLanguage(codec.getName());
+			msg.setOntology(ontology.getName());
 			msg.setConversationId("parts-prices");
-			for (AID sup : suppliers) {
+			for (AID sup : suppliers) 
+			{
 				msg.addReceiver(sup);
 				myAgent.send(msg);
+				System.out.println("REQUEST price list from "+sup.getLocalName()+" done");
+				msg.removeReceiver(sup);
 			}
 		}
 	}
 	
-	private class ReceivePartsPrices extends OneShotBehaviour
+	private class ReceivePartsPrices extends Behaviour
 	{
 		public ReceivePartsPrices(Agent a) { super(a); }
 		int received = 0;
@@ -210,38 +217,45 @@ public class Manufacturer extends Agent
 		@Override
 		public void action()
 		{
-			while (received <= 2)
+			MessageTemplate mt = MessageTemplate.and(
+					MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+		            MessageTemplate.MatchConversationId("price-list"));
+			ACLMessage msg = receive(mt);
+			
+			if (msg != null)
 			{
-				MessageTemplate mt = MessageTemplate.and(
-						MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-			            MessageTemplate.MatchConversationId("price-list"));
-				ACLMessage msg = receive(mt);
-				
-				if (msg != null)
+				try 
 				{
-					try 
+					ContentElement ce = null;
+					ce = getContentManager().extractContent(msg);
+					System.out.println("1");
+					
+					if (ce instanceof SupplierPrices) 
 					{
-						ContentElement ce = null;
-						ce = getContentManager().extractContent(msg);
-						
-						if (ce instanceof SupplierPrices) 
-						{
-							SupplierPrices supPrices = (SupplierPrices) ce;
-							AID supplier = supPrices.getSupplier();
-							System.out.println("SUPPLIER: "+supplier.getLocalName());
-							supplier1prices = supPrices.getPricesSupplier1();
-							supplier2prices = supPrices.getPricesSupplier2();
-							// CHECK IF IT GET'S ADDED TO HASHMAP
-						}
+						System.out.println("2");
+						SupplierPrices supPrices = (SupplierPrices) ce;
+						AID supplier = supPrices.getSupplier();
+						System.out.println("3");
+						System.out.println("SUPPLIER: "+supplier.getLocalName());
+						supplier1prices = supPrices.getPricesSupplier1();
+						supplier2prices = supPrices.getPricesSupplier2();
+						System.out.println("4");
+						// CHECK IF IT GET'S ADDED TO HASHMAP
+						received++;
 					}
-					catch (CodecException ce) { ce.printStackTrace(); } 
-					catch (OntologyException oe) { oe.printStackTrace(); }
 				}
+				catch (CodecException ce) { ce.printStackTrace(); } 
+				catch (OntologyException oe) { oe.printStackTrace(); }
+				System.out.println("5");
 			}
+			
+		}
+		public boolean done() {
+			return (received >= 2);
 		}
 	}
 	
-	// receive queryOrders from customer
+	// receive OrderQuery from customer
 	private class ReceiveOrderQuery extends Behaviour
 	{
 
@@ -258,7 +272,30 @@ public class Manufacturer extends Agent
 			
 			if (msg != null)
 			{
-				
+				try 
+				{
+					ContentElement ce = null;
+					ce = getContentManager().extractContent(msg);
+					
+					if (ce instanceof OrderQuery)
+					{
+						OrderQuery orderAccepted = (OrderQuery) ce;
+						CustomerOrder order = orderAccepted.getOrder();
+						order.setCustomer(msg.getSender());
+						
+						// choose best supplier for this order
+						AID supplier = null;
+						double maxProfit = 0; 
+						double expectedProfit = 0;
+						double bestSupplierCost = 0;
+						int lateDeliveryFee = 0;
+						int daysLate = 0;
+						
+						
+					}
+				} 
+				catch (CodecException e) { e.printStackTrace(); } 
+				catch (OntologyException e) { e.printStackTrace(); }
 			}
 			else
 				block();
@@ -380,7 +417,7 @@ public class Manufacturer extends Agent
 					msgParts.addReceiver(suppliers.get(0));
 					msgParts.setLanguage(codec.getName());
 					msgParts.setOntology(ontology.getName());
-
+					/*
 					SupplierOrder o = new SupplierOrder();
 					o.setBattery(2000);
 					o.setRAM(4);
@@ -430,6 +467,8 @@ public class Manufacturer extends Agent
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
+					
+					*/
 
 					//System.out.println("step: "+step);
 					step = 2;
@@ -469,6 +508,7 @@ public class Manufacturer extends Agent
 				//receive parts from supplier
 				if (step == 3)
 				{
+					/*
 					System.out.println("Receiving parts from suppliers");
 					int partsPerDay = 0;
 					do
@@ -588,6 +628,9 @@ public class Manufacturer extends Agent
 						System.out.println("        "+i + " \t " + warehouse.get(i));
 					}
 					System.out.println("        --------------------");
+					
+					*/
+					
 					step = 4;
 				}
 

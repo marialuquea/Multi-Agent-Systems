@@ -7,6 +7,7 @@ public class CustomerOrder implements AgentAction
 {
 	private int id;
 	private AID customer; 
+	private AID supplier; // the supplier assigned
 	private int price; // price set by the customer
 	private int penalty; // per-day penalty for late delivery
 	private Smartphone specification; // smartphone specification
@@ -68,5 +69,11 @@ public class CustomerOrder implements AgentAction
 	}
 	public void setProfit(int profit) {
 		this.profit = profit;
+	}
+	public AID getSupplier() {
+		return supplier;
+	}
+	public void setSupplier(AID supplier) {
+		this.supplier = supplier;
 	}
 }
