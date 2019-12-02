@@ -245,7 +245,7 @@ public class Manufacturer extends Agent
 						for(int i = 0; i < keys.size(); i++)
 						{
 							String sc = (String)keys.get(i).toString();
-							System.out.println("added to price list:\t"+sc);
+							//System.out.println("added to price list:\t"+sc);
 							int price = values.get(i).intValue();
 							priceList.put(sc, price);
 						}
@@ -289,7 +289,6 @@ public class Manufacturer extends Agent
 			ACLMessage msg = receive(mt);
 			if (msg != null)
 			{
-				System.out.println(msg);
 				try 
 				{
 					ContentElement ce = null;
@@ -302,30 +301,19 @@ public class Manufacturer extends Agent
 						
 						// choose best supplier for this order
 						AID bestSupplier = null;
-						double maxProfit = 0; 
-						double expectedProfit = 0;
-						double bestSupplierCost = 0;
-						int lateDeliveryFee = 0;
-						int daysLate = 0;
-						/*
-						System.out.println("\tSUPPLIER 1 PRICE LIST");
-						for (Entry<String, Integer> part : supplier1prices.entrySet())
-							System.out.println("\t"+part.getKey()+"\t"+part.getValue());
+						double maxProfit, expectedProfit, bestSupplierCost;
+						maxProfit = expectedProfit = bestSupplierCost = 0;
+						int lateDeliveryFee, daysLate = 0;
 						
-						System.out.println("\n\tSUPPLIER 2 PRICE LIST");
-						for (Entry<String, Integer> part : supplier2prices.entrySet())
-							System.out.println("\t"+part.getKey()+"\t"+part.getValue());
-						*/
 						for (AID supplier : suppliers) 
 						{
 							// calculate cost of order
 							double totalCost = 0;
 							for (SmartphoneComponent c : order.getSpecification().getComponents())
 							{
-								if (supplier.getLocalName().equals("supplier1")) {
-									System.out.println("darwon\t"+supplier1prices.get(c.toString()));
+								if (supplier.getLocalName().equals("supplier1"))
 									totalCost += supplier1prices.get(c.toString());
-								}
+								
 								// supplier 2 only has storage and ram so buy some parts from supplier 2 
 								// and others from supplier 1
 								if (supplier.getLocalName().equals("supplier2")) {
@@ -335,9 +323,45 @@ public class Manufacturer extends Agent
 										totalCost += supplier1prices.get(c.toString());
 								}
 								
-								
 							}
+							System.out.println("quantity\t"+order.getQuantity());
+							System.out.println("totalCost before quantity\t"+totalCost);
+							totalCost *= order.getQuantity();
+							System.out.println("totalCost after quantity\t"+totalCost);
+							
+							daysLate = supplier1deliveryDays - order.getDaysDue();
+							System.out.println("daysLate\t"+daysLate
+									+"\nsupplier1deliveryDays\t"+supplier1deliveryDays
+									+"\norder.getDaysDue()\t"+order.getDaysDue());
+							
+							if (daysLate > 0)
+								lateDeliveryFee = daysLate * order.getPenalty();
+							else
+								lateDeliveryFee = 0;
+							
+							expectedProfit = (order.getPrice() + order.getQuantity()) 
+									- totalCost - lateDeliveryFee;
+							
+							System.out.println("expectedProfit"+expectedProfit);
+							System.out.println("order.getPrice()"+order.getPrice());
+							System.out.println("order.getQuantity()"+order.getQuantity());
+							System.out.println("totalCost"+totalCost);
+							System.out.println("lateDeliveryFee"+lateDeliveryFee);
+							
+							// Decide if this supplier is better than the others
+							if ((bestSupplier == null && expectedProfit > 0)
+									|| (expectedProfit > maxProfit)) {
+								// if there is no best supplier, get the first that grants some profit
+								bestSupplier = supplier;
+								maxProfit = expectedProfit;
+								bestSupplierCost = totalCost;
+							}
+							System.out.println("\n----"+supplier.getLocalName()+" done----\n");
 						}
+						
+						
+						
+						//TODO: Send reply to buyer
 						
 						received++;
 					}
