@@ -113,7 +113,7 @@ public class Manufacturer extends Agent
 					phoneAssembledCount = 0;
 					day++;
 					System.out.println("Day "+ day);
-					//TODO: fix this
+					//TODO: for every order, decrease 1 day in order due date
 					/*
 					for (CustomerOrder o : orders) 
 					{
@@ -140,6 +140,8 @@ public class Manufacturer extends Agent
 					dailyActivity.addSubBehaviour(new ReceiveOrderQuery(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
 					dailyActivity.addSubBehaviour(new OrderPartsFromSupplier(myAgent));
+					dailyActivity.addSubBehaviour(new ReceiveSuppliesInfo(myAgent));
+					dailyActivity.addSubBehaviour(new ReceiveSupplies(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
@@ -409,9 +411,7 @@ public class Manufacturer extends Agent
 
 						Action available = (Action) ce;
 						order = (CustomerOrder) available.getAction(); // this is the order requested
-						
 						order = orders.get(order.getId());
-						
 						phone = order.getSpecification();
 						
 						//System.out.println("Order request: \t "+order);
@@ -428,9 +428,9 @@ public class Manufacturer extends Agent
 		public boolean done() {
 			return done;
 		}
-		
 	}
 	
+	// DONE
 	private class OrderPartsFromSupplier extends Behaviour
 	{
 		public OrderPartsFromSupplier(Agent a) { super(a); }
@@ -447,6 +447,7 @@ public class Manufacturer extends Agent
 			supOrder.setSmartphone(order.getSpecification());
 			supOrder.setQuantity(order.getQuantity());
 			supOrder.setSupplier(order.getSupplier());
+			supOrder.setOrderID(order.getId());
 			
 			// WE NEED THIS WHEN REQUESTING AN ACTION
 			Action request = new Action();
@@ -473,344 +474,95 @@ public class Manufacturer extends Agent
 		
 	}
 	
-	private class Before extends Behaviour // not in ticker
+	//DONE
+	private class ReceiveSuppliesInfo extends OneShotBehaviour
 	{
-		private int step = 0;
+		public ReceiveSuppliesInfo(Agent a) { super(a); }
 		
-
 		@Override
 		public void action() 
 		{
-			switch (step)
+			int messages = 0;
+			while (messages <= 1) 
 			{
-			case 0:
-			case 1:
-				//order PARTS from supplier everyday
-				if (step == 1)
+				//System.out.println("messages: "+messages);
+				MessageTemplate info = MessageTemplate.MatchConversationId("parts");
+				ACLMessage infomsg = myAgent.receive(info);
+				if(infomsg != null) 
 				{
-					//System.out.println("All orders received, now ordering parts");
-
-					ACLMessage msgParts = new ACLMessage(ACLMessage.REQUEST);
-					msgParts.addReceiver(suppliers.get(0));
-					msgParts.setLanguage(codec.getName());
-					msgParts.setOntology(ontology.getName());
-					/*
-					SupplierOrder o = new SupplierOrder();
-					o.setBattery(2000);
-					o.setRAM(4);
-					o.setScreen(5);
-					o.setStorage(64);
-					// quantity
-					o.setBatteryQuantity(50);
-					o.setRamQuantity(50);
-					o.setScreenQuantity(50);
-					o.setStorageQuantity(50);
-					// supplier
-					o.setSupplier(1);
-
-					Action request = new Action();
-					request.setAction(o);
-					request.setActor(suppliers.get(0));
-					try
-					{
-						getContentManager().fillContent(msgParts, request); //send the wrapper object
-						send(msgParts);
-					}
-					catch (CodecException ce) { ce.printStackTrace(); }
-					catch (OntologyException oe) { oe.printStackTrace(); } 
-
-
-
-					// other parts
-					o.setBattery(3000);
-					o.setRAM(8);
-					o.setScreen(7);
-					o.setStorage(256);
-					// quantity
-					o.setBatteryQuantity(50);
-					o.setRamQuantity(50);
-					o.setScreenQuantity(50);
-					o.setStorageQuantity(50);
-					// supplier
-					o.setSupplier(1);
-
-					request.setAction(o);
-					request.setActor(suppliers.get(0));
-					try
-					{
-						getContentManager().fillContent(msgParts, request); //send the wrapper object
-						send(msgParts);
-						//System.out.println("msgParts: "+msgParts);
-					}
-					catch (CodecException ce) { ce.printStackTrace(); }
-					catch (OntologyException oe) { oe.printStackTrace(); } 
-					
-					*/
-
-					//System.out.println("step: "+step);
-					step = 2;
+					partsComingToday = Integer.parseInt(infomsg.getContent(), 10);
+					System.out.println(partsComingToday + " order parts from supplier coming in today");
+					messages++;
+					break;
 				}
-
-
-
-
-			case 2:
-				// receive information about how many parts the supplier is going to send today
-				if (step == 2)
-				{
-					int messages = 0;
-					while (messages <= 1) 
-					{
-						//System.out.println("messages: "+messages);
-						MessageTemplate info = MessageTemplate.MatchConversationId("parts");
-						ACLMessage infomsg = myAgent.receive(info);
-						if(infomsg != null) 
-						{
-							partsComingToday = Integer.parseInt(infomsg.getContent(), 10);
-							//System.out.println(partsComingToday + " order parts from supplier coming in today");
-							messages++;
-							break;
-						}
-						else 
-							block();
-					}
-					step = 3;
-				}
-
-
-
-
-
-			case 3:
-				//receive parts from supplier
-				if (step == 3)
-				{
-					/*
-					System.out.println("Receiving parts from suppliers");
-					int partsPerDay = 0;
-					do
-					{
-						MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
-						ACLMessage msg2 = receive(mt2);
-						if(msg2 != null)
-						{
-							//System.out.println("msg received: "+msg2);
-							try
-							{	
-								ContentElement ce = null;
-								ce = getContentManager().extractContent(msg2);
-
-								Action available = (Action) ce;
-								supOrder = (SupplierOrder) available.getAction(); // this is the order requested
-
-								partsPerDay++;
-
-								// Place parts in warehouse
-
-								//SCREENS
-								if (supOrder.getScreen() == 5) {
-									if (warehouse.get("screen5") == null)
-										warehouse.put("screen5", supOrder.getScreenQuantity());
-									else {
-										int before = warehouse.get("screen5");
-										warehouse.remove("screen5");
-										warehouse.put("screen5", before+supOrder.getScreenQuantity()); 
-									}
-								}
-								else if (supOrder.getScreen() == 7) {
-									if (warehouse.get("screen7") == null)
-										warehouse.put("screen7", supOrder.getScreenQuantity());
-									else {
-										int before = warehouse.get("screen7");
-										warehouse.remove("screen7");
-										warehouse.put("screen7", before+supOrder.getScreenQuantity()); 
-									}
-								}
-
-								// STORAGE
-								if (supOrder.getStorage() == 64) {
-									if (warehouse.get("storage64") == null)
-										warehouse.put("storage64", supOrder.getStorageQuantity());
-									else {
-										int before = warehouse.get("storage64");
-										warehouse.remove("storage64");
-										warehouse.put("storage64", before+supOrder.getStorageQuantity()); 
-									}
-								}
-								if (supOrder.getStorage() == 256) {
-									if (warehouse.get("storage256") == null )
-										warehouse.put("storage256", supOrder.getStorageQuantity());
-									else {
-										int before = warehouse.get("storage256");
-										warehouse.remove("storage256");
-										warehouse.put("storage256", before+supOrder.getStorageQuantity());
-									}
-								}
-
-								// RAM
-								if (supOrder.getRAM() == 4) {
-									if (warehouse.get("ram4") == null )
-										warehouse.put("ram4", supOrder.getRamQuantity());
-									else {
-										int before = warehouse.get("ram4");
-										warehouse.remove("ram4");
-										warehouse.put("ram4", before+supOrder.getRamQuantity());
-									}
-								}
-								if (supOrder.getRAM() == 8) {
-									if (warehouse.get("ram8") == null )
-										warehouse.put("ram8", supOrder.getRamQuantity());
-									else {
-										int before = warehouse.get("ram8");
-										warehouse.remove("ram8");
-										warehouse.put("ram8", before+supOrder.getRamQuantity());
-									}
-								}
-
-
-								// BATTERY
-								if (supOrder.getBattery() == 2000) {
-									if (warehouse.get("battery2000") == null )
-										warehouse.put("battery2000", supOrder.getBatteryQuantity());
-									else {
-										int before = warehouse.get("battery2000");
-										warehouse.remove("battery2000");
-										warehouse.put("battery2000", before+supOrder.getBatteryQuantity());
-									}	
-								}
-								if (supOrder.getBattery() == 3000) {
-									if (warehouse.get("battery3000") == null )
-										warehouse.put("battery3000", supOrder.getBatteryQuantity());
-									else {
-										int before = warehouse.get("battery3000");
-										warehouse.remove("battery3000");
-										warehouse.put("battery3000", before+supOrder.getBatteryQuantity());
-									}	
-								}
-								//System.out.println("all parts received from supplier and stored in warehouse");
-							}
-							catch (CodecException ce) { ce.printStackTrace(); }
-							catch (OntologyException oe) { oe.printStackTrace(); }
-							//System.out.println("parts count: "+partsPerDay);
-						}
-						else
-							block();
-					}
-					while (partsPerDay < partsComingToday);
-					//System.out.println("batteries received count: "+partsTotal);
-
-					// YEA BOI IT WORKS
-					System.out.println("        ------WAREHOUSE-----");
-					for (String i : warehouse.keySet()) {
-						System.out.println("        "+i + " \t " + warehouse.get(i));
-					}
-					System.out.println("        --------------------");
-					
-					*/
-					
-					step = 4;
-				}
-
-
-			case 4:
-				//TODO: assemble phone!! and sell
-				if (step == 4 && day >= 2)
-				{
-					
-					
-					int orderCount = 0;
-					
-					for (int i = orders.size() - 1; i >= 0; i--)
-					{
-						ArrayList<String> specification = new ArrayList<>();
-						specification.clear();
-						
-						phone = orders.get(i).getSpecification();
-						
-						
-						int count = 0;
-						/*
-						if ((phone.getBattery() == 2000) && (warehouse.get("battery2000") > orders.get(i).getQuantity())) {
-							count++; specification.add("battery2000"); }
-						else if ((phone.getBattery() == 3000) && (warehouse.get("battery3000") > orders.get(i).getQuantity())) {
-							count++; specification.add("battery3000"); }
-						if ((phone.getRAM() == 4) && (warehouse.get("ram4") > orders.get(i).getQuantity())) {
-							count++; specification.add("ram4"); }
-						else if ((phone.getRAM() == 8) && (warehouse.get("ram8") > orders.get(i).getQuantity())) {
-							count++; specification.add("ram8"); }
-						if ((phone.getScreen() == 5) && (warehouse.get("screen5") > orders.get(i).getQuantity())) {
-							count++; specification.add("screen5"); }
-						else if ((phone.getScreen() == 7) && (warehouse.get("screen7") > orders.get(i).getQuantity())) {
-							count++; specification.add("screen7"); }
-						if ((phone.getStorage() == 64) && (warehouse.get("storage64") > orders.get(i).getQuantity())) {
-							count++; specification.add("storage64"); }
-						if ((phone.getStorage() == 256) && (warehouse.get("storage256") > orders.get(i).getQuantity())) {
-							count++; specification.add("storage256"); }
-						//System.out.println("count: "+count);
-
-						*/
-						// assemble and remove from order list
-						if ((count == 4) && (phoneAssembledCount + orders.get(i).getQuantity() <= 50))
-						{
-							//System.out.println("order quantity: "+orders.get(i).getQuantity());
-							//for (String s : specification)
-							//	System.out.println("specification: "+s);
-							
-							System.out.println("Assemblying order "+orders.get(i).getId());
-							
-							// send phones to customer
-							ACLMessage msgA = new ACLMessage(ACLMessage.AGREE);
-							msgA.addReceiver(orders.get(i).getCustomer());
-							msgA.setLanguage(codec.getName());
-							msgA.setOntology(ontology.getName());
-							
-							Action request = new Action();
-							request.setAction(orders.get(i));
-							request.setActor(orders.get(i).getCustomer());
-							try
-							{
-								getContentManager().fillContent(msgA, request); //send the wrapper object
-								send(msgA);
-								System.out.println("        SENT "+orders.get(i).getId()
-										+" - "+orders.get(i).getCustomer().getLocalName());
-							}
-							catch (CodecException ce) { ce.printStackTrace(); }
-							catch (OntologyException oe) { oe.printStackTrace(); } 
-							
-							
-							
-							// remove parts from warehouse
-							for (String s : specification)
-							{
-								int before = warehouse.get(s);
-								warehouse.remove(s);
-								warehouse.put(s, before-orders.get(i).getQuantity());
-							}
-							phoneAssembledCount += orders.get(i).getQuantity();
-							
-							
-							//remove order from order list
-							orderCount++;
-							orders.remove(i);
-						}
-
-					}
-					
-					System.out.println(phoneAssembledCount+" phones assembled today");
-					System.out.println("orders assembled today: "+orderCount);
-					System.out.println("orders left to assemble: "+orders.size());	
-				}
-				break;
+				else 
+					block();
 			}
-
+			
 		}
-
+		
+	}
+	
+	private class ReceiveSupplies extends Behaviour
+	{
+		public ReceiveSupplies(Agent a) { super(a); }
+		private int ordersReceived = 0;
+		@Override
+		public void action() 
+		{
+			MessageTemplate mt = MessageTemplate.and(
+					MessageTemplate.MatchPerformative(ACLMessage.CONFIRM), 
+					MessageTemplate.MatchConversationId("sending-parts"));
+			ACLMessage msg = receive(mt);
+			
+			if (msg != null)
+			{
+				try
+				{
+					ContentElement ce = null;
+					ce = getContentManager().extractContent(msg);
+					
+					Action available = (Action) ce;
+					
+					supOrder = (SupplierOrder)available.getAction();
+					
+					order = orders.get(supOrder.getOrderID());
+					//TODO: add order to ready to assemble arraylist/hashmap
+					
+					System.out.println("getting order from supOrder: "+order);
+					
+					ArrayList<String> components = new ArrayList<>();
+					components.add(supOrder.getSmartphone().getBattery().toString());
+					components.add(supOrder.getSmartphone().getRAM().toString());
+					components.add(supOrder.getSmartphone().getScreen().toString());
+					components.add(supOrder.getSmartphone().getStorage().toString());
+					
+					for (String s : components)
+					{
+						if (warehouse.get(s) == null)
+							warehouse.put(s, supOrder.getQuantity());
+						else
+							warehouse.put(s, (warehouse.get(s) + supOrder.getQuantity()));
+					}
+					
+					System.out.println("\t\t----WAREHOUSE----");
+					for (HashMap.Entry<String, Integer> entry : warehouse.entrySet())
+					    System.out.println("\t\t"+entry.getKey()+"\t"+entry.getValue());
+					
+					
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
+			}
+			
+		}
 		@Override
 		public boolean done() {
-			return false;
+			return ordersReceived == partsComingToday;
 		}
-
+		
 	}
+
 
 	
 	public class EndDayListener extends CyclicBehaviour 
@@ -849,7 +601,6 @@ public class Manufacturer extends Agent
 				myAgent.removeBehaviour(this);
 			}
 		}
-
 	}
 
 

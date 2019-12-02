@@ -35,7 +35,7 @@ public class DayTicker extends Agent
 		}
 		
 		//wait for the other agents to start
-		doWait(1000);
+		doWait(15000);
 		addBehaviour(new SynchAgentsBehaviour(this));
 	}
 

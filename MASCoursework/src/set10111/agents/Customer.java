@@ -256,7 +256,7 @@ public class Customer extends Agent
 					catch (OntologyException oe) { oe.printStackTrace(); } 
 				}
 				else 
-					System.out.println("\nThe order was not accepted! " + myAgent.getLocalName() + " is done.");			
+					System.out.println(myAgent.getLocalName() + "'s order was not accepted.");			
 				accepted = true;
 			}
 			else

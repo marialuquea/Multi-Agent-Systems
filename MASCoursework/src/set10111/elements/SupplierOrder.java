@@ -8,6 +8,7 @@ public class SupplierOrder implements AgentAction
 	private Smartphone smartphone;
 	private int quantity;
 	private AID supplier;
+	private int orderID;
 	
 	public Smartphone getSmartphone() {
 		return smartphone;
@@ -28,6 +29,12 @@ public class SupplierOrder implements AgentAction
 	public void setQuantity(int quantity) {
 		this.quantity = quantity;
 	}
+	public int getOrderID() {
+		return orderID;
+	}
+	public void setOrderID(int orderID) {
+		this.orderID = orderID;
+	}
 	
 	@Override
 	public String toString() {
@@ -37,5 +44,6 @@ public class SupplierOrder implements AgentAction
 		        + "\t supplier: %s )",
 		        smartphone, quantity, supplier);
 	}
+	
 	
 }

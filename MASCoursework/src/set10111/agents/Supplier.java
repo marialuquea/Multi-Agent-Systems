@@ -2,9 +2,9 @@ package set10111.agents;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
-import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -35,11 +35,11 @@ public class Supplier extends Agent
 	private Ontology ontology = CommerceOntology.getInstance();
 	private AID tickerAgent;
 	private ArrayList<AID> manufacturers = new ArrayList<>();
+	private ArrayList<AID> customers = new ArrayList<>();
 	private SupplierOrder order = new SupplierOrder();
 	private HashMap<SupplierOrder, Integer> orders = new HashMap<>(); 
 	private HashMap<SmartphoneComponent, Integer> supplies;
 	private int deliveryDays;
-	private ArrayList<SmartphoneComponent> components = new ArrayList<>();
 
 	protected void setup()
 	{
@@ -112,15 +112,22 @@ public class Supplier extends Agent
 						orders.put(order, orders.get(order) - 1);
 						//System.out.println(entry.getKey().getCustomer().getLocalName() + " = " + entry.getValue());	
 					}
+					
+					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
+
+					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
+			        myAgent.addBehaviour(ror);
+			        cyclicBehaviours.add(ror);
 
 					// activities for the day
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					dailyActivity.addSubBehaviour(new FindCustomers(myAgent));
 					dailyActivity.addSubBehaviour(new PriceListRequest(myAgent));
-					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
 					dailyActivity.addSubBehaviour(new SendParts(myAgent));
-					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
+					
+					myAgent.addBehaviour(new EndDayListener(myAgent, cyclicBehaviours));
 
 				}
 				else 
@@ -168,6 +175,26 @@ public class Supplier extends Agent
 		}
 	}
 
+	private class FindCustomers extends OneShotBehaviour 
+	{
+		public FindCustomers(Agent a) { super(a); }
+		@Override
+		public void action() {
+
+			DFAgentDescription sellerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("customer");
+			sellerTemplate.addServices(sd);
+			try{
+				customers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
+				for(int i=0; i<agentsType1.length; i++){ customers.add(agentsType1[i].getName()); }
+				//System.out.println("customers size "+customers.size());
+			}
+			catch(FIPAException e) { e.printStackTrace(); }
+		}
+	}
+	
 	// DONE Send Price List to Manufacturer 
 	private class PriceListRequest extends Behaviour
 	{
@@ -223,48 +250,43 @@ public class Supplier extends Agent
 		}
 	}
 	
-	private class ReceiveOrderRequests extends OneShotBehaviour
+	//DONE
+	private class ReceiveOrderRequests extends CyclicBehaviour
 	{
-		private int order_count = 0;
-		
 		public ReceiveOrderRequests(Agent a) { super(a); }
 
 		@Override
 		public void action() 
 		{
-			do 
+			MessageTemplate mt = MessageTemplate.and(
+			          MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+			          MessageTemplate.MatchConversationId("requestingParts"));
+			ACLMessage msg = receive(mt);
+			if(msg != null)
 			{
-				MessageTemplate mt = MessageTemplate.and(
-				          MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-				          MessageTemplate.MatchConversationId("requestingParts"));
-				ACLMessage msg = receive(mt);
-				if(msg != null)
-				{
-					System.out.println(msg);
-					try
-					{	
-						ContentElement ce = null;
-						ce = getContentManager().extractContent(msg);
-						
-						Action available = (Action) ce;
-						SupplierOrder order = new SupplierOrder();
-						order = (SupplierOrder)available.getAction();
-						
-						orders.put(order, deliveryDays);
-						
-						System.out.println(order);
-					}
-					catch (CodecException ce) { ce.printStackTrace(); }
-					catch (OntologyException oe) { oe.printStackTrace(); }
+				//System.out.println(msg);
+				try
+				{	
+					ContentElement ce = null;
+					ce = getContentManager().extractContent(msg);
+					
+					Action available = (Action) ce;
+					SupplierOrder order = new SupplierOrder();
+					order = (SupplierOrder)available.getAction();
+					
+					orders.put(order, deliveryDays);
+					
+					System.out.println("Received supply order in "+this.getAgent().getLocalName());
 				}
-				else
-					block();
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
 			}
-			while (order_count < 2);
-			//System.out.println("while loop finished");
+			else
+				block();
 		}
 	}
 
+	//DONE
 	private class SendParts extends OneShotBehaviour
 	{
 		public SendParts(Agent a) { super(a); }
@@ -310,21 +332,42 @@ public class Supplier extends Agent
 		
 	}
 	
-	public class EndDay extends OneShotBehaviour {
+	public class EndDayListener extends CyclicBehaviour 
+	{
+		private int customersFinished = 0;
+		private List<Behaviour> toRemove;
 
-		public EndDay(Agent a) {
+		public EndDayListener(Agent a, List<Behaviour> toRemove) 
+		{
 			super(a);
+			this.toRemove = toRemove;
 		}
 
 		@Override
 		public void action() {
-			//System.out.println("end day supplier");
-			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-			msg.addReceiver(tickerAgent);
-			msg.setContent("done");
-			myAgent.send(msg);
-		}
+			MessageTemplate mt = MessageTemplate.MatchContent("done");
+			ACLMessage msg = myAgent.receive(mt);
+			if(msg != null) {
+				customersFinished++;
+			}
+			else {
+				block();
+			}
+			if(customersFinished == customers.size()) {
+				//we are finished
+				// System.out.println("orders received from customers: "+numOrdersReceived);
 
+				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
+				tick.setContent("done");
+				tick.addReceiver(tickerAgent);
+				myAgent.send(tick);
+				//remove behaviours
+				for(Behaviour b : toRemove) {
+					myAgent.removeBehaviour(b);
+				}
+				myAgent.removeBehaviour(this);
+			}
+		}
 	}
 
 }
