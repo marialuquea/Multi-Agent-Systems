@@ -388,12 +388,11 @@ public class Manufacturer extends Agent
 	{
 		public ReceiveOrderRequests(Agent a) { super(a); }
 		private int step = 0;
+		private boolean done = false;
 		
 		@Override
 		public void action() 
 		{
-			switch(step) {
-			case 0:
 				// receive order REQUEST messages from customers
 				MessageTemplate mt = MessageTemplate.and(
 						MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
@@ -410,12 +409,11 @@ public class Manufacturer extends Agent
 						order = (CustomerOrder) available.getAction(); // this is the order requested
 						phone = order.getSpecification();
 
-						order.setId(++orderID);
 						System.out.println("Order request: \t "+order.getId());
 						
 						//TODO: if order is accepted in previous method...
 						
-						step++;
+						
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); }
@@ -423,18 +421,14 @@ public class Manufacturer extends Agent
 				else
 					block();
 				
-				
-				
-			case 1:
-				// ask sup
-			}
+			
 			
 			
 		}
 
 		@Override
 		public boolean done() {
-			return false;
+			return done;
 		}
 		
 	}

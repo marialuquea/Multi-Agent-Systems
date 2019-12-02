@@ -225,8 +225,7 @@ public class Customer extends Agent
 			ACLMessage msg = myAgent.receive(mt);
 			if(msg != null) 
 			{
-				accepted = true;
-				System.out.println("msg received in customer\n"+msg);
+				//System.out.println("msg received in customer\n"+msg);
 				if(msg.getPerformative() == ACLMessage.CONFIRM) 
 				{
 					ACLMessage orderReq = new ACLMessage(ACLMessage.REQUEST);
@@ -248,6 +247,7 @@ public class Customer extends Agent
 				}
 				else 
 					System.out.println("\nThe order was not accepted! " + myAgent.getLocalName() + " is done.");			
+				accepted = true;
 			}
 			else
 				block();
