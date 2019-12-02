@@ -15,6 +15,7 @@ public class CustomerOrder implements AgentAction
 	private int daysDue;
 	private boolean accepted;
 	private int profit;
+	private double cost;
 
 	public int getId() {
 		return id;
@@ -75,5 +76,11 @@ public class CustomerOrder implements AgentAction
 	}
 	public void setSupplier(AID supplier) {
 		this.supplier = supplier;
+	}
+	public double getCost() {
+		return cost;
+	}
+	public void setCost(double bestSupplierCost) {
+		this.cost = bestSupplierCost;
 	}
 }

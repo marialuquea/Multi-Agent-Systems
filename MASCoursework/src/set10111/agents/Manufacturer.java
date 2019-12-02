@@ -307,54 +307,28 @@ public class Manufacturer extends Agent
 						
 						for (AID supplier : suppliers) 
 						{
-							System.out.println("\n"+supplier.getLocalName());
-							System.out.println("\norder:\t"+order.getQuantity()
-								+"\t"+order.getPrice()
-								+"\t"+(order.getQuantity() * order.getPrice())+"\n");
-							
 							// calculate cost of order
 							double totalCost = 0;
 							for (SmartphoneComponent c : order.getSpecification().getComponents())
 							{
-								if (supplier.getLocalName().equals("supplier1")) {
+								if (supplier.getLocalName().equals("supplier1")) 
 									totalCost += supplier1prices.get(c.toString());
-									System.out.println(c.toString()+"\t"+supplier1prices.get(c.toString()));
-								}
 								// supplier 2 only has storage and ram so buy some parts from supplier 2 
 								// and others from supplier 1
-								
-								
 								if (supplier.getLocalName().equals("supplier2")) {
 									if (c.toString().contains("Storage") || c.toString().contains("Ram")) {
 										totalCost += supplier2prices.get(c.toString());
-										System.out.println(c.toString()+"\t"+supplier2prices.get(c.toString()));
 									}
-									else {
+									else 
 										totalCost += supplier1prices.get(c.toString());
-										System.out.println(c.toString()+"\t"+supplier1prices.get(c.toString()));
-									}
 								}
-								
 							}
-							
 							totalCost *= order.getQuantity();
-							System.out.println("\ntotalCost\t"+totalCost);
-							
-							if (supplier.getLocalName().equals("supplier2")) {
+							if (supplier.getLocalName().equals("supplier2"))
 								daysLate = supplier1deliveryDays - order.getDaysDue(); // will give negative number if no penalty fee is to be paid
-							
-								System.out.println("\ndaysLate\t"+daysLate
-									+"\nsupplier1deliveryDays\t"+supplier1deliveryDays
-									+"\norder.getDaysDue()\t"+order.getDaysDue());
-							}
-							else {
+							else 
 								daysLate = supplier2deliveryDays - order.getDaysDue();
-								System.out.println("\ndaysLate\t"+daysLate
-									+"\nsupplier1deliveryDays\t"+supplier2deliveryDays
-									+"\norder.getDaysDue()\t"+order.getDaysDue());	
-							}
 								
-							
 							if (daysLate > 0) 
 								lateDeliveryFee = daysLate * order.getPenalty();
 							else
@@ -363,12 +337,6 @@ public class Manufacturer extends Agent
 							expectedProfit = (order.getPrice() * order.getQuantity()) 
 									- totalCost - lateDeliveryFee;
 							
-							System.out.println("\nexpectedProfit\t"+expectedProfit);
-							System.out.println("order.getPrice()\t"+order.getPrice());
-							System.out.println("order.getQuantity()\t"+order.getQuantity());
-							System.out.println("totalCost\t"+totalCost);
-							System.out.println("lateDeliveryFee\t"+lateDeliveryFee);
-							
 							// Decide if this supplier is better than the others
 							if ((bestSupplier == null && expectedProfit > 0)
 									|| (expectedProfit > maxProfit)) {
@@ -376,18 +344,27 @@ public class Manufacturer extends Agent
 								bestSupplier = supplier;
 								maxProfit = expectedProfit;
 								bestSupplierCost = totalCost;
-								
-								System.out.println("\nbestSupplier\t"+bestSupplier.getLocalName());
-								System.out.println("maxProfit\t"+maxProfit);
-								System.out.println("bestSupplierCost\t"+bestSupplierCost);
 							}
-							System.out.println("\n----"+supplier.getLocalName()+" done----\n");
 						}
 						
+						//Send reply to customer
+						ACLMessage reply = msg.createReply();
+						if (bestSupplier != null) // if profit is positive
+						{
+							order.setSupplier(bestSupplier);
+							order.setCost(bestSupplierCost);
+							order.setAccepted(true);
+							orderID++;
+							order.setId(orderID);
+							orders.add(order);
+							
+							reply.setPerformative(ACLMessage.CONFIRM);
+						}
+						else
+							reply.setPerformative(ACLMessage.DISCONFIRM);
 						
-						
-						//TODO: Send reply to buyer
-						
+						reply.setConversationId("customerOrder-answer");
+						myAgent.send(reply);
 						received++;
 					}
 				} 
