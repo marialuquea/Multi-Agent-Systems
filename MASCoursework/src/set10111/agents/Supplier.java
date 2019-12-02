@@ -181,7 +181,7 @@ public class Supplier extends Agent
 			
 			if (msg != null) 
 			{
-				System.out.println("Price list request received in "+this.getAgent().getLocalName());
+				//System.out.println("Price list request received in "+this.getAgent().getLocalName());
 				ACLMessage reply = msg.createReply(); 
 	            reply.setPerformative(ACLMessage.INFORM);
 	            reply.setConversationId("price-list");
@@ -205,19 +205,10 @@ public class Supplier extends Agent
 	            prices.setKeys(components);
 	            prices.setValues(componentQuantities);
 	            
-	            // Make message 
-	            /*
-	            Action request = new Action();
-				request.setAction(prices);
-				request.setActor(manufacturers.get(0)); */
 				try
 				{      
 					getContentManager().fillContent(reply, prices); //send the wrapper object
 					send(reply);
-					/* System.out.println("\nPrice list sent to manufacturer from "
-							+this.getAgent().getLocalName()
-							+": \n"
-							+reply); */
 					received = true;
 				}
 				catch (CodecException ce) { ce.printStackTrace(); }
