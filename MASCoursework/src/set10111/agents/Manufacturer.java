@@ -365,6 +365,7 @@ public class Manufacturer extends Agent
 						
 						reply.setConversationId("customerOrder-answer");
 						myAgent.send(reply);
+						System.out.println("Manufacturer replied to all customer orders");
 						received++;
 					}
 				} 
@@ -377,7 +378,6 @@ public class Manufacturer extends Agent
 		
 		@Override
 		public boolean done() {
-			System.out.println("\t"+received+" - "+customers.size());
 			return received == customers.size();
 		}
 		

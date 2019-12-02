@@ -31,7 +31,6 @@ public class Customer extends Agent
 	private AID tickerAgent;
 	private CustomerOrder order = new CustomerOrder();
 	Smartphone smartphone = new Smartphone();
-	private int orderID = 0;
 
 	protected void setup()
 	{
@@ -56,7 +55,6 @@ public class Customer extends Agent
 		}
 
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new OrderConfirmed(this));
 		addBehaviour(new ReceiveOrder(this));
 	}
 
@@ -95,6 +93,7 @@ public class Customer extends Agent
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
+					dailyActivity.addSubBehaviour(new OrderConfirmed(myAgent));
 					//dailyActivity.addSubBehaviour(new ReceiveOrder(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
@@ -208,7 +207,7 @@ public class Customer extends Agent
 		}
 	}
 
-	// confirm accepted order and request actual order
+	// confirm accepted or not order and request actual order if accepted
 	public class OrderConfirmed extends Behaviour
 	{
 		public OrderConfirmed(Agent a) { super(a); }
@@ -219,7 +218,7 @@ public class Customer extends Agent
 		public void action() 
 		{
 			MessageTemplate mt = MessageTemplate.and(
-					MessageTemplate.MatchConversationId("customer-order-reply"), 
+					MessageTemplate.MatchConversationId("customerOrder-answer"), 
 					MessageTemplate.or(
 							MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),
 							MessageTemplate.MatchPerformative(ACLMessage.DISCONFIRM)));
@@ -227,11 +226,9 @@ public class Customer extends Agent
 			if(msg != null) 
 			{
 				accepted = true;
-				System.out.println(msg);
+				System.out.println("msg received in customer\n"+msg);
 				if(msg.getPerformative() == ACLMessage.CONFIRM) 
 				{
-					System.out.println("order was accepted, msg received in customer");
-					
 					ACLMessage orderReq = new ACLMessage(ACLMessage.REQUEST);
 			        orderReq.setLanguage(codec.getName());
 			        orderReq.setOntology(ontology.getName()); 
@@ -250,7 +247,7 @@ public class Customer extends Agent
 					catch (OntologyException oe) { oe.printStackTrace(); } 
 				}
 				else 
-					System.out.println("\nThe order was not accepted! Costumer " + myAgent.getLocalName() + " is done.");			
+					System.out.println("\nThe order was not accepted! " + myAgent.getLocalName() + " is done.");			
 			}
 			else
 				block();
