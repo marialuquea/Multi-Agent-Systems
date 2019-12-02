@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -26,7 +27,7 @@ import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
 import set10111.predicates.*;
 import set10111.elements.*;
-import set10111.elements.concepts.SmartphoneComponent;
+import set10111.elements.concepts.*;
 
 public class Supplier extends Agent
 {
@@ -38,6 +39,7 @@ public class Supplier extends Agent
 	private HashMap<SupplierOrder, Integer> orders = new HashMap<>(); 
 	private HashMap<SmartphoneComponent, Integer> supplies;
 	private int deliveryDays;
+	private ArrayList<SmartphoneComponent> components = new ArrayList<>();
 
 	protected void setup()
 	{
@@ -166,7 +168,7 @@ public class Supplier extends Agent
 		}
 	}
 
-	// Send Price List to Manufacturer
+	// DONE Send Price List to Manufacturer 
 	private class PriceListRequest extends Behaviour
 	{
 		public PriceListRequest(Agent a) { super(a); }
@@ -232,27 +234,25 @@ public class Supplier extends Agent
 		{
 			do 
 			{
-				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+				MessageTemplate mt = MessageTemplate.and(
+				          MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+				          MessageTemplate.MatchConversationId("requestingParts"));
 				ACLMessage msg = receive(mt);
 				if(msg != null)
 				{
+					System.out.println(msg);
 					try
 					{	
-						
 						ContentElement ce = null;
 						ce = getContentManager().extractContent(msg);
-
+						
 						Action available = (Action) ce;
-						order = (SupplierOrder) available.getAction(); // this is the order requested
-
-						//TODO: if supplier 1 then 1 day, if supplier 2 then 4 days
-
-						orders.put(order, 1); 
-						//System.out.println("order received: "+order.getBatteryQuantity());
-
-						order_count++;
-						//System.out.println("count: "+order_count);
-
+						SupplierOrder order = new SupplierOrder();
+						order = (SupplierOrder)available.getAction();
+						
+						orders.put(order, deliveryDays);
+						
+						System.out.println(order);
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); }
@@ -274,12 +274,8 @@ public class Supplier extends Agent
 			// Send parts that have day 0 to manufacturer
 			for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 			{	
-				
-				SupplierOrder order1;
-				int days;
-				
-				order1 = entry.getKey();
-				days = entry.getValue();
+				SupplierOrder order1 = entry.getKey();
+				int days = entry.getValue();
 				
 				if (days == 0)
 				{
@@ -287,6 +283,7 @@ public class Supplier extends Agent
 					
 					// send order back to manufacturer
 					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+					msg.setConversationId("sending-parts");
 					msg.addReceiver(manufacturers.get(0));
 					msg.setLanguage(codec.getName());
 					msg.setOntology(ontology.getName());

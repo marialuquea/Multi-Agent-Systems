@@ -244,8 +244,6 @@ public class Customer extends Agent
 			        orderReq.setConversationId("FinalOrderRequest");
 			        orderReq.addReceiver(manufacturerAID);
 			        
-			        
-					
 					Action request = new Action();
 					request.setAction(order);
 					request.setActor(manufacturerAID); // the agent that you request to perform the action

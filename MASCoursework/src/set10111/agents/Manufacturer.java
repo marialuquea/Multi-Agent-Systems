@@ -361,9 +361,6 @@ public class Manufacturer extends Agent
 							order.setAccepted(true);
 							orders.put(order.getId(), order);
 							
-							System.out.println("ORDER ID: "+order.getId());
-							System.out.println("ReceiveOrderQuery"+order.toString());
-							
 							reply.setPerformative(ACLMessage.CONFIRM);
 						}
 						else
@@ -412,6 +409,9 @@ public class Manufacturer extends Agent
 
 						Action available = (Action) ce;
 						order = (CustomerOrder) available.getAction(); // this is the order requested
+						
+						order = orders.get(order.getId());
+						
 						phone = order.getSpecification();
 						
 						//System.out.println("Order request: \t "+order);
@@ -444,23 +444,21 @@ public class Manufacturer extends Agent
 			msg.setConversationId("requestingParts");
 			msg.addReceiver(order.getSupplier());
 			
-			
-			
-			//System.out.println("order.getSupplier()\t"+order);
-			//System.out.println("order.getSpecification().getBattery().toString():"+order.getSpecification().getBattery().toString());
-			
-			supOrder.setBattery(order.getSpecification().getBattery().toString());
-			supOrder.setRAM(order.getSpecification().getRAM().toString());
-			supOrder.setScreen(order.getSpecification().getScreen().toString());
-			supOrder.setStorage(order.getSpecification().getStorage().toString());
+			supOrder.setSmartphone(order.getSpecification());
 			supOrder.setQuantity(order.getQuantity());
 			supOrder.setSupplier(order.getSupplier());
 			
+			// WE NEED THIS WHEN REQUESTING AN ACTION
+			Action request = new Action();
+			request.setAction(supOrder);
+			request.setActor(order.getSupplier());
+			
+			System.out.println("supplier order \t"+supOrder);
+			
 			try
 			{
-				getContentManager().fillContent(msg, supOrder);
+				getContentManager().fillContent(msg, request);
 				send(msg);
-				System.out.println("msg sent to supplier:\n"+msg);
 				done = true;
 			}
 			catch (CodecException ce) { ce.printStackTrace(); }
@@ -814,6 +812,7 @@ public class Manufacturer extends Agent
 
 	}
 
+	
 	public class EndDayListener extends CyclicBehaviour 
 	{
 		private int customersFinished = 0;

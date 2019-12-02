@@ -56,11 +56,11 @@ public class Smartphone implements Concept
 	
 	@Override
 	public String toString() {
-		return String.format("(\n\t"
+		return String.format("("
 		        + "screen: %s, \n\t"
-		        + "battery: %s, \n\t"
-		        + "storage: %s, \n\t"
-		        + "ram: %s,",
+		        + "\t battery: %s, \n\t"
+		        + "\t storage: %s, \n\t"
+		        + "\t ram: %s),",
 		        screen, battery, storage, ram);
 	}
 
