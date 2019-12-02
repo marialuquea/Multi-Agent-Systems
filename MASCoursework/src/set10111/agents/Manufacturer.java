@@ -28,7 +28,9 @@ import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
 import set10111.predicates.*;
 import set10111.elements.*;
+import set10111.elements.concepts.Screen;
 import set10111.elements.concepts.SmartphoneComponent;
+import set10111.elements.concepts.Storage;
 
 public class Manufacturer extends Agent
 {
@@ -43,8 +45,8 @@ public class Manufacturer extends Agent
 	private Smartphone phone = new Smartphone();
 	private ArrayList<CustomerOrder> orders = new ArrayList<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
-	private HashMap<SmartphoneComponent, Integer> supplier1prices = new HashMap<>();
-	private HashMap<SmartphoneComponent, Integer> supplier2prices = new HashMap<>();
+	private HashMap<SmartphoneComponent, Integer> supplier1prices = new HashMap<SmartphoneComponent, Integer>();
+	private HashMap<SmartphoneComponent, Integer> supplier2prices = new HashMap<SmartphoneComponent, Integer>();
 	private int supplier1deliveryDays;
 	private int supplier2deliveryDays;
 	private int partsComingToday = 0;
@@ -133,12 +135,13 @@ public class Manufacturer extends Agent
 					dailyActivity.addSubBehaviour(new AskSupInfo(myAgent));
 					dailyActivity.addSubBehaviour(new ReceivePartsPrices(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderQuery(myAgent));
+					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
-					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
-					myAgent.addBehaviour(ror);
-					cyclicBehaviours.add(ror);
+					//CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
+					//myAgent.addBehaviour(ror);
+					//cyclicBehaviours.add(ror);
 					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
 
 				}
@@ -217,7 +220,6 @@ public class Manufacturer extends Agent
 		public ReceivePartsPrices(Agent a) { super(a); }
 		int received = 0;
 		
-		@Override
 		public void action()
 		{
 			MessageTemplate mt = MessageTemplate.and(
@@ -259,8 +261,6 @@ public class Manufacturer extends Agent
 						}
 						received++;
 					}
-					else
-						System.out.println("Unknown predicate "+ce.getClass().getName());
 				}
 				catch (CodecException ce) { ce.printStackTrace(); } 
 				catch (OntologyException oe) { oe.printStackTrace(); }
@@ -278,17 +278,14 @@ public class Manufacturer extends Agent
 	private class ReceiveOrderQuery extends Behaviour
 	{
 		public ReceiveOrderQuery(Agent a) { super(a); }
-		
 		private int received = 0;
 		
-		@SuppressWarnings("unlikely-arg-type")
 		public void action()
 		{
 			MessageTemplate mt = MessageTemplate.and(
 					MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF),
 					MessageTemplate.MatchConversationId("customer-order-query"));
 			ACLMessage msg = receive(mt);
-			
 			if (msg != null)
 			{
 				System.out.println(msg);
@@ -296,16 +293,11 @@ public class Manufacturer extends Agent
 				{
 					ContentElement ce = null;
 					ce = getContentManager().extractContent(msg);
-					System.out.println("oh no: "+ce.getClass().getName());
-					
 					if (ce instanceof OrderQuery)
 					{
-						System.out.println("1");
 						OrderQuery orderAccepted = (OrderQuery) ce;
 						CustomerOrder order = orderAccepted.getOrder();
 						order.setCustomer(msg.getSender());
-						
-						System.out.println("2");
 						
 						// choose best supplier for this order
 						AID bestSupplier = null;
@@ -315,15 +307,19 @@ public class Manufacturer extends Agent
 						int lateDeliveryFee = 0;
 						int daysLate = 0;
 						
+						System.out.println("\n\n3\t"+supplier1prices.get(0));
 						
-						System.out.println("3\t"+supplier1prices.get(0));
 						
 						for (Entry<SmartphoneComponent, Integer> part : supplier1prices.entrySet())
 			            {
 							System.out.println(part.getKey()+" - "+part.getValue());
 			            }
 						
+						Screen s = new Screen("SCREEN_5");
+						System.out.println("s:\t"+supplier1prices.get(s));
 						
+						SmartphoneComponent  sc = new Storage("STORAGE_256");
+						System.out.println("sc:\t"+supplier1prices.get(sc));
 						
 						for (AID supplier : suppliers) 
 						{
@@ -334,16 +330,16 @@ public class Manufacturer extends Agent
 							double totalCost = 0;
 							for (SmartphoneComponent c : order.getSpecification().getComponents())
 							{
-								System.out.println("5\t"+supplier);
-								System.out.println("6\t"+c);
-								System.out.println("7\t"+(Integer)supplier1prices.get(c));
+								System.out.println("supplier\t"+supplier.getLocalName());
+								System.out.println("component\t"+c);
+								System.out.println("7\t"+(Integer)supplier1prices.get("Storage: STORAGE_64"));
 								
 								if (supplier.getLocalName().equals("supplier1")) {
-									if (supplier1prices.get(c) != null)
-										totalCost += supplier1prices.get(c);
+									//totalCost += supplier1prices.get(c);
 								}
-								if (supplier.getLocalName().equals("supplier2"))
-									totalCost += supplier2prices.get(c);
+								if (supplier.getLocalName().equals("supplier2")) {
+									//totalCost += supplier2prices.get(c);
+								}
 								
 								
 							}
@@ -366,30 +362,28 @@ public class Manufacturer extends Agent
 		}
 		
 	}
-	
-	// behaviour to receive customer requests
-	private class ReceiveOrderRequests extends CyclicBehaviour
-	{
-		private int step = 0;
-		public ReceiveOrderRequests(Agent a) { super(a); }
 
+	// behaviour to receive customer requests that were accepted
+	private class ReceiveOrderRequests extends Behaviour
+	{
+		public ReceiveOrderRequests(Agent a) { super(a); }
+		private int step = 0;
+		
 		@Override
 		public void action() 
 		{
-			switch (step)
-			{
+			switch(step) {
 			case 0:
-				// receive and respond to order REQUEST messages from customers
-				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+				// receive order REQUEST messages from customers
+				MessageTemplate mt = MessageTemplate.and(
+						MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+						MessageTemplate.MatchConversationId("FinalOrderRequest"));
 				ACLMessage msg = receive(mt);
 				if(msg != null)
 				{
 					try
 					{	
 						ContentElement ce = null;
-
-						// Let JADE convert from String to Java objects
-						// Output will be a ContentElement
 						ce = getContentManager().extractContent(msg);
 
 						Action available = (Action) ce;
@@ -399,71 +393,44 @@ public class Manufacturer extends Agent
 						order.setId(++orderID);
 						System.out.println("Order request: \t "+order.getId());
 						
+						//TODO: if order is accepted in previous method...
 						
-						
-						//System.out.println("orderID: "+order.getId());
-						//System.out.println("orders.size(): "+orders.size());
-
-						// calculate cost of making offer from supplier 1
-						int cost = 0;
-						/*
-						if (phone.getScreen() == 5)
-							cost += 100;
-						if (phone.getScreen() == 7)
-							cost += 150;
-
-						if (phone.getBattery() == 2000)
-							cost += 70;
-						if (phone.getBattery() == 3000)
-							cost += 100;
-
-						if (phone.getStorage() == 64)
-							cost += 25;
-						if (phone.getStorage() == 256)
-							cost += 50;
-
-						if (phone.getRAM() == 4)
-							cost += 30;
-						if (phone.getStorage() == 64)
-							cost += 25;
-						
-						*/
-						// how much it is going to sell for 
-						int sold = order.getPrice() * order.getQuantity();
-						order.setProfit(sold - cost);
-						System.out.println("sold: "+sold+" - cost: "+cost);
-						//System.out.println("profit: "+order.getProfit());
-						//System.out.println("penalty costs: "+order.getPenalty());
-
-						//TODO: if sold > x then sell, else refuse
-						
-						// if late orders, no
-						
-						// check penalty costs
-						
-						// if profit >>> accept
-						
-						// order accepted and added to list of orders
-						orders.add(order);
-						
-						// send accept proposal message to customer
-						ACLMessage reply = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-						reply.setContent("order accepted");
-						reply.addReceiver(order.getCustomer());
-						myAgent.send(reply);
-
-						numOrdersReceived++;
-
-						//System.out.println(numOrdersReceived+" - "+customers.size());
-						if (numOrdersReceived >= customers.size())
-							step = 1;
+						step++;
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); }
-
 				}
 				else
 					block();
+				
+				
+				
+			case 1:
+				// ask sup
+			}
+			
+			
+		}
+
+		@Override
+		public boolean done() {
+			return false;
+		}
+		
+	}
+	
+	private class Before extends Behaviour // not in ticker
+	{
+		private int step = 0;
+		
+
+		@Override
+		public void action() 
+		{
+			switch (step)
+			{
+			case 0:
+				
 
 
 			case 1:
@@ -785,6 +752,11 @@ public class Manufacturer extends Agent
 				break;
 			}
 
+		}
+
+		@Override
+		public boolean done() {
+			return false;
 		}
 
 	}

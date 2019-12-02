@@ -235,7 +235,7 @@ public class Customer extends Agent
 					ACLMessage orderReq = new ACLMessage(ACLMessage.REQUEST);
 			        orderReq.setLanguage(codec.getName());
 			        orderReq.setOntology(ontology.getName()); 
-			        orderReq.setConversationId("customer-order-req");
+			        orderReq.setConversationId("FinalOrderRequest");
 			        orderReq.addReceiver(manufacturerAID);
 					
 					Action request = new Action();

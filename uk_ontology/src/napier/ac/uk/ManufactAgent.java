@@ -254,7 +254,8 @@ public class ManufactAgent extends Agent
             ContentElement ce = null;
             ce = getContentManager().extractContent(msg);
             
-            if (ce instanceof SendsSuppInfo) {
+            if (ce instanceof SendsSuppInfo) 
+            {
               SendsSuppInfo sendSuppInfo = (SendsSuppInfo) ce;
               
               // Cannot send HashMaps by message. De-composed in two lists, re-compose here
