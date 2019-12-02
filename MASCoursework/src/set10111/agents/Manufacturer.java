@@ -45,8 +45,8 @@ public class Manufacturer extends Agent
 	private Smartphone phone = new Smartphone();
 	private ArrayList<CustomerOrder> orders = new ArrayList<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
-	private HashMap<SmartphoneComponent, Integer> supplier1prices = new HashMap<SmartphoneComponent, Integer>();
-	private HashMap<SmartphoneComponent, Integer> supplier2prices = new HashMap<SmartphoneComponent, Integer>();
+	private HashMap<String, Integer> supplier1prices = new HashMap<>();
+	private HashMap<String, Integer> supplier2prices = new HashMap<>();
 	private int supplier1deliveryDays;
 	private int supplier2deliveryDays;
 	private int partsComingToday = 0;
@@ -238,13 +238,14 @@ public class Manufacturer extends Agent
 					{
 						PriceList supPrices = (PriceList) ce;
 						
-						HashMap<SmartphoneComponent, Integer> priceList = new HashMap<>();
+						HashMap<String, Integer> priceList = new HashMap<>();
 						ArrayList<SmartphoneComponent> keys = supPrices.getKeys();
 						ArrayList<Long> values = supPrices.getValues();
 						
 						for(int i = 0; i < keys.size(); i++)
 						{
-							SmartphoneComponent sc = keys.get(i);
+							String sc = (String)keys.get(i).toString();
+							System.out.println("added to price list:\t"+sc);
 							int price = values.get(i).intValue();
 							priceList.put(sc, price);
 						}
@@ -306,39 +307,32 @@ public class Manufacturer extends Agent
 						double bestSupplierCost = 0;
 						int lateDeliveryFee = 0;
 						int daysLate = 0;
+						/*
+						System.out.println("\tSUPPLIER 1 PRICE LIST");
+						for (Entry<String, Integer> part : supplier1prices.entrySet())
+							System.out.println("\t"+part.getKey()+"\t"+part.getValue());
 						
-						System.out.println("\n\n3\t"+supplier1prices.get(0));
-						
-						
-						for (Entry<SmartphoneComponent, Integer> part : supplier1prices.entrySet())
-			            {
-							System.out.println(part.getKey()+" - "+part.getValue());
-			            }
-						
-						Screen s = new Screen("SCREEN_5");
-						System.out.println("s:\t"+supplier1prices.get(s));
-						
-						SmartphoneComponent  sc = new Storage("STORAGE_256");
-						System.out.println("sc:\t"+supplier1prices.get(sc));
-						
+						System.out.println("\n\tSUPPLIER 2 PRICE LIST");
+						for (Entry<String, Integer> part : supplier2prices.entrySet())
+							System.out.println("\t"+part.getKey()+"\t"+part.getValue());
+						*/
 						for (AID supplier : suppliers) 
 						{
-							
-							System.out.println("4");
-							
 							// calculate cost of order
 							double totalCost = 0;
 							for (SmartphoneComponent c : order.getSpecification().getComponents())
 							{
-								System.out.println("supplier\t"+supplier.getLocalName());
-								System.out.println("component\t"+c);
-								System.out.println("7\t"+(Integer)supplier1prices.get("Storage: STORAGE_64"));
-								
 								if (supplier.getLocalName().equals("supplier1")) {
-									//totalCost += supplier1prices.get(c);
+									System.out.println("darwon\t"+supplier1prices.get(c.toString()));
+									totalCost += supplier1prices.get(c.toString());
 								}
+								// supplier 2 only has storage and ram so buy some parts from supplier 2 
+								// and others from supplier 1
 								if (supplier.getLocalName().equals("supplier2")) {
-									//totalCost += supplier2prices.get(c);
+									if (c.toString().contains("Storage") || c.toString().contains("Ram"))
+										totalCost += supplier2prices.get(c.toString());
+									else
+										totalCost += supplier1prices.get(c.toString());
 								}
 								
 								
