@@ -22,6 +22,6 @@ public class Screen extends SmartphoneComponent
 	
 	@Override
 	public String toString() {
-		return "Screen: " + this.specification;
+		return this.specification;
 	}
 }

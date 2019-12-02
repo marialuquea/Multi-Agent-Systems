@@ -22,6 +22,6 @@ public class Ram extends SmartphoneComponent
 	
 	@Override
 	public String toString() {
-		return "Ram: " + this.specification;
+		return this.specification;
 	}
 }

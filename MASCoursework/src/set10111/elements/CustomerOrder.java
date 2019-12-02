@@ -83,4 +83,23 @@ public class CustomerOrder implements AgentAction
 	public void setCost(double bestSupplierCost) {
 		this.cost = bestSupplierCost;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("(\n\t"
+		        + "id: %s, \n\t"
+		        + "customer: %s, \n\t"
+		        + "supplier: %s, \n\t"
+		        + "price: %s, \n\t"
+		        + "penalty: %s, \n\t"
+		        + "phone: %s \n\t"
+		        + "quantity: %s, \n\t"
+		        + "days due: %s, \n\t"
+		        + "accepted: %s, \n\t"
+		        + "profit: %s, \n\t"
+		        + "cost: %s,",
+		        id, customer, supplier, price,
+				penalty, specification, quantity, daysDue,
+				accepted, profit, cost);
+	}
 }

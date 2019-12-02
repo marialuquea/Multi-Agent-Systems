@@ -43,7 +43,7 @@ public class Manufacturer extends Agent
 	private CustomerOrder order = new CustomerOrder();
 	private SupplierOrder supOrder = new SupplierOrder();
 	private Smartphone phone = new Smartphone();
-	private ArrayList<CustomerOrder> orders = new ArrayList<>();
+	private HashMap<Integer, CustomerOrder> orders = new HashMap<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
 	private HashMap<String, Integer> supplier1prices = new HashMap<>();
 	private HashMap<String, Integer> supplier2prices = new HashMap<>();
@@ -113,6 +113,8 @@ public class Manufacturer extends Agent
 					phoneAssembledCount = 0;
 					day++;
 					System.out.println("Day "+ day);
+					//TODO: fix this
+					/*
 					for (CustomerOrder o : orders) 
 					{
 						o.setDaysDue(o.getDaysDue() - 1);
@@ -128,6 +130,7 @@ public class Manufacturer extends Agent
 							+ ", penalty: "+o.getPenalty()
 							+ ", profit: "+o.getProfit());
 					}
+					*/
 					
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					dailyActivity.addSubBehaviour(new FindCustomers(myAgent));
@@ -136,6 +139,7 @@ public class Manufacturer extends Agent
 					dailyActivity.addSubBehaviour(new ReceivePartsPrices(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderQuery(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
+					dailyActivity.addSubBehaviour(new OrderPartsFromSupplier(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
@@ -349,23 +353,24 @@ public class Manufacturer extends Agent
 						
 						//Send reply to customer
 						ACLMessage reply = msg.createReply();
+						reply.setConversationId("customerOrder-answer");
 						if (bestSupplier != null) // if profit is positive
 						{
 							order.setSupplier(bestSupplier);
 							order.setCost(bestSupplierCost);
 							order.setAccepted(true);
-							orderID++;
-							order.setId(orderID);
-							orders.add(order);
+							orders.put(order.getId(), order);
+							
+							System.out.println("ORDER ID: "+order.getId());
+							System.out.println("ReceiveOrderQuery"+order.toString());
 							
 							reply.setPerformative(ACLMessage.CONFIRM);
 						}
 						else
 							reply.setPerformative(ACLMessage.DISCONFIRM);
-						
-						reply.setConversationId("customerOrder-answer");
+					
 						myAgent.send(reply);
-						System.out.println("Manufacturer replied to all customer orders");
+						//System.out.println("Manufacturer replied to all customer orders");
 						received++;
 					}
 				} 
@@ -387,7 +392,7 @@ public class Manufacturer extends Agent
 	private class ReceiveOrderRequests extends Behaviour
 	{
 		public ReceiveOrderRequests(Agent a) { super(a); }
-		private int step = 0;
+		
 		private boolean done = false;
 		
 		@Override
@@ -408,21 +413,58 @@ public class Manufacturer extends Agent
 						Action available = (Action) ce;
 						order = (CustomerOrder) available.getAction(); // this is the order requested
 						phone = order.getSpecification();
-
-						System.out.println("Order request: \t "+order.getId());
 						
-						//TODO: if order is accepted in previous method...
-						
-						
+						//System.out.println("Order request: \t "+order);
+						done = true;
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); }
 				}
 				else
 					block();
-				
+		}
+
+		@Override
+		public boolean done() {
+			return done;
+		}
+		
+	}
+	
+	private class OrderPartsFromSupplier extends Behaviour
+	{
+		public OrderPartsFromSupplier(Agent a) { super(a); }
+		private boolean done = false;
+		@Override
+		public void action() 
+		{
+			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+			msg.setLanguage(codec.getName());
+			msg.setOntology(ontology.getName());
+			msg.setConversationId("requestingParts");
+			msg.addReceiver(order.getSupplier());
 			
 			
+			
+			//System.out.println("order.getSupplier()\t"+order);
+			//System.out.println("order.getSpecification().getBattery().toString():"+order.getSpecification().getBattery().toString());
+			
+			supOrder.setBattery(order.getSpecification().getBattery().toString());
+			supOrder.setRAM(order.getSpecification().getRAM().toString());
+			supOrder.setScreen(order.getSpecification().getScreen().toString());
+			supOrder.setStorage(order.getSpecification().getStorage().toString());
+			supOrder.setQuantity(order.getQuantity());
+			supOrder.setSupplier(order.getSupplier());
+			
+			try
+			{
+				getContentManager().fillContent(msg, supOrder);
+				send(msg);
+				System.out.println("msg sent to supplier:\n"+msg);
+				done = true;
+			}
+			catch (CodecException ce) { ce.printStackTrace(); }
+			catch (OntologyException oe) { oe.printStackTrace(); }
 			
 		}
 
@@ -444,9 +486,6 @@ public class Manufacturer extends Agent
 			switch (step)
 			{
 			case 0:
-				
-
-
 			case 1:
 				//order PARTS from supplier everyday
 				if (step == 1)

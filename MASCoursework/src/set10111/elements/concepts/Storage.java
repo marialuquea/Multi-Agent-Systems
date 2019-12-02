@@ -22,6 +22,6 @@ public class Storage extends SmartphoneComponent
 	
 	@Override
 	public String toString() {
-		return "Storage: " + this.specification;
+		return this.specification;
 	}
 }

@@ -31,6 +31,7 @@ public class Customer extends Agent
 	private AID tickerAgent;
 	private CustomerOrder order = new CustomerOrder();
 	Smartphone smartphone = new Smartphone();
+	private int day = 0;
 
 	protected void setup()
 	{
@@ -88,6 +89,7 @@ public class Customer extends Agent
 
 				if(msg.getContent().equals("new day")) 
 				{
+					day++;
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
@@ -191,7 +193,15 @@ public class Customer extends Agent
 			order.setPrice((int)Math.floor(100 + 500 * Math.random()));
 			order.setDaysDue((int)Math.floor(1 + 10 * Math.random()));
 			order.setPenalty(order.getQuantity() + (int)Math.floor(1 + 50 * Math.random()));
+			//orderID++;
 			
+			if (this.getAgent().getLocalName().equals("customer0"))
+				order.setId((3*day)-2);
+			if (this.getAgent().getLocalName().equals("customer1"))
+				order.setId((3*day)-1);
+			if (this.getAgent().getLocalName().equals("customer2"))
+				order.setId(3*day);
+	        
 			OrderQuery orderQuery = new OrderQuery();
 			orderQuery.setManufacturer(manufacturerAID);
 			orderQuery.setOrder(order);
@@ -233,6 +243,8 @@ public class Customer extends Agent
 			        orderReq.setOntology(ontology.getName()); 
 			        orderReq.setConversationId("FinalOrderRequest");
 			        orderReq.addReceiver(manufacturerAID);
+			        
+			        
 					
 					Action request = new Action();
 					request.setAction(order);

@@ -22,7 +22,7 @@ private String specification;
 	
 	@Override
 	public String toString() {
-		return "Battery: " + this.specification;
+		return this.specification;
 	}
 	
 }
