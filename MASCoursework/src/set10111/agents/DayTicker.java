@@ -35,7 +35,7 @@ public class DayTicker extends Agent
 		}
 		
 		//wait for the other agents to start
-		doWait(15000);
+		doWait(1000);
 		addBehaviour(new SynchAgentsBehaviour(this));
 	}
 
@@ -123,7 +123,7 @@ public class DayTicker extends Agent
 				ACLMessage msg = myAgent.receive(mt);
 				if(msg != null) 
 				{
-					//System.out.println("msg received in ticker: "+msg.getSender().getLocalName()+" - "+msg.getContent());
+					System.out.println("msg received in ticker: "+msg.getSender().getLocalName()+" - "+msg.getContent());
 					numFinReceived++;
 					if(numFinReceived >= simulationAgents.size()) 
 						step++;

@@ -105,12 +105,13 @@ public class Supplier extends Agent
 				{
 					// new day - reset values
 					
+					//System.out.println("\nSupplier orders at the start of the day:");
 					// decrease day in order to send parts to manufacturer
 					for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 					{	
 						order = entry.getKey();
 						orders.put(order, orders.get(order) - 1);
-						//System.out.println(entry.getKey().getCustomer().getLocalName() + " = " + entry.getValue());	
+						//System.out.println(entry.getKey().getOrderID() + " = " + entry.getValue());	
 					}
 					
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
@@ -125,6 +126,7 @@ public class Supplier extends Agent
 					dailyActivity.addSubBehaviour(new FindCustomers(myAgent));
 					dailyActivity.addSubBehaviour(new PriceListRequest(myAgent));
 					dailyActivity.addSubBehaviour(new SendParts(myAgent));
+					//dailyActivity.addSubBehaviour(new EndDayListener(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 					
 					myAgent.addBehaviour(new EndDayListener(myAgent, cyclicBehaviours));
@@ -161,6 +163,7 @@ public class Supplier extends Agent
 			int count1 = 0;
 			for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 			{	
+				System.out.println("order "+entry.getKey().getOrderID()+" - days "+entry.getValue());
 				int days = 0;
 				days = entry.getValue();
 				if (days == 0)
@@ -189,7 +192,7 @@ public class Supplier extends Agent
 				customers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
 				for(int i=0; i<agentsType1.length; i++){ customers.add(agentsType1[i].getName()); }
-				//System.out.println("customers size "+customers.size());
+				System.out.println("customers size "+customers.size());
 			}
 			catch(FIPAException e) { e.printStackTrace(); }
 		}
@@ -264,7 +267,6 @@ public class Supplier extends Agent
 			ACLMessage msg = receive(mt);
 			if(msg != null)
 			{
-				//System.out.println(msg);
 				try
 				{	
 					ContentElement ce = null;
@@ -275,6 +277,12 @@ public class Supplier extends Agent
 					order = (SupplierOrder)available.getAction();
 					
 					orders.put(order, deliveryDays);
+					
+					System.out.println("\norders in supplier");
+					for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
+					{	
+						System.out.println(entry.getKey().getOrderID()+" - "+entry.getValue());
+					}
 					
 					System.out.println("Received supply order in "+this.getAgent().getLocalName());
 				}
@@ -296,12 +304,13 @@ public class Supplier extends Agent
 			// Send parts that have day 0 to manufacturer
 			for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 			{	
+				
 				SupplierOrder order1 = entry.getKey();
 				int days = entry.getValue();
 				
 				if (days == 0)
 				{
-					//System.out.println("days == 0");
+					System.out.println("SUPPLIER SENDING PARTS");
 					
 					// send order back to manufacturer
 					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
@@ -317,7 +326,7 @@ public class Supplier extends Agent
 					{
 						getContentManager().fillContent(msg, request); //send the wrapper object
 						send(msg);
-						// System.out.println("msg sent: "+msg);
+						System.out.println("msg sent: "+msg);
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
@@ -345,29 +354,19 @@ public class Supplier extends Agent
 
 		@Override
 		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchContent("done");
-			ACLMessage msg = myAgent.receive(mt);
-			if(msg != null) {
-				customersFinished++;
+			System.out.println("END DAY IN SUPPLIER");
+			ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
+			tick.setContent("done");
+			tick.addReceiver(tickerAgent);
+			myAgent.send(tick);
+			
+			//remove behaviours
+			for(Behaviour b : toRemove) {
+				myAgent.removeBehaviour(b);
 			}
-			else {
-				block();
-			}
-			if(customersFinished == customers.size()) {
-				//we are finished
-				// System.out.println("orders received from customers: "+numOrdersReceived);
-
-				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
-				tick.setContent("done");
-				tick.addReceiver(tickerAgent);
-				myAgent.send(tick);
-				//remove behaviours
-				for(Behaviour b : toRemove) {
-					myAgent.removeBehaviour(b);
-				}
-				myAgent.removeBehaviour(this);
-			}
+			myAgent.removeBehaviour(this);
 		}
 	}
-
 }
+
+

@@ -113,24 +113,12 @@ public class Manufacturer extends Agent
 					phoneAssembledCount = 0;
 					day++;
 					System.out.println("Day "+ day);
-					//TODO: for every order, decrease 1 day in order due date
-					/*
-					for (CustomerOrder o : orders) 
-					{
-						o.setDaysDue(o.getDaysDue() - 1);
-						
-						if (o.getDaysDue() <= 0) 
-						{
-							o.setProfit(o.getProfit()-o.getPenalty());
-							System.out.println("- "+(o.getProfit()-o.getPenalty()));
-						}
-						
-						System.out.println("order "+o.getId()
-							+ ", daysDue: "+o.getDaysDue()
-							+ ", penalty: "+o.getPenalty()
-							+ ", profit: "+o.getProfit());
+					
+					for (Entry<Integer, CustomerOrder> entry : orders.entrySet()) 
+					{	
+						order = entry.getValue();
+						order.setDaysDue(order.getDaysDue() - 1);
 					}
-					*/
 					
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					dailyActivity.addSubBehaviour(new FindCustomers(myAgent));
@@ -454,8 +442,6 @@ public class Manufacturer extends Agent
 			request.setAction(supOrder);
 			request.setActor(order.getSupplier());
 			
-			System.out.println("supplier order \t"+supOrder);
-			
 			try
 			{
 				getContentManager().fillContent(msg, request);
@@ -474,7 +460,7 @@ public class Manufacturer extends Agent
 		
 	}
 	
-	//DONE
+	//DONE - how many parts are coming in today
 	private class ReceiveSuppliesInfo extends OneShotBehaviour
 	{
 		public ReceiveSuppliesInfo(Agent a) { super(a); }
@@ -502,11 +488,12 @@ public class Manufacturer extends Agent
 		}
 		
 	}
-	
-	private class ReceiveSupplies extends Behaviour
+
+
+	private class ReceiveSupplies extends CyclicBehaviour
 	{
 		public ReceiveSupplies(Agent a) { super(a); }
-		private int ordersReceived = 0;
+		
 		@Override
 		public void action() 
 		{
@@ -517,6 +504,7 @@ public class Manufacturer extends Agent
 			
 			if (msg != null)
 			{
+				System.out.println("MANUFACTURER RECEIVING PARTS");
 				try
 				{
 					ContentElement ce = null;
@@ -555,10 +543,6 @@ public class Manufacturer extends Agent
 				catch (OntologyException oe) { oe.printStackTrace(); }
 			}
 			
-		}
-		@Override
-		public boolean done() {
-			return ordersReceived == partsComingToday;
 		}
 		
 	}

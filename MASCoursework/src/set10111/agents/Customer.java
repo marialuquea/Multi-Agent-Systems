@@ -35,8 +35,6 @@ public class Customer extends Agent
 
 	protected void setup()
 	{
-		//System.out.println("setup() in "+this.getLocalName());
-
 		// register codec
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
@@ -96,7 +94,6 @@ public class Customer extends Agent
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					dailyActivity.addSubBehaviour(new OrderConfirmed(myAgent));
-					//dailyActivity.addSubBehaviour(new ReceiveOrder(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -268,8 +265,9 @@ public class Customer extends Agent
 	    }
 
 	}
+
 	
-	// NOT EDITED YET
+	// DONE
 	public class ReceiveOrder extends CyclicBehaviour
 	{
 
@@ -277,7 +275,9 @@ public class Customer extends Agent
 
 		@Override
 		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.AGREE);
+			MessageTemplate mt = MessageTemplate.and(
+					MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),
+					MessageTemplate.MatchConversationId("orderSent"));
 			ACLMessage msg = receive(mt);
 			if(msg != null)
 			{
@@ -287,18 +287,28 @@ public class Customer extends Agent
 					ce = getContentManager().extractContent(msg);
 
 					Action available = (Action) ce;
-					order = (CustomerOrder) available.getAction(); // this is the order received
+					order = (CustomerOrder) available.getAction(); 
 					smartphone = order.getSpecification();
 
-
+					System.out.println("order received in "+this.getAgent().getLocalName()+": "+order);
 					
-					//System.out.println("order received in c: \t"+msg);
-					System.out.println("       RECEIVED: "+order.getId()
-						+" - "+order.getCustomer().getLocalName());
+					//Send payment
+					ACLMessage pay = new ACLMessage(ACLMessage.INFORM);
+					pay.setLanguage(codec.getName());
+					pay.setOntology(ontology.getName());
+					pay.setConversationId("customer-payment");
+					pay.addReceiver(manufacturerAID);
+					
+					SendPayment payment = new SendPayment();
+					payment.setCustomer(this.getAgent().getAID());
+					payment.setOrder(order);
+					
+					getContentManager().fillContent(pay, payment);
+					send(pay);
+					
 				}
 				catch (CodecException ce) { ce.printStackTrace(); }
 				catch (OntologyException oe) { oe.printStackTrace(); }
-
 			}
 			else
 				block();
