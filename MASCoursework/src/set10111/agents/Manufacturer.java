@@ -568,47 +568,47 @@ public class Manufacturer extends Agent
 		{
 			switch(step) {
 			case 0:
-				//TODO: only assemble 50 per day
 				
 				ArrayList<CustomerOrder> done = new ArrayList<>();
 				
 				for (CustomerOrder o : readyToAssemble)
 				{
-					//System.out.println("2");
-					ArrayList<String> components = new ArrayList<>();
-					components.add(o.getSpecification().getBattery().toString());
-					components.add(o.getSpecification().getRAM().toString());
-					components.add(o.getSpecification().getScreen().toString());
-					components.add(o.getSpecification().getStorage().toString());
-					
-					//Remove components from warehouse
-					for (String comp : components)
+					System.out.println("order quantity: "+o.getQuantity());
+					// only assemble 50 phones per day
+					if ( ( phoneAssembledCount + o.getQuantity() ) <= 50) 
 					{
-						warehouse.put(comp, warehouse.get(comp) - o.getQuantity());
-						//System.out.println(warehouse.get(comp));
-					}
-					
-					//Send order back to customer
-					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-					msg.setLanguage(codec.getName());
-					msg.setOntology(ontology.getName());
-					msg.setConversationId("orderSent");
-					msg.addReceiver(o.getCustomer());
-					
-					Action finalOrder = new Action();
-					finalOrder.setAction(o);
-					finalOrder.setActor(o.getCustomer());
-					
-					try
-					{
-						getContentManager().fillContent(msg, finalOrder);
-						send(msg);
-						pendingPayment++;
+						System.out.println("2");
+						ArrayList<String> components = new ArrayList<>();
+						components.add(o.getSpecification().getBattery().toString());
+						components.add(o.getSpecification().getRAM().toString());
+						components.add(o.getSpecification().getScreen().toString());
+						components.add(o.getSpecification().getStorage().toString());
 						
-						done.add(o);
+						//Remove components from warehouse
+						for (String comp : components)
+							warehouse.put(comp, warehouse.get(comp) - o.getQuantity());
+						
+						//Send order back to customer
+						ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+						msg.setLanguage(codec.getName());
+						msg.setOntology(ontology.getName());
+						msg.setConversationId("orderSent");
+						msg.addReceiver(o.getCustomer());
+						
+						Action finalOrder = new Action();
+						finalOrder.setAction(o);
+						finalOrder.setActor(o.getCustomer());
+						
+						try
+						{
+							getContentManager().fillContent(msg, finalOrder);
+							send(msg);
+							pendingPayment++;
+							done.add(o);
+						}
+						catch (CodecException ce) { ce.printStackTrace(); } 
+						catch (OntologyException oe) { oe.printStackTrace(); }
 					}
-					catch (CodecException ce) { ce.printStackTrace(); } 
-					catch (OntologyException oe) { oe.printStackTrace(); }
 				}
 				
 				for (CustomerOrder o : done)
