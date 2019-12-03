@@ -266,7 +266,6 @@ public class Customer extends Agent
 
 	}
 
-	
 	// DONE
 	public class ReceiveOrder extends CyclicBehaviour
 	{

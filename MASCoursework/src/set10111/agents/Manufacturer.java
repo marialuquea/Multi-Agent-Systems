@@ -52,7 +52,7 @@ public class Manufacturer extends Agent
 	private int supplier2deliveryDays;
 	private int partsComingToday = 0;
 	private int day;
-	private int phoneAssembledCount = 0;
+	private int phoneAssembledCount = 0, orderCount = 0;
 	private int orderID = 0;
 	private long dailyProfit = 0;
 	private long totalProfit = 0;
@@ -113,7 +113,7 @@ public class Manufacturer extends Agent
 					// reset values for new day
 					customers.clear();
 					partsComingToday = 0;
-					phoneAssembledCount = 0;
+					phoneAssembledCount = orderCount = 0;
 					day++;
 					dailyProfit = 0;
 					System.out.println("Day "+ day);
@@ -573,11 +573,9 @@ public class Manufacturer extends Agent
 				
 				for (CustomerOrder o : readyToAssemble)
 				{
-					System.out.println("order quantity: "+o.getQuantity());
 					// only assemble 50 phones per day
 					if ( ( phoneAssembledCount + o.getQuantity() ) <= 50) 
 					{
-						System.out.println("2");
 						ArrayList<String> components = new ArrayList<>();
 						components.add(o.getSpecification().getBattery().toString());
 						components.add(o.getSpecification().getRAM().toString());
@@ -604,6 +602,8 @@ public class Manufacturer extends Agent
 							getContentManager().fillContent(msg, finalOrder);
 							send(msg);
 							pendingPayment++;
+							orderCount++;
+							phoneAssembledCount += o.getQuantity();
 							done.add(o);
 						}
 						catch (CodecException ce) { ce.printStackTrace(); } 
@@ -655,11 +655,11 @@ public class Manufacturer extends Agent
 			    				- penalty;
 			    		
 			    		order.setProfit(profit);
-			    		
+			    		/*
 			    		System.out.println(String.format("profit for order %s: %s ", 
 			    				order.getId(),
 			    				order.getProfit()));
-			    		
+			    		*/
 			    		dailyProfit += order.getProfit();
 			    		totalProfit += order.getProfit();
 			    		
@@ -694,8 +694,9 @@ public class Manufacturer extends Agent
 		@Override
 		public void action() {
 			// print to console
-			System.out.println("dailyProfit: "+dailyProfit);
-			System.out.println("totalProfit: "+totalProfit);
+			System.out.println(phoneAssembledCount+" phones assembled today for "+orderCount+" orders");
+			System.out.println("orders left to assemble: "+orders.size());	
+			System.out.println("dailyProfit: "+dailyProfit+"\t total profit: "+totalProfit);
 			
 			// send done message to tickerAgent
 			ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
