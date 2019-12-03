@@ -2,6 +2,7 @@ package set10111.agents;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -163,12 +164,11 @@ public class Supplier extends Agent
 			int count1 = 0;
 			for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 			{	
-				System.out.println("order "+entry.getKey().getOrderID()+" - days "+entry.getValue());
-				int days = 0;
-				days = entry.getValue();
-				if (days == 0)
+				//System.out.println("order "+entry.getKey().getOrderID()+" - days "+entry.getValue());
+				if (entry.getValue() == 0)
 					count1++;
 			}
+			//System.out.println("count1: "+count1);
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.setConversationId("parts");
 			msg.setContent(String.valueOf(count1));
@@ -192,7 +192,7 @@ public class Supplier extends Agent
 				customers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
 				for(int i=0; i<agentsType1.length; i++){ customers.add(agentsType1[i].getName()); }
-				System.out.println("customers size "+customers.size());
+				//System.out.println("customers size "+customers.size());
 			}
 			catch(FIPAException e) { e.printStackTrace(); }
 		}
@@ -277,7 +277,7 @@ public class Supplier extends Agent
 					order = (SupplierOrder)available.getAction();
 					
 					orders.put(order, deliveryDays);
-					
+					/*
 					System.out.println("\norders in supplier");
 					for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 					{	
@@ -285,6 +285,7 @@ public class Supplier extends Agent
 					}
 					
 					System.out.println("Received supply order in "+this.getAgent().getLocalName());
+					*/
 				}
 				catch (CodecException ce) { ce.printStackTrace(); }
 				catch (OntologyException oe) { oe.printStackTrace(); }
@@ -300,17 +301,13 @@ public class Supplier extends Agent
 		public SendParts(Agent a) { super(a); }
 		@Override
 		public void action() 
-		{
-			// Send parts that have day 0 to manufacturer
-			for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
-			{	
-				
-				SupplierOrder order1 = entry.getKey();
-				int days = entry.getValue();
-				
-				if (days == 0)
-				{
-					System.out.println("SUPPLIER SENDING PARTS");
+		{	
+			for(Iterator<HashMap.Entry<SupplierOrder, Integer>> it = orders.entrySet().iterator(); it.hasNext(); ) 
+			{
+			    HashMap.Entry<SupplierOrder, Integer> order = it.next();
+			    if(order.getValue() == 0) {
+			    	
+			    	//System.out.println("SUPPLIER SENDING PARTS");
 					
 					// send order back to manufacturer
 					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
@@ -320,21 +317,19 @@ public class Supplier extends Agent
 					msg.setOntology(ontology.getName());
 					
 					Action request = new Action();
-					request.setAction(order1);
+					request.setAction(order.getKey());
 					request.setActor(manufacturers.get(0));
 					try
 					{
 						getContentManager().fillContent(msg, request); //send the wrapper object
 						send(msg);
-						System.out.println("msg sent: "+msg);
+						//System.out.println("msg sent: "+msg);
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
 					
-					//delete order from orders hashmap
-					orders.remove(entry);
-				}
-				
+			        it.remove();
+			    }
 			}
 			
 		}
@@ -354,7 +349,6 @@ public class Supplier extends Agent
 
 		@Override
 		public void action() {
-			System.out.println("END DAY IN SUPPLIER");
 			ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 			tick.setContent("done");
 			tick.addReceiver(tickerAgent);

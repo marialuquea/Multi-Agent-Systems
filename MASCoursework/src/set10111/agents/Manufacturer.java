@@ -2,6 +2,7 @@ package set10111.agents;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -38,7 +39,7 @@ public class Manufacturer extends Agent
 	private Ontology ontology = CommerceOntology.getInstance();
 	private ArrayList<AID> customers = new ArrayList<>();
 	private ArrayList<AID> suppliers = new ArrayList<>();
-	private int numOrdersReceived = 0;
+	private ArrayList<CustomerOrder> readyToAssemble = new ArrayList<>();
 	private AID tickerAgent;
 	private CustomerOrder order = new CustomerOrder();
 	private SupplierOrder supOrder = new SupplierOrder();
@@ -53,6 +54,8 @@ public class Manufacturer extends Agent
 	private int day;
 	private int phoneAssembledCount = 0;
 	private int orderID = 0;
+	private long dailyProfit = 0;
+	private long totalProfit = 0;
 
 	protected void setup()
 	{
@@ -75,6 +78,7 @@ public class Manufacturer extends Agent
 		}
 		
 		addBehaviour(new TickerWaiter(this));
+		addBehaviour(new ReceiveSupplies(this));
 	}
 
 	@Override
@@ -108,10 +112,10 @@ public class Manufacturer extends Agent
 				{
 					// reset values for new day
 					customers.clear();
-					numOrdersReceived = 0;
 					partsComingToday = 0;
 					phoneAssembledCount = 0;
 					day++;
+					dailyProfit = 0;
 					System.out.println("Day "+ day);
 					
 					for (Entry<Integer, CustomerOrder> entry : orders.entrySet()) 
@@ -129,14 +133,10 @@ public class Manufacturer extends Agent
 					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
 					dailyActivity.addSubBehaviour(new OrderPartsFromSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveSuppliesInfo(myAgent));
-					dailyActivity.addSubBehaviour(new ReceiveSupplies(myAgent));
+					dailyActivity.addSubBehaviour(new AssembleCustomerOrder(myAgent));
+					dailyActivity.addSubBehaviour(new EndDay());
 					myAgent.addBehaviour(dailyActivity);
 
-					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
-					//CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
-					//myAgent.addBehaviour(ror);
-					//cyclicBehaviours.add(ror);
-					myAgent.addBehaviour(new EndDayListener(myAgent,cyclicBehaviours));
 
 				}
 				else 
@@ -460,7 +460,7 @@ public class Manufacturer extends Agent
 		
 	}
 	
-	//DONE - how many parts are coming in today
+	//how many parts are coming in today
 	private class ReceiveSuppliesInfo extends OneShotBehaviour
 	{
 		public ReceiveSuppliesInfo(Agent a) { super(a); }
@@ -472,14 +472,20 @@ public class Manufacturer extends Agent
 			while (messages <= 1) 
 			{
 				//System.out.println("messages: "+messages);
-				MessageTemplate info = MessageTemplate.MatchConversationId("parts");
-				ACLMessage infomsg = myAgent.receive(info);
+				MessageTemplate mt = MessageTemplate.MatchConversationId("parts");
+				ACLMessage infomsg = myAgent.receive(mt);
 				if(infomsg != null) 
 				{
-					partsComingToday = Integer.parseInt(infomsg.getContent(), 10);
-					System.out.println(partsComingToday + " order parts from supplier coming in today");
-					messages++;
-					break;
+					if (infomsg.getSender().getLocalName().equals("supplier1")) {
+						partsComingToday += Integer.parseInt(infomsg.getContent(), 10);
+						//System.out.println(partsComingToday + " parts from supplier1 coming in today");
+						messages++;
+					}
+					if (infomsg.getSender().getLocalName().equals("supplier2")) {
+						partsComingToday += Integer.parseInt(infomsg.getContent(), 10);
+						//System.out.println(partsComingToday + " parts from supplier2 coming in today");
+						messages++;
+					}
 				}
 				else 
 					block();
@@ -504,7 +510,6 @@ public class Manufacturer extends Agent
 			
 			if (msg != null)
 			{
-				System.out.println("MANUFACTURER RECEIVING PARTS");
 				try
 				{
 					ContentElement ce = null;
@@ -512,13 +517,16 @@ public class Manufacturer extends Agent
 					
 					Action available = (Action) ce;
 					
+					//the supplier order
 					supOrder = (SupplierOrder)available.getAction();
-					
+					// find customer order from that supplier order id
 					order = orders.get(supOrder.getOrderID());
-					//TODO: add order to ready to assemble arraylist/hashmap
-					
-					System.out.println("getting order from supOrder: "+order);
-					
+					// parts received for this order so add to ready to assemble list
+					readyToAssemble.add(order);
+					/*
+					for (CustomerOrder o : readyToAssemble)
+						System.out.println("readyToAssemble"+o);
+					*/
 					ArrayList<String> components = new ArrayList<>();
 					components.add(supOrder.getSmartphone().getBattery().toString());
 					components.add(supOrder.getSmartphone().getRAM().toString());
@@ -533,9 +541,10 @@ public class Manufacturer extends Agent
 							warehouse.put(s, (warehouse.get(s) + supOrder.getQuantity()));
 					}
 					
-					System.out.println("\t\t----WAREHOUSE----");
+					System.out.println("\n\t\t-----WAREHOUSE-----");
 					for (HashMap.Entry<String, Integer> entry : warehouse.entrySet())
 					    System.out.println("\t\t"+entry.getKey()+"\t"+entry.getValue());
+					System.out.println("\t\t-------------------\n");
 					
 					
 				}
@@ -546,44 +555,153 @@ public class Manufacturer extends Agent
 		}
 		
 	}
-
-
 	
-	public class EndDayListener extends CyclicBehaviour 
+	public class AssembleCustomerOrder extends Behaviour
 	{
-		private int customersFinished = 0;
-		private List<Behaviour> toRemove;
+		public AssembleCustomerOrder(Agent a) {super(a);}
+		private int step = 0;
+		private boolean done = false;
+		private int pendingPayment = 0;
 
-		public EndDayListener(Agent a, List<Behaviour> toRemove) 
+		@Override
+		public void action() 
 		{
-			super(a);
-			this.toRemove = toRemove;
+			switch(step) {
+			case 0:
+				//TODO: only assemble 50 per day
+				
+				ArrayList<CustomerOrder> done = new ArrayList<>();
+				
+				for (CustomerOrder o : readyToAssemble)
+				{
+					//System.out.println("2");
+					ArrayList<String> components = new ArrayList<>();
+					components.add(o.getSpecification().getBattery().toString());
+					components.add(o.getSpecification().getRAM().toString());
+					components.add(o.getSpecification().getScreen().toString());
+					components.add(o.getSpecification().getStorage().toString());
+					
+					//Remove components from warehouse
+					for (String comp : components)
+					{
+						warehouse.put(comp, warehouse.get(comp) - o.getQuantity());
+						//System.out.println(warehouse.get(comp));
+					}
+					
+					//Send order back to customer
+					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+					msg.setLanguage(codec.getName());
+					msg.setOntology(ontology.getName());
+					msg.setConversationId("orderSent");
+					msg.addReceiver(o.getCustomer());
+					
+					Action finalOrder = new Action();
+					finalOrder.setAction(o);
+					finalOrder.setActor(o.getCustomer());
+					
+					try
+					{
+						getContentManager().fillContent(msg, finalOrder);
+						send(msg);
+						pendingPayment++;
+						
+						done.add(o);
+					}
+					catch (CodecException ce) { ce.printStackTrace(); } 
+					catch (OntologyException oe) { oe.printStackTrace(); }
+				}
+				
+				for (CustomerOrder o : done)
+					readyToAssemble.remove(o);
+				done.clear();
+				
+				step++;
+				break;
+				
+			case 1:
+				//System.out.println("6");
+				MessageTemplate mt = MessageTemplate.and(
+			            MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+			            MessageTemplate.MatchConversationId("customer-payment"));
+			    ACLMessage receivePayment = receive(mt);
+			    
+			    if (receivePayment != null)
+			    {
+			    	try
+			    	{
+			    		//System.out.println("7");
+			    		ContentElement ce = null;
+			    		ce = getContentManager().extractContent(receivePayment);
+			    		
+			    		SendPayment payment = (SendPayment) ce;
+			    		order = payment.getOrder();
+			    		
+			    		//System.out.println(order);
+			    		//System.out.println("variables");
+			    		//System.out.println(order.getDaysDue());
+			    		//System.out.println(order.getPenalty());
+			    		
+			    		// penalty if order was sent late
+			    		int penalty = 0;
+			    		if (order.getDaysDue() < 0)
+			    		{
+			    			int due = Math.abs(order.getDaysDue());
+			    			penalty = due * order.getPenalty();
+			    		}
+			    			
+			    		// calculate profit for this order
+			    		int profit = (order.getPrice()* order.getQuantity())
+			    				- (int)order.getCost()
+			    				- penalty;
+			    		
+			    		order.setProfit(profit);
+			    		
+			    		System.out.println(String.format("profit for order %s: %s ", 
+			    				order.getId(),
+			    				order.getProfit()));
+			    		
+			    		dailyProfit += order.getProfit();
+			    		totalProfit += order.getProfit();
+			    		
+			    		pendingPayment--;
+			    		
+			    		orders.remove(order.getId());
+			    		
+			    	}
+			    	catch (CodecException ce) { ce.printStackTrace(); } 
+					catch (OntologyException oe) { oe.printStackTrace(); }
+			    }
+			    else
+			    	block();
+			    break;
+			    
+			}
+			if (pendingPayment == 0)
+				done = true;
 		}
 
 		@Override
-		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchContent("done");
-			ACLMessage msg = myAgent.receive(mt);
-			if(msg != null) {
-				customersFinished++;
-			}
-			else {
-				block();
-			}
-			if(customersFinished == customers.size()) {
-				//we are finished
-				// System.out.println("orders received from customers: "+numOrdersReceived);
+		public boolean done() {
+			return done;
+		}
+		
+	}
 
-				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
-				tick.setContent("done");
-				tick.addReceiver(tickerAgent);
-				myAgent.send(tick);
-				//remove behaviours
-				for(Behaviour b : toRemove) {
-					myAgent.removeBehaviour(b);
-				}
-				myAgent.removeBehaviour(this);
-			}
+
+	
+	public class EndDay extends OneShotBehaviour 
+	{
+		@Override
+		public void action() {
+			// print to console
+			System.out.println("dailyProfit: "+dailyProfit);
+			System.out.println("totalProfit: "+totalProfit);
+			
+			// send done message to tickerAgent
+			ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
+			tick.setContent("done");
+			tick.addReceiver(tickerAgent);
+			myAgent.send(tick);
 		}
 	}
 

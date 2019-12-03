@@ -290,7 +290,7 @@ public class Customer extends Agent
 					order = (CustomerOrder) available.getAction(); 
 					smartphone = order.getSpecification();
 
-					System.out.println("order received in "+this.getAgent().getLocalName()+": "+order);
+					//System.out.println("order received in "+this.getAgent().getLocalName()+": "+order);
 					
 					//Send payment
 					ACLMessage pay = new ACLMessage(ACLMessage.INFORM);

@@ -10,7 +10,7 @@ public class CustomerOrder implements AgentAction
 	private AID supplier; // the supplier assigned
 	private int price; // price set by the customer
 	private int penalty; // per-day penalty for late delivery
-	private Smartphone specification; // smartphone specification
+	private Smartphone smartphone; // smartphone specification
 	private int quantity; // how many smartphones ordered
 	private int daysDue;
 	private boolean accepted;
@@ -42,10 +42,10 @@ public class CustomerOrder implements AgentAction
 		this.penalty = penalty;
 	}
 	public Smartphone getSpecification() {
-		return specification;
+		return smartphone;
 	}
 	public void setSpecification(Smartphone specification) {
-		this.specification = specification;
+		this.smartphone = specification;
 	}
 	public int getQuantity() {
 		return quantity;
@@ -99,7 +99,7 @@ public class CustomerOrder implements AgentAction
 		        + "profit: %s, \n\t"
 		        + "cost: %s,",
 		        id, customer, supplier, price,
-				penalty, specification, quantity, daysDue,
+				penalty, smartphone, quantity, daysDue,
 				accepted, profit, cost);
 	}
 }
