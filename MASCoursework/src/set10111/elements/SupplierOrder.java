@@ -9,6 +9,7 @@ public class SupplierOrder implements AgentAction
 	private int quantity;
 	private AID supplier;
 	private int orderID;
+	private double cost;
 	
 	public Smartphone getSmartphone() {
 		return smartphone;
@@ -43,6 +44,12 @@ public class SupplierOrder implements AgentAction
 				+ "\t quantity: %s, \n\t"
 		        + "\t supplier: %s )",
 		        smartphone, quantity, supplier);
+	}
+	public double getCost() {
+		return cost;
+	}
+	public void setCost(double cost) {
+		this.cost = cost;
 	}
 	
 	

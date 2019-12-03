@@ -521,6 +521,7 @@ public class Manufacturer extends Agent
 					supOrder = (SupplierOrder)available.getAction();
 					// find customer order from that supplier order id
 					order = orders.get(supOrder.getOrderID());
+					supOrder.setCost(order.getCost());
 					// parts received for this order so add to ready to assemble list
 					readyToAssemble.add(order);
 					/*
@@ -546,6 +547,24 @@ public class Manufacturer extends Agent
 					    System.out.println("\t\t"+entry.getKey()+"\t"+entry.getValue());
 					System.out.println("\t\t-------------------\n");
 					
+					
+					
+					// SEND PAYMENT TO SUPPLIER
+					ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+					reply.setLanguage(codec.getName());
+					reply.setOntology(ontology.getName());
+					reply.setConversationId("supplierPayment");
+					reply.addReceiver(order.getSupplier());
+					
+					SendPayment pay = new SendPayment();
+					pay.setCustomer(order.getCustomer());
+					pay.setSupOrder(supOrder); 
+					
+					getContentManager().fillContent(reply, pay);
+					send(reply);
+					
+					dailyProfit -= order.getCost();
+					totalProfit -= order.getCost();
 					
 				}
 				catch (CodecException ce) { ce.printStackTrace(); }

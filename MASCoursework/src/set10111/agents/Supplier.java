@@ -296,42 +296,67 @@ public class Supplier extends Agent
 	}
 
 	//DONE
-	private class SendParts extends OneShotBehaviour
+	private class SendParts extends Behaviour
 	{
 		public SendParts(Agent a) { super(a); }
+		
+		private int expectingPayment;
+		private int step = 0;
+		
 		@Override
 		public void action() 
 		{	
-			for(Iterator<HashMap.Entry<SupplierOrder, Integer>> it = orders.entrySet().iterator(); it.hasNext(); ) 
-			{
-			    HashMap.Entry<SupplierOrder, Integer> order = it.next();
-			    if(order.getValue() == 0) {
-			    	
-			    	//System.out.println("SUPPLIER SENDING PARTS");
-					
-					// send order back to manufacturer
-					ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-					msg.setConversationId("sending-parts");
-					msg.addReceiver(manufacturers.get(0));
-					msg.setLanguage(codec.getName());
-					msg.setOntology(ontology.getName());
-					
-					Action request = new Action();
-					request.setAction(order.getKey());
-					request.setActor(manufacturers.get(0));
-					try
-					{
-						getContentManager().fillContent(msg, request); //send the wrapper object
-						send(msg);
-						//System.out.println("msg sent: "+msg);
-					}
-					catch (CodecException ce) { ce.printStackTrace(); }
-					catch (OntologyException oe) { oe.printStackTrace(); } 
-					
-			        it.remove();
-			    }
+			switch (step) {
+			case 0: 
+				// send parts to manufacturer
+				for(Iterator<HashMap.Entry<SupplierOrder, Integer>> it = orders.entrySet().iterator(); it.hasNext(); ) 
+				{
+				    HashMap.Entry<SupplierOrder, Integer> order = it.next();
+				    if(order.getValue() == 0) {
+				    	
+				    	//System.out.println("SUPPLIER SENDING PARTS");
+						
+						// send order back to manufacturer
+						ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+						msg.setConversationId("sending-parts");
+						msg.addReceiver(manufacturers.get(0));
+						msg.setLanguage(codec.getName());
+						msg.setOntology(ontology.getName());
+						
+						Action request = new Action();
+						request.setAction(order.getKey());
+						request.setActor(manufacturers.get(0));
+						try
+						{
+							getContentManager().fillContent(msg, request); //send the wrapper object
+							send(msg);
+							//System.out.println("msg sent: "+msg);
+						}
+						catch (CodecException ce) { ce.printStackTrace(); }
+						catch (OntologyException oe) { oe.printStackTrace(); } 
+						
+						expectingPayment++;
+						
+				        it.remove();
+				    }
+				}
+				step++;
+				break;
+				
+			case 1:
+				// receive payment from manufacturer
+				
+				System.out.println("HOLAAAAAAAAAAAA");
+				expectingPayment--;
+				break;
 			}
+				
 			
+			
+		}
+		@Override
+		public boolean done() {
+			return (expectingPayment == 0);
 		}
 		
 	}
