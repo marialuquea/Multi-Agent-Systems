@@ -169,12 +169,27 @@ public class Supplier extends Agent
 					count1++;
 			}
 			//System.out.println("count1: "+count1);
-			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-			msg.setConversationId("parts");
-			msg.setContent(String.valueOf(count1));
-			msg.addReceiver(manufacturers.get(0));
-			myAgent.send(msg);
-			//System.out.println("msg info sent: "+msg);
+			
+			// SEND INFO TO SUPPLIER
+			ACLMessage info = new ACLMessage(ACLMessage.INFORM);
+			info.setLanguage(codec.getName());
+			info.setOntology(ontology.getName());
+			info.setConversationId("parts");
+			info.addReceiver(manufacturers.get(0));
+			
+			PartsSentToday parts = new PartsSentToday();
+			parts.setParts(count1);
+			
+			try 
+			{
+				getContentManager().fillContent(info, parts);
+				send(info);
+				//System.out.println("msg info sent: "+info);
+			}
+			catch (CodecException ce) { ce.printStackTrace(); }
+			catch (OntologyException oe) { oe.printStackTrace(); }
+			
+			
 		}
 	}
 
@@ -314,11 +329,11 @@ public class Supplier extends Agent
 				    HashMap.Entry<SupplierOrder, Integer> order = it.next();
 				    if(order.getValue() == 0) {
 				    	
-				    	//System.out.println("SUPPLIER SENDING PARTS");
+				    	System.out.println("SUPPLIER SENDING PARTS");
 						
 						// send order back to manufacturer
 						ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-						msg.setConversationId("sending-parts");
+						msg.setConversationId("sendingParts");
 						msg.addReceiver(manufacturers.get(0));
 						msg.setLanguage(codec.getName());
 						msg.setOntology(ontology.getName());
@@ -330,7 +345,7 @@ public class Supplier extends Agent
 						{
 							getContentManager().fillContent(msg, request); //send the wrapper object
 							send(msg);
-							//System.out.println("msg sent: "+msg);
+							//System.out.println("parts sent: "+msg);
 						}
 						catch (CodecException ce) { ce.printStackTrace(); }
 						catch (OntologyException oe) { oe.printStackTrace(); } 

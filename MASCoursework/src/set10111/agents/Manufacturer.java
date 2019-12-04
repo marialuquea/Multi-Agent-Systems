@@ -43,7 +43,6 @@ public class Manufacturer extends Agent
 	private AID tickerAgent;
 	private CustomerOrder order = new CustomerOrder();
 	private SupplierOrder supOrder = new SupplierOrder();
-	private Smartphone phone = new Smartphone();
 	private HashMap<Integer, CustomerOrder> orders = new HashMap<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
 	private HashMap<String, Integer> supplier1prices = new HashMap<>();
@@ -53,7 +52,6 @@ public class Manufacturer extends Agent
 	private int partsComingToday = 0;
 	private int day;
 	private int phoneAssembledCount = 0, orderCount = 0;
-	private int orderID = 0;
 	private long dailyProfit = 0;
 	private long totalProfit = 0;
 
@@ -78,7 +76,6 @@ public class Manufacturer extends Agent
 		}
 		
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new ReceiveSupplies(this));
 	}
 
 	@Override
@@ -133,6 +130,7 @@ public class Manufacturer extends Agent
 					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
 					dailyActivity.addSubBehaviour(new OrderPartsFromSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveSuppliesInfo(myAgent));
+					dailyActivity.addSubBehaviour(new ReceiveSupplies(myAgent));
 					dailyActivity.addSubBehaviour(new AssembleCustomerOrder(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay());
 					myAgent.addBehaviour(dailyActivity);
@@ -400,7 +398,6 @@ public class Manufacturer extends Agent
 						Action available = (Action) ce;
 						order = (CustomerOrder) available.getAction(); // this is the order requested
 						order = orders.get(order.getId());
-						phone = order.getSpecification();
 						
 						//System.out.println("Order request: \t "+order);
 						done = true;
@@ -446,10 +443,34 @@ public class Manufacturer extends Agent
 			{
 				getContentManager().fillContent(msg, request);
 				send(msg);
+			}
+			catch (CodecException ce) { ce.printStackTrace(); }
+			catch (OntologyException oe) { oe.printStackTrace(); }
+			
+			
+			// SEND PAYMENT TO SUPPLIER - PREDICATE
+			ACLMessage pay = new ACLMessage(ACLMessage.INFORM);
+			pay.setLanguage(codec.getName());
+			pay.setOntology(ontology.getName());
+			pay.setConversationId("supplierPayment");
+			pay.addReceiver(order.getSupplier());
+			
+			SendPayment payment = new SendPayment();
+			payment.setAgent(order.getSupplier());
+			payment.setSupOrder(supOrder);
+			payment.setOrder(order);
+			
+			try
+			{
+				getContentManager().fillContent(pay, payment);
+				send(pay);
 				done = true;
 			}
 			catch (CodecException ce) { ce.printStackTrace(); }
 			catch (OntologyException oe) { oe.printStackTrace(); }
+			
+			dailyProfit -= order.getCost();
+			totalProfit -= order.getCost();
 			
 		}
 
@@ -461,120 +482,123 @@ public class Manufacturer extends Agent
 	}
 	
 	//how many parts are coming in today
-	private class ReceiveSuppliesInfo extends OneShotBehaviour
+	private class ReceiveSuppliesInfo extends Behaviour
 	{
 		public ReceiveSuppliesInfo(Agent a) { super(a); }
-		
+		int replies = 0;
 		@Override
 		public void action() 
 		{
-			int messages = 0;
-			while (messages <= 1) 
-			{
-				//System.out.println("messages: "+messages);
-				MessageTemplate mt = MessageTemplate.MatchConversationId("parts");
-				ACLMessage infomsg = myAgent.receive(mt);
-				if(infomsg != null) 
-				{
-					if (infomsg.getSender().getLocalName().equals("supplier1")) {
-						partsComingToday += Integer.parseInt(infomsg.getContent(), 10);
-						//System.out.println(partsComingToday + " parts from supplier1 coming in today");
-						messages++;
-					}
-					if (infomsg.getSender().getLocalName().equals("supplier2")) {
-						partsComingToday += Integer.parseInt(infomsg.getContent(), 10);
-						//System.out.println(partsComingToday + " parts from supplier2 coming in today");
-						messages++;
-					}
-				}
-				else 
-					block();
-			}
+			MessageTemplate mt = MessageTemplate.and(
+			          MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+			          MessageTemplate.MatchConversationId("parts"));
+			ACLMessage msg = receive(mt);
 			
+			if(msg != null)
+			{
+				//System.out.println("parts received: "+msg);
+		        try 
+		        {
+		          ContentElement ce = null;
+		          ce = getContentManager().extractContent(msg);
+		          
+		          if (ce instanceof PartsSentToday) 
+		          {
+		            PartsSentToday payment = (PartsSentToday) ce; 
+		            partsComingToday += payment.getParts();
+		            if (payment.getParts() > 0)
+		            	System.out.println("partsComingToday: "+partsComingToday+" by "+msg.getSender().getLocalName()+" on day "+day);
+		            replies++;
+		          }
+		          else 
+		            System.out.println("Unknown predicate " + ce.getClass().getName());
+		          
+		        }
+		        catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); } 
+		        
+		    } 
+			else 
+		        block();
+		}
+
+		@Override
+		public boolean done() {
+			return replies == 2;
 		}
 		
 	}
 
 
-	private class ReceiveSupplies extends CyclicBehaviour
+	private class ReceiveSupplies extends OneShotBehaviour
 	{
 		public ReceiveSupplies(Agent a) { super(a); }
-		
 		@Override
 		public void action() 
 		{
-			MessageTemplate mt = MessageTemplate.and(
-					MessageTemplate.MatchPerformative(ACLMessage.CONFIRM), 
-					MessageTemplate.MatchConversationId("sending-parts"));
-			ACLMessage msg = receive(mt);
-			
-			if (msg != null)
+			while (partsComingToday > 0)
 			{
-				try
+				MessageTemplate mt = MessageTemplate.and(
+						MessageTemplate.MatchPerformative(ACLMessage.CONFIRM), 
+						MessageTemplate.MatchConversationId("sendingParts"));
+				ACLMessage msg = receive(mt);
+				
+				if (msg != null)
 				{
-					ContentElement ce = null;
-					ce = getContentManager().extractContent(msg);
-					
-					Action available = (Action) ce;
-					
-					//the supplier order
-					supOrder = (SupplierOrder)available.getAction();
-					// find customer order from that supplier order id
-					order = orders.get(supOrder.getOrderID());
-					supOrder.setCost(order.getCost());
-					// parts received for this order so add to ready to assemble list
-					readyToAssemble.add(order);
-					/*
-					for (CustomerOrder o : readyToAssemble)
-						System.out.println("readyToAssemble"+o);
-					*/
-					ArrayList<String> components = new ArrayList<>();
-					components.add(supOrder.getSmartphone().getBattery().toString());
-					components.add(supOrder.getSmartphone().getRAM().toString());
-					components.add(supOrder.getSmartphone().getScreen().toString());
-					components.add(supOrder.getSmartphone().getStorage().toString());
-					
-					for (String s : components)
+					try
 					{
-						if (warehouse.get(s) == null)
-							warehouse.put(s, supOrder.getQuantity());
-						else
-							warehouse.put(s, (warehouse.get(s) + supOrder.getQuantity()));
+						ContentElement ce = null;
+						ce = getContentManager().extractContent(msg);
+						
+						Action available = (Action) ce;
+						
+						//the supplier order
+						supOrder = (SupplierOrder)available.getAction();
+						// find customer order from that supplier order id
+						order = orders.get(supOrder.getOrderID());
+						supOrder.setCost(order.getCost());
+						// parts received for this order so add to ready to assemble list
+						readyToAssemble.add(order);
+						/*
+						for (CustomerOrder o : readyToAssemble)
+							System.out.println("readyToAssemble"+o);
+						*/
+						ArrayList<String> components = new ArrayList<>();
+						components.add(supOrder.getSmartphone().getBattery().toString());
+						components.add(supOrder.getSmartphone().getRAM().toString());
+						components.add(supOrder.getSmartphone().getScreen().toString());
+						components.add(supOrder.getSmartphone().getStorage().toString());
+						
+						for (String s : components)
+						{
+							if (warehouse.get(s) == null)
+								warehouse.put(s, supOrder.getQuantity());
+							else
+								warehouse.put(s, (warehouse.get(s) + supOrder.getQuantity()));
+						}
+					
+						//System.out.println(order);
+						//System.out.println(supOrder);
+						
+						System.out.println("Day: "+day);
+						
+						System.out.println("\t\t-----WAREHOUSE-----");
+						for (HashMap.Entry<String, Integer> entry : warehouse.entrySet())
+						    System.out.println("\t\t"+entry.getKey()+"\t"+entry.getValue());
+						System.out.println("\t\t-------------------");
+						
+						
+						partsComingToday--;
+						
 					}
-					
-					System.out.println("\n\t\t-----WAREHOUSE-----");
-					for (HashMap.Entry<String, Integer> entry : warehouse.entrySet())
-					    System.out.println("\t\t"+entry.getKey()+"\t"+entry.getValue());
-					System.out.println("\t\t-------------------\n");
-					
-					
-					//System.out.println(order);
-					//System.out.println(supOrder);
-					
-					
-					// SEND PAYMENT TO SUPPLIER
-					ACLMessage pay = new ACLMessage(ACLMessage.INFORM);
-					pay.setLanguage(codec.getName());
-					pay.setOntology(ontology.getName());
-					pay.setConversationId("supplierPayment");
-					pay.addReceiver(order.getSupplier());
-					
-					SendPayment payment = new SendPayment();
-					payment.setAgent(order.getSupplier());
-					payment.setSupOrder(supOrder);
-					payment.setOrder(order);
-					
-					getContentManager().fillContent(pay, payment);
-					send(pay);
-					//System.out.println(pay);
-					
-					dailyProfit -= order.getCost();
-					totalProfit -= order.getCost();
-					
+					catch (CodecException ce) { ce.printStackTrace(); }
+					catch (OntologyException oe) { oe.printStackTrace(); }
 				}
-				catch (CodecException ce) { ce.printStackTrace(); }
-				catch (OntologyException oe) { oe.printStackTrace(); }
 			}
+			
+			
+			
+			
 			
 		}
 		
@@ -710,21 +734,28 @@ public class Manufacturer extends Agent
 		}
 		
 	}
-
-
 	
 	public class EndDay extends OneShotBehaviour 
 	{
 		@Override
 		public void action() {
-			// WAREHOUSE COSTS EVERY DAY
+			// WAREHOUSE EVERY 10 DAYS
+			if (day % 10 == 0)
+			{
+				System.out.println("\t\t-----WAREHOUSE-----");
+				for (HashMap.Entry<String, Integer> entry : warehouse.entrySet())
+				    System.out.println("\t\t"+entry.getKey()+"\t"+entry.getValue());
+				System.out.println("\t\t-------------------");
+			}
+			
+			// WAREHOUSE COSTS
 			int parts = 0;
 			for (Entry<String, Integer> component : warehouse.entrySet()) 
 				parts += component.getValue();
 			dailyProfit -= (parts * 5);
 			totalProfit -= (parts * 5);
 			
-			// print to console
+			// print daily values
 			System.out.println(phoneAssembledCount+" phones assembled today for "+orderCount+" orders");
 			System.out.println("orders left to assemble: "+orders.size());	
 			System.out.println("warehouse costs today: "+ (parts * 5));
