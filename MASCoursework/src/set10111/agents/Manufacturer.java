@@ -40,6 +40,7 @@ public class Manufacturer extends Agent
 	private ArrayList<AID> customers = new ArrayList<>();
 	private ArrayList<AID> suppliers = new ArrayList<>();
 	private ArrayList<CustomerOrder> readyToAssemble = new ArrayList<>();
+	private ArrayList<Integer> toOrderSupplies = new ArrayList<>();
 	private AID tickerAgent;
 	private CustomerOrder order = new CustomerOrder();
 	private SupplierOrder supOrder = new SupplierOrder();
@@ -51,6 +52,7 @@ public class Manufacturer extends Agent
 	private int supplier2deliveryDays;
 	private int partsComingToday = 0;
 	private int day;
+	private int orderID = 0;
 	private int phoneAssembledCount = 0, orderCount = 0;
 	private long dailyProfit = 0;
 	private long totalProfit = 0;
@@ -127,7 +129,6 @@ public class Manufacturer extends Agent
 					dailyActivity.addSubBehaviour(new AskSupInfo(myAgent));
 					dailyActivity.addSubBehaviour(new ReceivePartsPrices(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderQuery(myAgent));
-					dailyActivity.addSubBehaviour(new ReceiveOrderRequests(myAgent));
 					dailyActivity.addSubBehaviour(new OrderPartsFromSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveSuppliesInfo(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveSupplies(myAgent));
@@ -361,9 +362,14 @@ public class Manufacturer extends Agent
 						reply.setConversationId("customerOrder-answer");
 						if (order.isAccepted()) // if profit is positive
 						{
+							orders.put(order.getId(), order);
+							orderID = order.getId();
+							System.out.println("orderID accepted: "+orderID);
+							toOrderSupplies.add(orderID);
+							
+							order.setCustomerPrice(order.getPrice()*order.getQuantity());
 							order.setSupplier(bestSup);
 							order.setCost(cheapestSupplies);
-							orders.put(order.getId(), order);
 							reply.setPerformative(ACLMessage.CONFIRM);
 						}
 						else
@@ -387,48 +393,6 @@ public class Manufacturer extends Agent
 		}
 		
 	}
-
-	// behaviour to receive customer requests that were accepted
-	private class ReceiveOrderRequests extends Behaviour
-	{
-		public ReceiveOrderRequests(Agent a) { super(a); }
-		
-		private boolean done = false;
-		
-		@Override
-		public void action() 
-		{
-				// receive order REQUEST messages from customers
-				MessageTemplate mt = MessageTemplate.and(
-						MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-						MessageTemplate.MatchConversationId("FinalOrderRequest"));
-				ACLMessage msg = receive(mt);
-				if(msg != null)
-				{
-					try
-					{	
-						ContentElement ce = null;
-						ce = getContentManager().extractContent(msg);
-
-						Action available = (Action) ce;
-						order = (CustomerOrder) available.getAction(); // this is the order requested
-						order = orders.get(order.getId());
-						
-						//System.out.println("Order request: \t "+order);
-						done = true;
-					}
-					catch (CodecException ce) { ce.printStackTrace(); }
-					catch (OntologyException oe) { oe.printStackTrace(); }
-				}
-				else
-					block();
-		}
-
-		@Override
-		public boolean done() {
-			return done;
-		}
-	}
 	
 	// order parts from supplier lol pretty obvious
 	private class OrderPartsFromSupplier extends Behaviour
@@ -438,55 +402,81 @@ public class Manufacturer extends Agent
 		@Override
 		public void action() 
 		{
-			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-			msg.setLanguage(codec.getName());
-			msg.setOntology(ontology.getName());
-			msg.setConversationId("requestingParts");
-			msg.addReceiver(order.getSupplier());
+			System.out.println("toOrderSupplies.size(): "+toOrderSupplies.size());
 			
-			supOrder.setSmartphone(order.getSpecification());
-			supOrder.setQuantity(order.getQuantity());
-			supOrder.setSupplier(order.getSupplier());
-			supOrder.setOrderID(order.getId());
-			
-			// WE NEED THIS WHEN REQUESTING AN ACTION
-			Action request = new Action();
-			request.setAction(supOrder);
-			request.setActor(order.getSupplier());
-			
-			try
+			for (Integer orderID : toOrderSupplies)
 			{
-				getContentManager().fillContent(msg, request);
-				send(msg);
+				order = orders.get(orderID);
+				
+				//System.out.println("ORDERING\n--------------");
+				//System.out.println(order.toString());
+				//System.out.println("--------------");
+				
+				// SEND SUPPLIES REQUEST - ACTION
+				ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+				msg.setLanguage(codec.getName());
+				msg.setOntology(ontology.getName());
+				msg.setConversationId("requestingParts");
+				msg.addReceiver(order.getSupplier());
+				
+				supOrder.setSmartphone(order.getSpecification());
+				supOrder.setQuantity(order.getQuantity());
+				supOrder.setSupplier(order.getSupplier());
+				supOrder.setOrderID(order.getId());
+				supOrder.setCost(order.getCost());
+				
+				
+				//System.out.println(supOrder.toString());
+				//System.out.println("--------------");
+				
+				// WE NEED THIS WHEN REQUESTING AN ACTION
+				Action request = new Action();
+				request.setAction(supOrder);
+				request.setActor(order.getSupplier());
+				
+				try
+				{
+					getContentManager().fillContent(msg, request);
+					send(msg);
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
+				
+				
+				// SEND PAYMENT TO SUPPLIER - PREDICATE
+				ACLMessage pay = new ACLMessage(ACLMessage.INFORM);
+				pay.setLanguage(codec.getName());
+				pay.setOntology(ontology.getName());
+				pay.setConversationId("supplierPayment");
+				pay.addReceiver(order.getSupplier());
+				
+				SendPayment payment = new SendPayment();
+				payment.setAgent(order.getSupplier());
+				payment.setSupOrder(supOrder);
+				payment.setOrder(order);
+				
+				//System.out.println(order);
+				//System.out.println(supOrder);
+				
+				try
+				{
+					getContentManager().fillContent(pay, payment);
+					send(pay);
+					
+				}
+				catch (CodecException ce) { ce.printStackTrace(); }
+				catch (OntologyException oe) { oe.printStackTrace(); }
+				
+				dailyProfit -= order.getCost();
+				totalProfit -= order.getCost();
+				
+				System.out.println("Ordering supplies: "+order.getCost());
+				System.out.println("dailyProfit: "+dailyProfit);
 			}
-			catch (CodecException ce) { ce.printStackTrace(); }
-			catch (OntologyException oe) { oe.printStackTrace(); }
 			
-			
-			// SEND PAYMENT TO SUPPLIER - PREDICATE
-			ACLMessage pay = new ACLMessage(ACLMessage.INFORM);
-			pay.setLanguage(codec.getName());
-			pay.setOntology(ontology.getName());
-			pay.setConversationId("supplierPayment");
-			pay.addReceiver(order.getSupplier());
-			
-			SendPayment payment = new SendPayment();
-			payment.setAgent(order.getSupplier());
-			payment.setSupOrder(supOrder);
-			payment.setOrder(order);
-			
-			try
-			{
-				getContentManager().fillContent(pay, payment);
-				send(pay);
-				done = true;
-			}
-			catch (CodecException ce) { ce.printStackTrace(); }
-			catch (OntologyException oe) { oe.printStackTrace(); }
-			
-			dailyProfit -= order.getCost();
-			totalProfit -= order.getCost();
-			
+			toOrderSupplies.clear();
+			System.out.println("toOrderSupplies.size(): "+toOrderSupplies.size());
+			done = true;
 		}
 
 		@Override
@@ -634,7 +624,7 @@ public class Manufacturer extends Agent
 		{
 			switch(step) {
 			case 0:
-				
+				// SEND ORDER TO CUSTOMERS WHEN ORDER IS ASSEMBLED
 				ArrayList<CustomerOrder> done = new ArrayList<>();
 				
 				for (CustomerOrder o : readyToAssemble)
@@ -685,6 +675,7 @@ public class Manufacturer extends Agent
 				break;
 				
 			case 1:
+				//GET PAID FOR ORDER
 				//System.out.println("6");
 				MessageTemplate mt = MessageTemplate.and(
 			            MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -703,31 +694,14 @@ public class Manufacturer extends Agent
 			    		order = payment.getOrder();
 			    		
 			    		//System.out.println(order);
-			    		//System.out.println("variables");
-			    		//System.out.println(order.getDaysDue());
-			    		//System.out.println(order.getPenalty());
+			    		System.out.println("variables");
+			    		System.out.println(order.getDaysDue());
+			    		System.out.println(order.getPenalty());
 			    		
-			    		// penalty if order was sent late
-			    		int penalty = 0;
-			    		if (order.getDaysDue() < 0)
-			    		{
-			    			int due = Math.abs(order.getDaysDue());
-			    			penalty = due * order.getPenalty();
-			    		}
-			    			
-			    		// calculate profit for this order
-			    		int profit = (order.getPrice()* order.getQuantity())
-			    				- (int)order.getCost()
-			    				- penalty;
 			    		
-			    		order.setProfit(profit);
-			    		/*
-			    		System.out.println(String.format("profit for order %s: %s ", 
-			    				order.getId(),
-			    				order.getProfit()));
-			    		*/
-			    		dailyProfit += order.getProfit();
-			    		totalProfit += order.getProfit();
+			    		
+			    		dailyProfit += order.getCustomerPrice();
+			    		totalProfit += order.getCustomerPrice();
 			    		
 			    		pendingPayment--;
 			    		

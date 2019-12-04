@@ -14,7 +14,7 @@ public class CustomerOrder implements AgentAction
 	private int quantity; // how many smartphones ordered
 	private int daysDue;
 	private boolean accepted;
-	private int profit;
+	private double customerPrice;
 	private double cost;
 
 	public int getId() {
@@ -65,11 +65,11 @@ public class CustomerOrder implements AgentAction
 	public void setAccepted(boolean accepted) {
 		this.accepted = accepted;
 	}
-	public int getProfit() {
-		return profit;
+	public double getCustomerPrice() {
+		return customerPrice;
 	}
-	public void setProfit(int profit) {
-		this.profit = profit;
+	public void setCustomerPrice(double highest) {
+		this.customerPrice = highest;
 	}
 	public AID getSupplier() {
 		return supplier;
@@ -96,10 +96,10 @@ public class CustomerOrder implements AgentAction
 		        + "quantity: %s, \n\t"
 		        + "days due: %s, \n\t"
 		        + "accepted: %s, \n\t"
-		        + "profit: %s, \n\t"
+		        + "customerPrice: %s, \n\t"
 		        + "cost: %s,",
 		        id, customer, supplier, price,
 				penalty, smartphone, quantity, daysDue,
-				accepted, profit, cost);
+				accepted, customerPrice, cost);
 	}
 }

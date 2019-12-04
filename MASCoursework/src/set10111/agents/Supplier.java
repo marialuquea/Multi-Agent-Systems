@@ -330,7 +330,7 @@ public class Supplier extends Agent
 				    HashMap.Entry<SupplierOrder, Integer> order = it.next();
 				    if(order.getValue() == 0) {
 				    	
-				    	System.out.println("SUPPLIER SENDING PARTS");
+				    	//System.out.println("SUPPLIER SENDING PARTS");
 						
 						// send order back to manufacturer
 						ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);

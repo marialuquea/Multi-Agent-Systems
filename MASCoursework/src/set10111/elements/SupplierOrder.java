@@ -41,9 +41,11 @@ public class SupplierOrder implements AgentAction
 	public String toString() {
 		return String.format("("
 		        + "phone: %s \n\t"
+		        + "\t orderID: %s, \n\t"
 				+ "\t quantity: %s, \n\t"
-		        + "\t supplier: %s )",
-		        smartphone, quantity, supplier);
+				+ "\t supplier: %s, \n\t"
+		        + "\t cost: %s )",
+		        smartphone, orderID, quantity, supplier, cost);
 	}
 	public double getCost() {
 		return cost;
