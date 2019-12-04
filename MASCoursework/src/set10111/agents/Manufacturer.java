@@ -342,8 +342,11 @@ public class Manufacturer extends Agent
 							// TotalValueOfOrdersShipped(d) – PenaltyForLateOrders(d) – WarehouseStorage(d) – SuppliesPurchased(d),
 							expected = (order.getPrice() * order.getQuantity()) - penaltyForLateOrderCost - warehouseCost - suppliesPurchasedCost;
 							
+							
+							
 							// CHOOSE SUPPLIER
-							if (expected > 0 && (readyToAssemble.size() <= 10)) //accept
+							//System.out.println("toAssemble: "+orders.size());
+							if (expected > 0 && (orders.size() <= 10)) //accept
 							{
 								order.setAccepted(true);
 								if ( (expected > highest) || (bestSup == null) ) 
@@ -356,6 +359,8 @@ public class Manufacturer extends Agent
 							else
 								order.setAccepted(false);
 						}
+						
+						//System.out.println("toAssemble: "+orders.size());
 						
 						//Send reply to customer
 						ACLMessage reply = msg.createReply();
@@ -402,7 +407,7 @@ public class Manufacturer extends Agent
 		@Override
 		public void action() 
 		{
-			System.out.println("toOrderSupplies.size(): "+toOrderSupplies.size());
+			//System.out.println("toOrderSupplies.size(): "+toOrderSupplies.size());
 			
 			for (Integer orderID : toOrderSupplies)
 			{
@@ -471,11 +476,12 @@ public class Manufacturer extends Agent
 				totalProfit -= order.getCost();
 				
 				System.out.println("Ordering supplies: "+order.getCost());
-				System.out.println("dailyProfit: "+dailyProfit);
+				//System.out.println("dailyProfit: "+dailyProfit);
 			}
 			
 			toOrderSupplies.clear();
-			System.out.println("toOrderSupplies.size(): "+toOrderSupplies.size());
+			//System.out.println("toOrderSupplies.size(): "+toOrderSupplies.size());
+			System.out.println("dailyProfit: "+dailyProfit);
 			done = true;
 		}
 
@@ -686,7 +692,6 @@ public class Manufacturer extends Agent
 			    {
 			    	try
 			    	{
-			    		//System.out.println("7");
 			    		ContentElement ce = null;
 			    		ce = getContentManager().extractContent(receivePayment);
 			    		
@@ -694,14 +699,25 @@ public class Manufacturer extends Agent
 			    		order = payment.getOrder();
 			    		
 			    		//System.out.println(order);
-			    		System.out.println("variables");
-			    		System.out.println(order.getDaysDue());
-			    		System.out.println(order.getPenalty());
+			    		//System.out.println("variables");
+			    		//System.out.println(order.getDaysDue());
+			    		//System.out.println(order.getPenalty());
 			    		
 			    		
+			    		double toReceive = order.getCustomerPrice();
 			    		
-			    		dailyProfit += order.getCustomerPrice();
-			    		totalProfit += order.getCustomerPrice();
+			    		//System.out.println("dailyProfit before: "+dailyProfit);
+			    		//System.out.println("to receive before penalty: "+toReceive);
+			    		
+			    		if (order.getDaysDue() < 0)
+			    			toReceive -= (Math.abs(order.getDaysDue()) * order.getPenalty());
+			    		
+			    		//System.out.println("to receive after penalty: "+toReceive);
+			    		
+			    		dailyProfit += toReceive;
+			    		totalProfit += toReceive;
+			    		
+			    		//System.out.println("dailyProfit after receiving payment: "+dailyProfit);
 			    		
 			    		pendingPayment--;
 			    		
