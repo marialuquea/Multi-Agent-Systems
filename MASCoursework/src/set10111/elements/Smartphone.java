@@ -58,9 +58,9 @@ public class Smartphone implements Concept
 	public String toString() {
 		return String.format("("
 		        + "screen: %s, \n\t"
-		        + "\t battery: %s, \n\t"
-		        + "\t storage: %s, \n\t"
-		        + "\t ram: %s),",
+		        + "battery: %s, \n\t"
+		        + "storage: %s, \n\t"
+		        + "ram: %s),",
 		        screen, battery, storage, ram);
 	}
 

@@ -548,8 +548,8 @@ public class Manufacturer extends Agent
 					System.out.println("\t\t-------------------\n");
 					
 					
-					System.out.println(order);
-					System.out.println(supOrder);
+					//System.out.println(order);
+					//System.out.println(supOrder);
 					
 					
 					// SEND PAYMENT TO SUPPLIER

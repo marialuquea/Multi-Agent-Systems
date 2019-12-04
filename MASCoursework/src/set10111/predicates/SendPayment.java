@@ -30,5 +30,12 @@ public class SendPayment implements Predicate
 		this.supOrder = supOrder;
 	}
 	
-	
+	@Override
+	public String toString() {
+		return String.format("(SendPayment:\n\t"
+		        + "agent: %s, \n\t"
+		        + "order ID: %s, \n\t"
+		        + "supOrder ID: %s),",
+		        agent, order.getId(), supOrder.getOrderID());
+	}
 }

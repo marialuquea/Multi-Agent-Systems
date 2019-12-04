@@ -350,9 +350,32 @@ public class Supplier extends Agent
 				          MessageTemplate.MatchConversationId("supplierPayment"));
 				ACLMessage msg = receive(mt);
 				
-				//TODO
+				if(msg != null)
+				{
+					//System.out.println("payment received: "+msg);
+			        try 
+			        {
+			          ContentElement ce = null;
+			          ce = getContentManager().extractContent(msg);
+			          
+			          if (ce instanceof SendPayment) 
+			          {
+			            SendPayment payment = (SendPayment) ce; 
+			            //System.out.println(payment.toString());
+			            expectingPayment--;
+			          }
+			          else 
+			            System.out.println("Unknown predicate " + ce.getClass().getName());
+			          
+			        }
+			        catch (CodecException ce) { ce.printStackTrace(); }
+					catch (OntologyException oe) { oe.printStackTrace(); } 
+			        
+			    } 
+				else 
+			        block();
+			      
 				
-				expectingPayment--;
 				break;
 			}
 				
@@ -368,7 +391,6 @@ public class Supplier extends Agent
 	
 	public class EndDayListener extends CyclicBehaviour 
 	{
-		private int customersFinished = 0;
 		private List<Behaviour> toRemove;
 
 		public EndDayListener(Agent a, List<Behaviour> toRemove) 
