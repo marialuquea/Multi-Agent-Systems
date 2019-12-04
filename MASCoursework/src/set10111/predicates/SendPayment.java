@@ -7,15 +7,15 @@ import set10111.elements.SupplierOrder;
 
 public class SendPayment implements Predicate
 {
-	private AID customer;
+	private AID agent;
 	private CustomerOrder order;
 	private SupplierOrder supOrder;
 	
-	public AID getCustomer() {
-		return customer;
+	public AID getAgent() {
+		return agent;
 	}
-	public void setCustomer(AID customer) {
-		this.customer = customer;
+	public void setAgent(AID customer) {
+		this.agent = customer;
 	}
 	public CustomerOrder getOrder() {
 		return order;

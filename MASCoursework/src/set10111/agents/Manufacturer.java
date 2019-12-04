@@ -548,20 +548,25 @@ public class Manufacturer extends Agent
 					System.out.println("\t\t-------------------\n");
 					
 					
+					System.out.println(order);
+					System.out.println(supOrder);
+					
 					
 					// SEND PAYMENT TO SUPPLIER
-					ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
-					reply.setLanguage(codec.getName());
-					reply.setOntology(ontology.getName());
-					reply.setConversationId("supplierPayment");
-					reply.addReceiver(order.getSupplier());
+					ACLMessage pay = new ACLMessage(ACLMessage.INFORM);
+					pay.setLanguage(codec.getName());
+					pay.setOntology(ontology.getName());
+					pay.setConversationId("supplierPayment");
+					pay.addReceiver(order.getSupplier());
 					
-					SendPayment pay = new SendPayment();
-					pay.setCustomer(order.getCustomer());
-					pay.setSupOrder(supOrder); 
+					SendPayment payment = new SendPayment();
+					payment.setAgent(order.getSupplier());
+					payment.setSupOrder(supOrder);
+					payment.setOrder(order);
 					
-					getContentManager().fillContent(reply, pay);
-					send(reply);
+					getContentManager().fillContent(pay, payment);
+					send(pay);
+					//System.out.println(pay);
 					
 					dailyProfit -= order.getCost();
 					totalProfit -= order.getCost();

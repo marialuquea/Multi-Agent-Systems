@@ -345,8 +345,13 @@ public class Supplier extends Agent
 				
 			case 1:
 				// receive payment from manufacturer
+				MessageTemplate mt = MessageTemplate.and(
+				          MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+				          MessageTemplate.MatchConversationId("supplierPayment"));
+				ACLMessage msg = receive(mt);
 				
-				System.out.println("HOLAAAAAAAAAAAA");
+				//TODO
+				
 				expectingPayment--;
 				break;
 			}

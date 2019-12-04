@@ -299,7 +299,7 @@ public class Customer extends Agent
 					pay.addReceiver(manufacturerAID);
 					
 					SendPayment payment = new SendPayment();
-					payment.setCustomer(this.getAgent().getAID());
+					payment.setAgent(manufacturerAID);
 					payment.setOrder(order);
 					
 					getContentManager().fillContent(pay, payment);
