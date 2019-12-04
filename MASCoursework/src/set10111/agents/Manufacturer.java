@@ -294,13 +294,13 @@ public class Manufacturer extends Agent
 						AID bestSup = null;
 						double profit, expected, cheapestCost;
 						profit = expected = cheapestCost = 0;
-						int penaltyFee, daysLate = 0;
+						int penaltyCost, daysLate = 0;
 						
 						for (AID supplier : suppliers) 
 						{
-							// calculate cost of order
-							double totalCost = 0;
 							
+							// COST OF SUPPLIES
+							double totalCost = 0;
 							for (SmartphoneComponent c : order.getSpecification().getComponents())
 							{
 								if (supplier.getLocalName().equals("supplier1")) 
@@ -317,23 +317,27 @@ public class Manufacturer extends Agent
 								
 							}
 							
-							if (supplier.getLocalName().equals("supplier2"))
-								daysLate = supplier1deliveryDays - order.getDaysDue(); // will give negative number if no penalty fee is to be paid
+							
+							// COST OF LATE DELIVERY FEE
+							if (supplier.getLocalName().equals("supplier1"))
+								daysLate = supplier1deliveryDays - order.getDaysDue(); 
 							else 
 								daysLate = supplier2deliveryDays - order.getDaysDue();
 								
-							if (daysLate > 0) 
-								penaltyFee = daysLate * order.getPenalty();
+							
+							if (daysLate > 0) // will give negative number if no penalty fee is to be paid
+								penaltyCost = daysLate * order.getPenalty();
 							else
-								penaltyFee = 0;
+								penaltyCost = 0;
 							
-							expected = (order.getPrice() * order.getQuantity()) 
-									- totalCost - penaltyFee;
 							
-							// Decide if this supplier is better than the others
-							if ((bestSup == null && expected > 0)
-									|| (expected > profit)) {
-								// if there is no best supplier, get the first that grants some profit
+							// TOTAL COST CALCULATION
+							// TotalValueOfOrdersShipped(d) – PenaltyForLateOrders(d) – WarehouseStorage(d) – SuppliesPurchased(d),
+							expected = (order.getPrice() * order.getQuantity()) - penaltyCost - totalCost;
+							
+							// CHOOSE SUPPLIER
+							if ((expected > profit) || (bestSup == null && expected > 0) ) 
+							{
 								bestSup = supplier;
 								profit = expected;
 								cheapestCost = totalCost;
