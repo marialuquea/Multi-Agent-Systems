@@ -290,70 +290,80 @@ public class Manufacturer extends Agent
 						CustomerOrder order = orderAccepted.getOrder();
 						order.setCustomer(msg.getSender());
 						
-						// choose best supplier
 						AID bestSup = null;
-						double profit, expected, cheapestCost;
-						profit = expected = cheapestCost = 0;
-						int penaltyCost, daysLate = 0;
+						double highest = 0, expected, suppliesPurchasedCost, cheapestSupplies = 0;
+						int penaltyForLateOrderCost = 0, warehouseCost, daysLate = 0;
 						
 						for (AID supplier : suppliers) 
-						{
+						{	
+							warehouseCost = 0;
+							suppliesPurchasedCost = 0;
 							
-							// COST OF SUPPLIES
-							double totalCost = 0;
+							// COST OF SUPPLIES AND LATE DAYS
 							for (SmartphoneComponent c : order.getSpecification().getComponents())
 							{
+								
 								if (supplier.getLocalName().equals("supplier1")) 
-									totalCost += supplier1prices.get(c.toString());
+								{
+									suppliesPurchasedCost += ((supplier1prices.get(c.toString())*order.getQuantity()));
+									
+									daysLate = order.getDaysDue() - supplier1deliveryDays; // late fee
+								}
+									
 								
 								/* supplier 2 only has storage and ram so buy some parts from supplier 2 
 								   and others from supplier 1 */
-								if (supplier.getLocalName().equals("supplier2")) {
-									if (c.toString().contains("Storage") || c.toString().contains("Ram"))
-										totalCost += ((supplier2prices.get(c.toString())*order.getQuantity()));
+								if (supplier.getLocalName().equals("supplier2")) 
+								{
+									if (c.toString().contains("STORAGE") || c.toString().contains("RAM"))
+										suppliesPurchasedCost += ((supplier2prices.get(c.toString())*order.getQuantity()));
 									else 
-										totalCost += ((supplier1prices.get(c.toString())*order.getQuantity()));
+										suppliesPurchasedCost += ((supplier1prices.get(c.toString())*order.getQuantity()));
+									
+									daysLate = order.getDaysDue() - supplier2deliveryDays;; // late fee
 								}
 								
 							}
 							
 							
-							// COST OF LATE DELIVERY FEE
-							if (supplier.getLocalName().equals("supplier1"))
-								daysLate = supplier1deliveryDays - order.getDaysDue(); 
-							else 
-								daysLate = supplier2deliveryDays - order.getDaysDue();
-								
+							// IF LATE, INCLUDE WAREHOUSE COST PER COMPONENT PER DAY
+							if (daysLate < 0) 
+							{// fee for customer and warehouse
+								penaltyForLateOrderCost = daysLate * order.getPenalty();
+								warehouseCost =  order.getQuantity() * 4 * daysLate;
+							}
+							else // no fee
+								penaltyForLateOrderCost = 0;
 							
-							if (daysLate > 0) // will give negative number if no penalty fee is to be paid
-								penaltyCost = daysLate * order.getPenalty();
-							else
-								penaltyCost = 0;
-							
+							//suppliesPurchasedCost *= order.getQuantity();
 							
 							// TOTAL COST CALCULATION
 							// TotalValueOfOrdersShipped(d) – PenaltyForLateOrders(d) – WarehouseStorage(d) – SuppliesPurchased(d),
-							expected = (order.getPrice() * order.getQuantity()) - penaltyCost - totalCost;
+							expected = (order.getPrice() * order.getQuantity()) - penaltyForLateOrderCost - warehouseCost - suppliesPurchasedCost;
 							
 							// CHOOSE SUPPLIER
-							if ((expected > profit) || (bestSup == null && expected > 0) ) 
+							if (expected > 0 && (readyToAssemble.size() <= 10)) //accept
 							{
-								bestSup = supplier;
-								profit = expected;
-								cheapestCost = totalCost;
+								order.setAccepted(true);
+								if ( (expected > highest) || (bestSup == null) ) 
+								{
+									highest = expected;
+									cheapestSupplies = suppliesPurchasedCost;
+									bestSup = supplier;
+								}
 							}
+							else
+								order.setAccepted(false);
 						}
 						
 						//Send reply to customer
 						ACLMessage reply = msg.createReply();
 						reply.setConversationId("customerOrder-answer");
-						if (bestSup != null) // if profit is positive
+						if (order.isAccepted()) // if profit is positive
 						{
 							order.setSupplier(bestSup);
-							order.setCost(cheapestCost);
-							order.setAccepted(true);
+							order.setCost(cheapestSupplies);
 							orders.put(order.getId(), order);
-							
 							reply.setPerformative(ACLMessage.CONFIRM);
 						}
 						else

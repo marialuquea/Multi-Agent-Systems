@@ -20,6 +20,7 @@ public class SupplierPrices implements AgentAction
 		this.supplier = supplier;
 	}
 	
+	ComponentType ct = ComponentType.getInstance();
 	
 	private static final HashMap<SmartphoneComponent, Integer> supplier1 = 
 			new HashMap<SmartphoneComponent, Integer>() {{

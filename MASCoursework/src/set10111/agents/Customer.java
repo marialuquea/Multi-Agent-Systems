@@ -203,7 +203,7 @@ public class Customer extends Agent
 			orderQuery.setManufacturer(manufacturerAID);
 			orderQuery.setOrder(order);
 			
-			System.out.println(order);
+			//System.out.println(order);
 			
 			try {
 		        getContentManager().fillContent(msg, orderQuery);
