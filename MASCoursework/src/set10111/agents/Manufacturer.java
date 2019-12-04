@@ -717,9 +717,17 @@ public class Manufacturer extends Agent
 	{
 		@Override
 		public void action() {
+			// WAREHOUSE COSTS EVERY DAY
+			int parts = 0;
+			for (Entry<String, Integer> component : warehouse.entrySet()) 
+				parts += component.getValue();
+			dailyProfit -= (parts * 5);
+			totalProfit -= (parts * 5);
+			
 			// print to console
 			System.out.println(phoneAssembledCount+" phones assembled today for "+orderCount+" orders");
 			System.out.println("orders left to assemble: "+orders.size());	
+			System.out.println("warehouse costs today: "+ (parts * 5));
 			System.out.println("dailyProfit: "+dailyProfit+"\t total profit: "+totalProfit);
 			
 			// send done message to tickerAgent
