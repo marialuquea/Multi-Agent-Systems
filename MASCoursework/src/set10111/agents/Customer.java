@@ -148,7 +148,7 @@ public class Customer extends Agent
 			msg.addReceiver(manufacturerAID);
 			msg.setLanguage(codec.getName());
 			msg.setOntology(ontology.getName());
-			msg.setConversationId("customer-order-query");
+			msg.setConversationId("firstCustomerOrder");
 			
 			Ram ram;
 			Storage storage;

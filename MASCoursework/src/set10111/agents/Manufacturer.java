@@ -135,7 +135,6 @@ public class Manufacturer extends Agent
 					dailyActivity.addSubBehaviour(new EndDay());
 					myAgent.addBehaviour(dailyActivity);
 
-
 				}
 				else 
 					myAgent.doDelete();
@@ -267,7 +266,7 @@ public class Manufacturer extends Agent
 		}
 	}
 	
-	// receive OrderQuery from customer
+	// accept/decline customer orders
 	private class ReceiveOrderQuery extends Behaviour
 	{
 		public ReceiveOrderQuery(Agent a) { super(a); }
@@ -277,7 +276,7 @@ public class Manufacturer extends Agent
 		{
 			MessageTemplate mt = MessageTemplate.and(
 					MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF),
-					MessageTemplate.MatchConversationId("customer-order-query"));
+					MessageTemplate.MatchConversationId("firstCustomerOrder"));
 			ACLMessage msg = receive(mt);
 			if (msg != null)
 			{
@@ -291,61 +290,63 @@ public class Manufacturer extends Agent
 						CustomerOrder order = orderAccepted.getOrder();
 						order.setCustomer(msg.getSender());
 						
-						// choose best supplier for this order
-						AID bestSupplier = null;
-						double maxProfit, expectedProfit, bestSupplierCost;
-						maxProfit = expectedProfit = bestSupplierCost = 0;
-						int lateDeliveryFee, daysLate = 0;
+						// choose best supplier
+						AID bestSup = null;
+						double profit, expected, cheapestCost;
+						profit = expected = cheapestCost = 0;
+						int penaltyFee, daysLate = 0;
 						
 						for (AID supplier : suppliers) 
 						{
 							// calculate cost of order
 							double totalCost = 0;
+							
 							for (SmartphoneComponent c : order.getSpecification().getComponents())
 							{
 								if (supplier.getLocalName().equals("supplier1")) 
 									totalCost += supplier1prices.get(c.toString());
-								// supplier 2 only has storage and ram so buy some parts from supplier 2 
-								// and others from supplier 1
+								
+								/* supplier 2 only has storage and ram so buy some parts from supplier 2 
+								   and others from supplier 1 */
 								if (supplier.getLocalName().equals("supplier2")) {
-									if (c.toString().contains("Storage") || c.toString().contains("Ram")) {
-										totalCost += supplier2prices.get(c.toString());
-									}
+									if (c.toString().contains("Storage") || c.toString().contains("Ram"))
+										totalCost += ((supplier2prices.get(c.toString())*order.getQuantity()));
 									else 
-										totalCost += supplier1prices.get(c.toString());
+										totalCost += ((supplier1prices.get(c.toString())*order.getQuantity()));
 								}
+								
 							}
-							totalCost *= order.getQuantity();
+							
 							if (supplier.getLocalName().equals("supplier2"))
 								daysLate = supplier1deliveryDays - order.getDaysDue(); // will give negative number if no penalty fee is to be paid
 							else 
 								daysLate = supplier2deliveryDays - order.getDaysDue();
 								
 							if (daysLate > 0) 
-								lateDeliveryFee = daysLate * order.getPenalty();
+								penaltyFee = daysLate * order.getPenalty();
 							else
-								lateDeliveryFee = 0;
+								penaltyFee = 0;
 							
-							expectedProfit = (order.getPrice() * order.getQuantity()) 
-									- totalCost - lateDeliveryFee;
+							expected = (order.getPrice() * order.getQuantity()) 
+									- totalCost - penaltyFee;
 							
 							// Decide if this supplier is better than the others
-							if ((bestSupplier == null && expectedProfit > 0)
-									|| (expectedProfit > maxProfit)) {
+							if ((bestSup == null && expected > 0)
+									|| (expected > profit)) {
 								// if there is no best supplier, get the first that grants some profit
-								bestSupplier = supplier;
-								maxProfit = expectedProfit;
-								bestSupplierCost = totalCost;
+								bestSup = supplier;
+								profit = expected;
+								cheapestCost = totalCost;
 							}
 						}
 						
 						//Send reply to customer
 						ACLMessage reply = msg.createReply();
 						reply.setConversationId("customerOrder-answer");
-						if (bestSupplier != null) // if profit is positive
+						if (bestSup != null) // if profit is positive
 						{
-							order.setSupplier(bestSupplier);
-							order.setCost(bestSupplierCost);
+							order.setSupplier(bestSup);
+							order.setCost(cheapestCost);
 							order.setAccepted(true);
 							orders.put(order.getId(), order);
 							
@@ -415,7 +416,7 @@ public class Manufacturer extends Agent
 		}
 	}
 	
-	// DONE
+	// order parts from supplier lol pretty obvious
 	private class OrderPartsFromSupplier extends Behaviour
 	{
 		public OrderPartsFromSupplier(Agent a) { super(a); }
@@ -506,8 +507,8 @@ public class Manufacturer extends Agent
 		          {
 		            PartsSentToday payment = (PartsSentToday) ce; 
 		            partsComingToday += payment.getParts();
-		            if (payment.getParts() > 0)
-		            	System.out.println("partsComingToday: "+partsComingToday+" by "+msg.getSender().getLocalName()+" on day "+day);
+		            //if (payment.getParts() > 0)
+		            //	System.out.println("partsComingToday: "+partsComingToday+" by "+msg.getSender().getLocalName()+" on day "+day);
 		            replies++;
 		          }
 		          else 
@@ -529,7 +530,7 @@ public class Manufacturer extends Agent
 		
 	}
 
-
+	// receive supplies from suppliers
 	private class ReceiveSupplies extends OneShotBehaviour
 	{
 		public ReceiveSupplies(Agent a) { super(a); }
@@ -577,8 +578,11 @@ public class Manufacturer extends Agent
 								warehouse.put(s, (warehouse.get(s) + supOrder.getQuantity()));
 						}
 					
-						//System.out.println(order);
-						//System.out.println(supOrder);
+						/*
+						 * FOR TESTING
+						 * 
+						System.out.println(order);
+						System.out.println(supOrder);
 						
 						System.out.println("Day: "+day);
 						
@@ -586,7 +590,7 @@ public class Manufacturer extends Agent
 						for (HashMap.Entry<String, Integer> entry : warehouse.entrySet())
 						    System.out.println("\t\t"+entry.getKey()+"\t"+entry.getValue());
 						System.out.println("\t\t-------------------");
-						
+						*/
 						
 						partsComingToday -= order.getQuantity();
 						
