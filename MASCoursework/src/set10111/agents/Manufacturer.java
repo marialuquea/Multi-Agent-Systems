@@ -588,7 +588,7 @@ public class Manufacturer extends Agent
 						System.out.println("\t\t-------------------");
 						
 						
-						partsComingToday--;
+						partsComingToday -= order.getQuantity();
 						
 					}
 					catch (CodecException ce) { ce.printStackTrace(); }

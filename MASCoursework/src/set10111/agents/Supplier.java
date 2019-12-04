@@ -166,7 +166,8 @@ public class Supplier extends Agent
 			{	
 				//System.out.println("order "+entry.getKey().getOrderID()+" - days "+entry.getValue());
 				if (entry.getValue() == 0)
-					count1++;
+					count1 += entry.getKey().getQuantity();;
+					
 			}
 			//System.out.println("count1: "+count1);
 			
