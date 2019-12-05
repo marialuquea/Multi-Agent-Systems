@@ -112,8 +112,8 @@ public class Supplier extends Agent
 					{	
 						order = entry.getKey();
 						orders.put(order, orders.get(order) - 1);
-						System.out.println(entry.getKey().getOrderID() + " = " + entry.getValue()
-								+ " - "+this.getAgent().getLocalName());	
+						//System.out.println(entry.getKey().getOrderID() + " = " + entry.getValue()
+						//		+ " - "+this.getAgent().getLocalName());	
 					}
 					
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();

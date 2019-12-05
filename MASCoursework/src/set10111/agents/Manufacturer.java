@@ -408,28 +408,32 @@ public class Manufacturer extends Agent
 		{
 			double highest = 0;
 			// order list and accept only the most profitable offer
+			System.out.println("dailyOrderQueries: "+dailyOrderQueries.size());
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
-				// System.out.println("order "+entry.getValue()+", profit: "+entry.getKey());
+				System.out.println("order "+entry.getValue()+", profit: "+entry.getKey());
 				if (entry.getKey() > highest)
 					highest = entry.getKey();
 			}
-			
+			System.out.println("highest: "+highest+", orderID: "+dailyOrderQueries.get(highest));
 			// the best offer
-			orderID = dailyOrderQueries.get(highest); 
-			CustomerOrder best = orders.get(orderID); // stays in orders
-			if (best.isAccepted())
-			{
-				System.out.print("orderID accepted: "+orderID+" | ");
-				toOrderSupplies.add(orderID); // order supplies for it
-				
-				ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-				accept.setConversationId("customerOrder-answer");
-				accept.addReceiver(best.getCustomer());
-				myAgent.send(accept);
-				dailyOrderQueries.remove(highest);
-			}
 			
+			if (highest > 0)
+			{
+				orderID = dailyOrderQueries.get(highest); 
+				CustomerOrder best = orders.get(orderID); // stays in orders
+				if (best.isAccepted())
+				{
+					System.out.print("orderID accepted: "+orderID+" | ");
+					toOrderSupplies.add(orderID); // order supplies for it
+					
+					ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+					accept.setConversationId("customerOrder-answer");
+					accept.addReceiver(best.getCustomer());
+					myAgent.send(accept);
+					dailyOrderQueries.remove(highest);
+				}
+			}
 				
 			// reject the others
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
@@ -691,7 +695,7 @@ public class Manufacturer extends Agent
 				for (CustomerOrder o : readyToAssemble)
 				{
 					// only assemble 50 phones per day
-					if ( ( phoneAssembledCount + o.getQuantity() ) <= 50) 
+					if ( phoneAssembledCount <= 50) 
 					{
 						ArrayList<String> components = new ArrayList<>();
 						components.add(o.getSpecification().getBattery().toString());
@@ -699,32 +703,49 @@ public class Manufacturer extends Agent
 						components.add(o.getSpecification().getScreen().toString());
 						components.add(o.getSpecification().getStorage().toString());
 						
+						int quantity = 0;
+						
+						if (o.getQuantity() < (50 - phoneAssembledCount))
+						{
+							quantity = o.getQuantity();
+							o.setAssembled(quantity);
+						}
+						else
+							quantity = 50 - phoneAssembledCount;
+						
+						System.out.println("quantity: "+quantity);
+						
 						//Remove components from warehouse
 						for (String comp : components)
-							warehouse.put(comp, warehouse.get(comp) - o.getQuantity());
+							warehouse.put(comp, warehouse.get(comp) - quantity);
 						
-						//Send order back to customer
-						ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-						msg.setLanguage(codec.getName());
-						msg.setOntology(ontology.getName());
-						msg.setConversationId("orderSent");
-						msg.addReceiver(o.getCustomer());
-						
-						Action finalOrder = new Action();
-						finalOrder.setAction(o);
-						finalOrder.setActor(o.getCustomer());
-						
-						try
+						if (o.getQuantity() == o.getAssembled())//done
 						{
-							getContentManager().fillContent(msg, finalOrder);
-							send(msg);
-							pendingPayment++;
-							orderCount++;
-							phoneAssembledCount += o.getQuantity();
-							done.add(o);
+							//Send order back to customer
+							ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+							msg.setLanguage(codec.getName());
+							msg.setOntology(ontology.getName());
+							msg.setConversationId("orderSent");
+							msg.addReceiver(o.getCustomer());
+							
+							Action finalOrder = new Action();
+							finalOrder.setAction(o);
+							finalOrder.setActor(o.getCustomer());
+							
+							try
+							{
+								getContentManager().fillContent(msg, finalOrder);
+								send(msg);
+								pendingPayment++;
+								orderCount++;
+								phoneAssembledCount += quantity;
+								done.add(o);
+							}
+							catch (CodecException ce) { ce.printStackTrace(); } 
+							catch (OntologyException oe) { oe.printStackTrace(); }
 						}
-						catch (CodecException ce) { ce.printStackTrace(); } 
-						catch (OntologyException oe) { oe.printStackTrace(); }
+						else
+							o.setAssembled(quantity); // how many of the order have been assembled
 					}
 				}
 				
