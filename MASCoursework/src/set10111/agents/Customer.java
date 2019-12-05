@@ -229,13 +229,13 @@ public class Customer extends Agent
 			MessageTemplate mt = MessageTemplate.and(
 					MessageTemplate.MatchConversationId("customerOrder-answer"), 
 					MessageTemplate.or(
-							MessageTemplate.MatchPerformative(ACLMessage.CONFIRM),
-							MessageTemplate.MatchPerformative(ACLMessage.DISCONFIRM)));
+							MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL),
+							MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL)));
 			ACLMessage msg = myAgent.receive(mt);
 			if(msg != null) 
 			{
 				//System.out.println("msg received in customer\n"+msg);
-				if(msg.getPerformative() == ACLMessage.CONFIRM) 
+				if(msg.getPerformative() == ACLMessage.ACCEPT_PROPOSAL) 
 				{
 					ACLMessage orderReq = new ACLMessage(ACLMessage.REQUEST);
 			        orderReq.setLanguage(codec.getName());

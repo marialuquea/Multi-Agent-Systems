@@ -2,8 +2,6 @@ package set10111.agents;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map.Entry;
 
 import jade.content.ContentElement;
@@ -12,7 +10,6 @@ import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
-import jade.content.onto.UngroundedException;
 import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
@@ -29,9 +26,7 @@ import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
 import set10111.predicates.*;
 import set10111.elements.*;
-import set10111.elements.concepts.Screen;
-import set10111.elements.concepts.SmartphoneComponent;
-import set10111.elements.concepts.Storage;
+import set10111.elements.concepts.*;
 
 public class Manufacturer extends Agent
 {
@@ -48,6 +43,7 @@ public class Manufacturer extends Agent
 	private HashMap<String, Integer> warehouse = new HashMap<>();
 	private HashMap<String, Integer> supplier1prices = new HashMap<>();
 	private HashMap<String, Integer> supplier2prices = new HashMap<>();
+	private HashMap<Double, Integer> dailyOrderQueries = new HashMap<>();
 	private int supplier1deliveryDays;
 	private int supplier2deliveryDays;
 	private int partsComingToday = 0;
@@ -129,6 +125,7 @@ public class Manufacturer extends Agent
 					dailyActivity.addSubBehaviour(new AskSupInfo(myAgent));
 					dailyActivity.addSubBehaviour(new ReceivePartsPrices(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderQuery(myAgent));
+					dailyActivity.addSubBehaviour(new ReplyToCustomerOrderQuery(myAgent));
 					dailyActivity.addSubBehaviour(new OrderPartsFromSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveSuppliesInfo(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveSupplies(myAgent));
@@ -283,6 +280,7 @@ public class Manufacturer extends Agent
 			{
 				try 
 				{
+					
 					ContentElement ce = null;
 					ce = getContentManager().extractContent(msg);
 					if (ce instanceof OrderQuery)
@@ -292,7 +290,7 @@ public class Manufacturer extends Agent
 						order.setCustomer(msg.getSender());
 						
 						AID bestSup = null;
-						double highest = 0, expected, suppliesPurchasedCost, cheapestSupplies = 0;
+						double highest = 0, expected = 0, suppliesPurchasedCost, cheapestSupplies = 0;
 						int penaltyForLateOrderCost = 0, warehouseCost, daysLate = 0;
 						
 						for (AID supplier : suppliers) 
@@ -366,34 +364,24 @@ public class Manufacturer extends Agent
 									highest = expected;
 									cheapestSupplies = suppliesPurchasedCost;
 									bestSup = supplier;
+									order.setCustomerPrice(order.getPrice()*order.getQuantity());
+									order.setSupplier(bestSup);
+									order.setCost(cheapestSupplies);
 								}
 							}
 							else
 								order.setAccepted(false);
 						}
 						
-						//System.out.println("toAssemble: "+orders.size());
+						// add all profitable daily orders to a list and then choose the best one to accept it
 						
-						//Send reply to customer
-						ACLMessage reply = msg.createReply();
-						reply.setConversationId("customerOrder-answer");
-						if (order.isAccepted()) // if profit is positive
-						{
-							orders.put(order.getId(), order);
-							orderID = order.getId();
-							System.out.println("\norderID accepted: "+orderID);
-							toOrderSupplies.add(orderID);
-							
-							order.setCustomerPrice(order.getPrice()*order.getQuantity());
-							order.setSupplier(bestSup);
-							order.setCost(cheapestSupplies);
-							reply.setPerformative(ACLMessage.CONFIRM);
-						}
-						else
-							reply.setPerformative(ACLMessage.DISCONFIRM);
-					
-						myAgent.send(reply);
-						//System.out.println("Manufacturer replied to all customer orders");
+						dailyOrderQueries.put(expected, order.getId());
+						orders.put(order.getId(), order);
+						
+						
+						//System.out.println("toAssemble: "+orders.size());
+						//System.out.println("dailyOrderQueries: "+dailyOrderQueries.size());
+						
 						received++;
 					}
 				} 
@@ -407,6 +395,59 @@ public class Manufacturer extends Agent
 		@Override
 		public boolean done() {
 			return received == customers.size();
+		}
+		
+	}
+	
+	private class ReplyToCustomerOrderQuery extends OneShotBehaviour
+	{
+		public ReplyToCustomerOrderQuery(Agent a) { super(a); }
+		
+		@Override
+		public void action() 
+		{
+			double highest = 0;
+			// order list and accept only the most profitable offer
+			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
+			{
+				// System.out.println("order "+entry.getValue()+", profit: "+entry.getKey());
+				if (entry.getKey() > highest)
+					highest = entry.getKey();
+			}
+			
+			// the best offer
+			orderID = dailyOrderQueries.get(highest); // sometimes gives ERROR
+			CustomerOrder best = orders.get(orderID); // stays in orders
+			if (best.isAccepted())
+			{
+				System.out.print("orderID accepted: "+orderID+" | ");
+				toOrderSupplies.add(orderID); // order supplies for it
+				
+				ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+				accept.setConversationId("customerOrder-answer");
+				accept.addReceiver(best.getCustomer());
+				myAgent.send(accept);
+				dailyOrderQueries.remove(highest);
+			}
+			
+				
+			// reject the others
+			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
+			{
+				//System.out.println("hi");
+				
+				order = orders.get(entry.getValue());
+				
+				ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
+				reply.setConversationId("customerOrder-answer");
+				reply.addReceiver(order.getCustomer());
+				myAgent.send(reply);
+				orders.remove(order.getId());
+			}
+			
+			dailyOrderQueries.clear();
+			
+			//System.out.println("Manufacturer replied to all customer orders");
 		}
 		
 	}
