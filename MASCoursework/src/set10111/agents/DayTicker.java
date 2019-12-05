@@ -14,7 +14,7 @@ import jade.lang.acl.MessageTemplate;
 
 public class DayTicker extends Agent
 {
-	public static final int NUM_DAYS = 10;
+	public static final int NUM_DAYS = 100;
 	
 	@Override
 	protected void setup() 

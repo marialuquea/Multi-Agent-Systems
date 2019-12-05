@@ -309,6 +309,10 @@ public class Manufacturer extends Agent
 									suppliesPurchasedCost += ((supplier1prices.get(c.toString())*order.getQuantity()));
 									
 									daysLate = order.getDaysDue() - supplier1deliveryDays; // late fee
+									
+									//System.out.println(order.getDaysDue()+" - "
+									//		+ supplier1deliveryDays+" - "
+									//		+ daysLate);
 								}
 									
 								
@@ -322,16 +326,24 @@ public class Manufacturer extends Agent
 										suppliesPurchasedCost += ((supplier1prices.get(c.toString())*order.getQuantity()));
 									
 									daysLate = order.getDaysDue() - supplier2deliveryDays;; // late fee
+									
+									//System.out.println(order.getDaysDue()+" - "
+									//		+ supplier2deliveryDays+" - "
+									//		+ daysLate);
 								}
 								
 							}
 							
 							
+							//System.out.println("daysLate: "+daysLate+" - quantity: "+order.getQuantity());
+							
 							// IF LATE, INCLUDE WAREHOUSE COST PER COMPONENT PER DAY
 							if (daysLate < 0) 
 							{// fee for customer and warehouse
 								penaltyForLateOrderCost = daysLate * order.getPenalty();
-								warehouseCost =  order.getQuantity() * 4 * daysLate;
+								// quantity * 4 parts per phone * days * £5 each 
+								warehouseCost =  order.getQuantity() * 4 * daysLate * 5;
+								//System.out.println("warehouseCost: "+warehouseCost);
 							}
 							else // no fee
 								penaltyForLateOrderCost = 0;
@@ -369,7 +381,7 @@ public class Manufacturer extends Agent
 						{
 							orders.put(order.getId(), order);
 							orderID = order.getId();
-							System.out.println("orderID accepted: "+orderID);
+							System.out.println("\norderID accepted: "+orderID);
 							toOrderSupplies.add(orderID);
 							
 							order.setCustomerPrice(order.getPrice()*order.getQuantity());
@@ -475,13 +487,13 @@ public class Manufacturer extends Agent
 				dailyProfit -= order.getCost();
 				totalProfit -= order.getCost();
 				
-				System.out.println("Ordering supplies: "+order.getCost());
+				//System.out.println("\nOrdering supplies: "+order.getCost());
 				//System.out.println("dailyProfit: "+dailyProfit);
 			}
 			
 			toOrderSupplies.clear();
 			//System.out.println("toOrderSupplies.size(): "+toOrderSupplies.size());
-			System.out.println("dailyProfit: "+dailyProfit);
+			//System.out.println("dailyProfit: "+dailyProfit);
 			done = true;
 		}
 
@@ -750,7 +762,7 @@ public class Manufacturer extends Agent
 			// WAREHOUSE EVERY 10 DAYS
 			if (day % 10 == 0)
 			{
-				System.out.println("\t\t-----WAREHOUSE-----");
+				System.out.println("\n\t\t-----WAREHOUSE-----");
 				for (HashMap.Entry<String, Integer> entry : warehouse.entrySet())
 				    System.out.println("\t\t"+entry.getKey()+"\t"+entry.getValue());
 				System.out.println("\t\t-------------------");
@@ -764,10 +776,10 @@ public class Manufacturer extends Agent
 			totalProfit -= (parts * 5);
 			
 			// print daily values
-			System.out.println(phoneAssembledCount+" phones assembled today for "+orderCount+" orders");
-			System.out.println("orders left to assemble: "+orders.size());	
-			System.out.println("warehouse costs today: "+ (parts * 5));
-			System.out.println("dailyProfit: "+dailyProfit+"\t total profit: "+totalProfit);
+			System.out.println("\n"+phoneAssembledCount+" phones assembled today for "+orderCount+" orders");
+			System.out.println("orders left to assemble: "+orders.size()
+					+"\twarehouse costs today: "+ (parts * 5));	
+			System.out.println("dailyProfit: "+dailyProfit+"\t\ttotal profit: "+totalProfit);
 			
 			// send done message to tickerAgent
 			ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
