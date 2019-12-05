@@ -106,17 +106,17 @@ public class Supplier extends Agent
 				{
 					// new day - reset values
 					
-					//System.out.println("\nSupplier orders at the start of the day:");
+					//System.out.println(this.getAgent().getLocalName()+" orders at the start of the day:");
 					// decrease day in order to send parts to manufacturer
 					for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 					{	
 						order = entry.getKey();
 						orders.put(order, orders.get(order) - 1);
-						//System.out.println(entry.getKey().getOrderID() + " = " + entry.getValue());	
+						System.out.println(entry.getKey().getOrderID() + " = " + entry.getValue()
+								+ " - "+this.getAgent().getLocalName());	
 					}
 					
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
-
 					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
 			        myAgent.addBehaviour(ror);
 			        cyclicBehaviours.add(ror);
@@ -127,10 +127,10 @@ public class Supplier extends Agent
 					dailyActivity.addSubBehaviour(new FindCustomers(myAgent));
 					dailyActivity.addSubBehaviour(new PriceListRequest(myAgent));
 					dailyActivity.addSubBehaviour(new SendParts(myAgent));
-					//dailyActivity.addSubBehaviour(new EndDayListener(myAgent));
+					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 					
-					myAgent.addBehaviour(new EndDayListener(myAgent, cyclicBehaviours));
+					//myAgent.addBehaviour(new EndDay(myAgent));
 
 				}
 				else 
@@ -405,15 +405,9 @@ public class Supplier extends Agent
 		
 	}
 	
-	public class EndDayListener extends CyclicBehaviour 
+	public class EndDay extends OneShotBehaviour 
 	{
-		private List<Behaviour> toRemove;
-
-		public EndDayListener(Agent a, List<Behaviour> toRemove) 
-		{
-			super(a);
-			this.toRemove = toRemove;
-		}
+		public EndDay(Agent a) { super(a); }
 
 		@Override
 		public void action() {
@@ -421,12 +415,6 @@ public class Supplier extends Agent
 			tick.setContent("done");
 			tick.addReceiver(tickerAgent);
 			myAgent.send(tick);
-			
-			//remove behaviours
-			for(Behaviour b : toRemove) {
-				myAgent.removeBehaviour(b);
-			}
-			myAgent.removeBehaviour(this);
 		}
 	}
 }

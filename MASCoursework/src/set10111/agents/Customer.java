@@ -329,11 +329,7 @@ public class Customer extends Agent
 			msg.setContent("done");
 			myAgent.send(msg);
 
-			//send a message to the manufacturer that we have finished
-			ACLMessage manufacturerDone = new ACLMessage(ACLMessage.INFORM);
-			manufacturerDone.setContent("done");
-			manufacturerDone.addReceiver(manufacturerAID);
-			myAgent.send(manufacturerDone);
+			
 		}
 
 	}

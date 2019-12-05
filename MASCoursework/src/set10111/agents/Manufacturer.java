@@ -416,7 +416,7 @@ public class Manufacturer extends Agent
 			}
 			
 			// the best offer
-			orderID = dailyOrderQueries.get(highest); // sometimes gives ERROR
+			orderID = dailyOrderQueries.get(highest); 
 			CustomerOrder best = orders.get(orderID); // stays in orders
 			if (best.isAccepted())
 			{
@@ -685,6 +685,8 @@ public class Manufacturer extends Agent
 			case 0:
 				// SEND ORDER TO CUSTOMERS WHEN ORDER IS ASSEMBLED
 				ArrayList<CustomerOrder> done = new ArrayList<>();
+				
+				System.out.println("\nreadyToAssemble: "+readyToAssemble.size());
 				
 				for (CustomerOrder o : readyToAssemble)
 				{

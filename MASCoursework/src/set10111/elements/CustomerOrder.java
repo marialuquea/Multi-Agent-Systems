@@ -16,6 +16,7 @@ public class CustomerOrder implements AgentAction
 	private boolean accepted;
 	private double customerPrice;
 	private double cost;
+	private int assembled;
 
 	public int getId() {
 		return id;
@@ -97,9 +98,16 @@ public class CustomerOrder implements AgentAction
 		        + "days due: %s, \n\t"
 		        + "accepted: %s, \n\t"
 		        + "customerPrice: %s, \n\t"
-		        + "cost: %s,",
+		        + "cost: %s, \n\t"
+		        + "assembled: %s,",
 		        id, customer, supplier, price,
 				penalty, smartphone, quantity, daysDue,
-				accepted, customerPrice, cost);
+				accepted, customerPrice, cost, assembled);
+	}
+	public int getAssembled() {
+		return assembled;
+	}
+	public void setAssembled(int assembled) {
+		this.assembled = assembled;
 	}
 }
