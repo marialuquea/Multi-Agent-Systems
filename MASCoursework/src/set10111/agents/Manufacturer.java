@@ -24,9 +24,9 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
-import set10111.predicates.*;
-import set10111.elements.*;
+import set10111.elements.actions.*;
 import set10111.elements.concepts.*;
+import set10111.elements.predicates.*;
 
 public class Manufacturer extends Agent
 {
@@ -228,8 +228,8 @@ public class Manufacturer extends Agent
 						PriceList supPrices = (PriceList) ce;
 						
 						HashMap<String, Integer> priceList = new HashMap<>();
-						ArrayList<SmartphoneComponent> keys = supPrices.getKeys();
-						ArrayList<Long> values = supPrices.getValues();
+						ArrayList<SmartphoneComponent> keys = supPrices.getComponents();
+						ArrayList<Integer> values = supPrices.getPrices();
 						
 						for(int i = 0; i < keys.size(); i++)
 						{
@@ -289,6 +289,12 @@ public class Manufacturer extends Agent
 						CustomerOrder order = orderAccepted.getOrder();
 						order.setCustomer(msg.getSender());
 						
+						ArrayList<SmartphoneComponent> components = new ArrayList<>();
+						components.add(order.getSpecification().getBattery());
+						components.add(order.getSpecification().getStorage());
+						components.add(order.getSpecification().getScreen());
+						components.add(order.getSpecification().getRAM());
+						
 						AID bestSup = null;
 						double highest = 0, expected = 0, suppliesPurchasedCost, cheapestSupplies = 0;
 						int penaltyForLateOrderCost = 0, warehouseCost, daysLate = 0;
@@ -298,8 +304,10 @@ public class Manufacturer extends Agent
 							warehouseCost = 0;
 							suppliesPurchasedCost = 0;
 							
+							
+							
 							// COST OF SUPPLIES AND LATE DAYS
-							for (SmartphoneComponent c : order.getSpecification().getComponents())
+							for (SmartphoneComponent c : components)
 							{
 								
 								if (supplier.getLocalName().equals("supplier1")) 

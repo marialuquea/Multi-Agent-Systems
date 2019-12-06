@@ -1,4 +1,4 @@
-package set10111.predicates;
+package set10111.elements.predicates;
 
 import jade.content.Predicate;
 

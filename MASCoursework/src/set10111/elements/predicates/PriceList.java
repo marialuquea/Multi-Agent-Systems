@@ -1,4 +1,4 @@
-package set10111.predicates;
+package set10111.elements.predicates;
 
 import java.util.ArrayList;
 
@@ -10,8 +10,8 @@ public class PriceList implements Predicate
 {
 	private AID supplier;
 	private int speed;
-	private ArrayList<SmartphoneComponent> keys;
-	private ArrayList<Long> values;
+	private ArrayList<SmartphoneComponent> component;
+	private ArrayList<Integer> prices;
 	
 	public AID getSupplier() {
 		return supplier;
@@ -25,17 +25,17 @@ public class PriceList implements Predicate
 	public void setSpeed(int speed) {
 		this.speed = speed;
 	}
-	public ArrayList<SmartphoneComponent> getKeys() {
-		return keys;
+	public ArrayList<SmartphoneComponent> getComponents() {
+		return component;
 	}
-	public void setKeys(ArrayList<SmartphoneComponent> keys) {
-		this.keys = keys;
+	public void setComponents(ArrayList<SmartphoneComponent> components) {
+		this.component = components;
 	}
-	public ArrayList<Long> getValues() {
-		return values;
+	public ArrayList<Integer> getPrices() {
+		return prices;
 	}
-	public void setValues(ArrayList<Long> values) {
-		this.values = values;
+	public void setPrices(ArrayList<Integer> prices) {
+		this.prices = prices;
 	}
 	
 

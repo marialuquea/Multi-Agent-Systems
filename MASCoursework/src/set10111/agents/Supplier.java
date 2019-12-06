@@ -26,9 +26,9 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import set10111.ontology.CommerceOntology;
-import set10111.predicates.*;
-import set10111.elements.*;
+import set10111.elements.actions.*;
 import set10111.elements.concepts.*;
+import set10111.elements.predicates.*;
 
 public class Supplier extends Agent
 {
@@ -236,12 +236,12 @@ public class Supplier extends Agent
 	              
 	            // separate hashmaps in 2 lists to send
 	            ArrayList<SmartphoneComponent> components = new ArrayList<>();
-	            ArrayList<Long> componentQuantities = new ArrayList<>();
+	            ArrayList<Integer> componentQuantities = new ArrayList<>();
 	            
 	            for (Entry<SmartphoneComponent, Integer> part : supplies.entrySet())
 	            {
 	            	SmartphoneComponent comp = part.getKey();
-	            	long quantity = part.getValue();
+	            	int quantity = part.getValue();
 	            	components.add(comp);
 	            	componentQuantities.add(quantity);
 	            }
@@ -250,8 +250,8 @@ public class Supplier extends Agent
 	            PriceList prices = new PriceList();
 	            prices.setSupplier(this.getAgent().getAID());
 	            prices.setSpeed(deliveryDays);
-	            prices.setKeys(components);
-	            prices.setValues(componentQuantities);
+	            prices.setComponents(components);
+	            prices.setPrices(componentQuantities);
 	            
 				try
 				{      

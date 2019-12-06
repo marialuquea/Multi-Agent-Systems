@@ -15,10 +15,10 @@ public class CommerceOntology extends BeanOntology
 	private CommerceOntology(String name) {
 		super(name);
 		try {
-			add("set10111.elements");
 			add("set10111.agents");
+			add("set10111.elements.actions");
 			add("set10111.elements.concepts");
-			add("set10111.predicates");
+			add("set10111.elements.predicates");
 		} catch (BeanOntologyException e) {
 			e.printStackTrace();
 		}

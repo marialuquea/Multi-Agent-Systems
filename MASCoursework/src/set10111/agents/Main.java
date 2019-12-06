@@ -4,7 +4,7 @@ import jade.core.*;
 import jade.core.Runtime;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
-import set10111.elements.SupplierPrices;
+import set10111.elements.actions.SupplierPrices;
 
 
 public class Main 

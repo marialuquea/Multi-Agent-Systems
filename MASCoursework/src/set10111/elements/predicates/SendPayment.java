@@ -1,9 +1,9 @@
-package set10111.predicates;
+package set10111.elements.predicates;
 
 import jade.content.Predicate;
 import jade.core.AID;
-import set10111.elements.CustomerOrder;
-import set10111.elements.SupplierOrder;
+import set10111.elements.actions.CustomerOrder;
+import set10111.elements.actions.SupplierOrder;
 
 public class SendPayment implements Predicate
 {

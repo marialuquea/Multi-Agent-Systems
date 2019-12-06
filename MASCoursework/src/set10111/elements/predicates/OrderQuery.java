@@ -1,9 +1,9 @@
-package set10111.predicates;
+package set10111.elements.predicates;
 
 import jade.content.Predicate;
 import jade.content.onto.annotations.Slot;
 import jade.core.AID;
-import set10111.elements.CustomerOrder;
+import set10111.elements.actions.CustomerOrder;
 
 public class OrderQuery implements Predicate
 {

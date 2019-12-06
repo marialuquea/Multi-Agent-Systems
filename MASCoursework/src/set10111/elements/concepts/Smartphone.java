@@ -1,4 +1,4 @@
-package set10111.elements;
+package set10111.elements.concepts;
 
 import java.util.ArrayList;
 
@@ -43,15 +43,6 @@ public class Smartphone implements Concept
 	}
 	public void setRAM(Ram ram) {
 		this.ram = ram;
-	}
-	
-	public ArrayList<SmartphoneComponent> getComponents() {
-		ArrayList<SmartphoneComponent> components = new ArrayList<>();
-		components.add(screen);
-		components.add(battery);
-		components.add(storage);
-		components.add(ram);
-		return components;
 	}
 	
 	@Override

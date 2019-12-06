@@ -1,7 +1,8 @@
-package set10111.elements;
+package set10111.elements.actions;
 
 import jade.content.AgentAction;
 import jade.core.AID;
+import set10111.elements.concepts.Smartphone;
 
 public class SupplierOrder implements AgentAction
 {

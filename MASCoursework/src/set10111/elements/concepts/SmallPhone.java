@@ -1,7 +1,6 @@
 package set10111.elements.concepts;
 
 import jade.content.onto.annotations.Slot;
-import set10111.elements.Smartphone;
 
 public class SmallPhone extends Smartphone
 {
