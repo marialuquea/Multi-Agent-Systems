@@ -323,14 +323,17 @@ public class Manufacturer extends Agent
 									else 
 										suppliesPurchasedCost += ((supplier1prices.get(c.toString())*order.getQuantity()));
 									
-									daysLate = order.getDaysDue() - supplier2deliveryDays;; // late fee
+									daysLate = order.getDaysDue() - supplier2deliveryDays; // late fee
 									
 									//System.out.println(order.getDaysDue()+" - "
 									//		+ supplier2deliveryDays+" - "
 									//		+ daysLate);
 								}
-								
 							}
+							
+							//System.out.println(order);
+							
+							
 							
 							
 							//System.out.println("daysLate: "+daysLate+" - quantity: "+order.getQuantity());
@@ -338,7 +341,7 @@ public class Manufacturer extends Agent
 							// IF LATE, INCLUDE WAREHOUSE COST PER COMPONENT PER DAY
 							if (daysLate < 0) 
 							{// fee for customer and warehouse
-								penaltyForLateOrderCost = daysLate * order.getPenalty();
+								penaltyForLateOrderCost = Math.abs(daysLate) * order.getPenalty();
 								// quantity * 4 parts per phone * days * £5 each 
 								warehouseCost =  order.getQuantity() * 4 * daysLate * 5;
 								//System.out.println("warehouseCost: "+warehouseCost);
@@ -352,7 +355,14 @@ public class Manufacturer extends Agent
 							// TotalValueOfOrdersShipped(d) – PenaltyForLateOrders(d) – WarehouseStorage(d) – SuppliesPurchased(d),
 							expected = (order.getPrice() * order.getQuantity()) - penaltyForLateOrderCost - warehouseCost - suppliesPurchasedCost;
 							
-							
+							/*
+							System.out.println(supplier.getLocalName());
+							System.out.println(expected);
+							System.out.println(penaltyForLateOrderCost);
+							System.out.println(warehouseCost);
+							System.out.println(suppliesPurchasedCost);
+							System.out.println("---------------");
+							*/
 							
 							// CHOOSE SUPPLIER
 							//System.out.println("toAssemble: "+orders.size());
@@ -408,46 +418,62 @@ public class Manufacturer extends Agent
 		{
 			double highest = 0;
 			// order list and accept only the most profitable offer
-			System.out.println("dailyOrderQueries: "+dailyOrderQueries.size());
+			//System.out.println("dailyOrderQueries: "+dailyOrderQueries.size());
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
-				System.out.println("order "+entry.getValue()+", profit: "+entry.getKey());
+				//System.out.println("order "+entry.getValue()+", profit: "+entry.getKey());
 				if (entry.getKey() > highest)
 					highest = entry.getKey();
 			}
-			System.out.println("highest: "+highest+", orderID: "+dailyOrderQueries.get(highest));
+			//System.out.println("highest: "+highest+", orderID: "+dailyOrderQueries.get(highest));
 			// the best offer
 			
-			if (highest > 0)
+			if (highest > 0) // if all orders are positive (manufacturer will not lose money)
 			{
 				orderID = dailyOrderQueries.get(highest); 
-				CustomerOrder best = orders.get(orderID); // stays in orders
-				if (best.isAccepted())
+				order = orders.get(orderID); // stays in orders
+				if (order.isAccepted())
 				{
 					System.out.print("orderID accepted: "+orderID+" | ");
 					toOrderSupplies.add(orderID); // order supplies for it
 					
 					ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 					accept.setConversationId("customerOrder-answer");
-					accept.addReceiver(best.getCustomer());
+					accept.addReceiver(order.getCustomer());
 					myAgent.send(accept);
 					dailyOrderQueries.remove(highest);
 				}
 			}
-				
-			// reject the others
+			CustomerOrder next = null;
+			// accept next one if > £3000 profit
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
-				//System.out.println("hi");
+				if (entry.getKey() > 3000)
+				{
+					// accept
+					next = orders.get(entry.getValue());
+					toOrderSupplies.add(entry.getValue()); // order supplies for it
+					ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+					accept.setConversationId("customerOrder-answer");
+					accept.addReceiver(next.getCustomer());
+					myAgent.send(accept);
+					//dailyOrderQueries.remove(highest);
+				}
+				else
+				{
+					order = orders.get(entry.getValue());
+					
+					ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
+					reply.setConversationId("customerOrder-answer");
+					reply.addReceiver(order.getCustomer());
+					myAgent.send(reply);
+					orders.remove(order.getId());
+				}
 				
-				order = orders.get(entry.getValue());
-				
-				ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
-				reply.setConversationId("customerOrder-answer");
-				reply.addReceiver(order.getCustomer());
-				myAgent.send(reply);
-				orders.remove(order.getId());
 			}
+			
+			if (next != null)
+				dailyOrderQueries.remove((next.getPrice()*next.getQuantity())-next.getCost());
 			
 			dailyOrderQueries.clear();
 			
@@ -687,7 +713,8 @@ public class Manufacturer extends Agent
 		{
 			switch(step) {
 			case 0:
-				// SEND ORDER TO CUSTOMERS WHEN ORDER IS ASSEMBLED
+				// ASSEMBLE PHONES AND SEND TO CUSTOMER
+				
 				ArrayList<CustomerOrder> done = new ArrayList<>();
 				
 				System.out.println("\nreadyToAssemble: "+readyToAssemble.size());
@@ -705,13 +732,17 @@ public class Manufacturer extends Agent
 						
 						int quantity = 0;
 						
-						if (o.getQuantity() < (50 - phoneAssembledCount))
+						// if quantity left to assemble is less than the allowed phones to assemble every day
+						if ((o.getQuantity() - o.getAssembled()) < (50 - phoneAssembledCount))
 						{
-							quantity = o.getQuantity();
-							o.setAssembled(quantity);
+							quantity = o.getQuantity() - o.getAssembled();
+							o.setAssembled(o.getAssembled() + quantity);
 						}
-						else
+						else {
 							quantity = 50 - phoneAssembledCount;
+							o.setAssembled(o.getAssembled() + quantity);
+						}
+							
 						
 						System.out.println("quantity: "+quantity);
 						
@@ -744,8 +775,6 @@ public class Manufacturer extends Agent
 							catch (CodecException ce) { ce.printStackTrace(); } 
 							catch (OntologyException oe) { oe.printStackTrace(); }
 						}
-						else
-							o.setAssembled(quantity); // how many of the order have been assembled
 					}
 				}
 				
