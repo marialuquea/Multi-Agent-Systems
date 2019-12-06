@@ -254,8 +254,8 @@ public class Customer extends Agent
 					catch (CodecException ce) { ce.printStackTrace(); }
 					catch (OntologyException oe) { oe.printStackTrace(); } 
 				}
-				else 
-					System.out.print(myAgent.getLocalName() + "'s order not accepted | ");			
+				//else 
+				//	System.out.print(myAgent.getLocalName() + "'s order not accepted | ");			
 				accepted = true;
 			}
 			else

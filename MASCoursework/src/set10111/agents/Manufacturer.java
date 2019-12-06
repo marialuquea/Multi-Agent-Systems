@@ -434,7 +434,7 @@ public class Manufacturer extends Agent
 				order = orders.get(orderID); // stays in orders
 				if (order.isAccepted())
 				{
-					System.out.print("orderID accepted: "+orderID+" | ");
+					System.out.println("orderID accepted: "+orderID+", q: "+order.getQuantity());
 					toOrderSupplies.add(orderID); // order supplies for it
 					
 					ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
@@ -444,11 +444,12 @@ public class Manufacturer extends Agent
 					dailyOrderQueries.remove(highest);
 				}
 			}
-			CustomerOrder next = null;
-			// accept next one if > £3000 profit
+			//CustomerOrder next = null; // accept next one if > £3000 profit
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
-				if (entry.getKey() > 3000)
+				
+				/*
+				if (entry.getKey() > 10000)
 				{
 					// accept
 					next = orders.get(entry.getValue());
@@ -461,6 +462,7 @@ public class Manufacturer extends Agent
 				}
 				else
 				{
+					*/
 					order = orders.get(entry.getValue());
 					
 					ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
@@ -468,12 +470,12 @@ public class Manufacturer extends Agent
 					reply.addReceiver(order.getCustomer());
 					myAgent.send(reply);
 					orders.remove(order.getId());
-				}
+				//}
 				
 			}
 			
-			if (next != null)
-				dailyOrderQueries.remove((next.getPrice()*next.getQuantity())-next.getCost());
+			//if (next != null)
+				//dailyOrderQueries.remove((next.getPrice()*next.getQuantity())-next.getCost());
 			
 			dailyOrderQueries.clear();
 			
@@ -717,7 +719,7 @@ public class Manufacturer extends Agent
 				
 				ArrayList<CustomerOrder> done = new ArrayList<>();
 				
-				System.out.println("\nreadyToAssemble: "+readyToAssemble.size());
+				System.out.println("readyToAssemble: "+readyToAssemble.size());
 				
 				for (CustomerOrder o : readyToAssemble)
 				{
@@ -729,6 +731,9 @@ public class Manufacturer extends Agent
 						components.add(o.getSpecification().getRAM().toString());
 						components.add(o.getSpecification().getScreen().toString());
 						components.add(o.getSpecification().getStorage().toString());
+						
+						// there was a bug that changed the assembled after day 10, hence this lol
+						if (day >= 10) { o.setAssembled(0); }
 						
 						int quantity = 0;
 						
@@ -744,7 +749,7 @@ public class Manufacturer extends Agent
 						}
 							
 						
-						System.out.println("quantity: "+quantity);
+						//System.out.println("quantity: "+quantity);
 						
 						//Remove components from warehouse
 						for (String comp : components)
@@ -869,7 +874,7 @@ public class Manufacturer extends Agent
 			totalProfit -= (parts * 5);
 			
 			// print daily values
-			System.out.println("\n"+phoneAssembledCount+" phones assembled today for "+orderCount+" orders");
+			System.out.println(phoneAssembledCount+" phones assembled today for "+orderCount+" orders");
 			System.out.println("orders left to assemble: "+orders.size()
 					+"\twarehouse costs today: "+ (parts * 5));	
 			System.out.println("dailyProfit: "+dailyProfit+"\t\ttotal profit: "+totalProfit);
