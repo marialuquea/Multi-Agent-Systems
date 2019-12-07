@@ -41,8 +41,8 @@ public class Manufacturer extends Agent
 	private SupplierOrder supOrder = new SupplierOrder();
 	private HashMap<Integer, CustomerOrder> orders = new HashMap<>();
 	private HashMap<String, Integer> warehouse = new HashMap<>();
-	private HashMap<String, Integer> supplier1prices = new HashMap<>();
-	private HashMap<String, Integer> supplier2prices = new HashMap<>();
+	private HashMap<String, Double> supplier1prices = new HashMap<>();
+	private HashMap<String, Double> supplier2prices = new HashMap<>();
 	private HashMap<Double, Integer> dailyOrderQueries = new HashMap<>();
 	private int supplier1deliveryDays;
 	private int supplier2deliveryDays;
@@ -122,7 +122,7 @@ public class Manufacturer extends Agent
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					dailyActivity.addSubBehaviour(new FindCustomers(myAgent));
 					dailyActivity.addSubBehaviour(new FindSuppliers(myAgent));
-					dailyActivity.addSubBehaviour(new AskSupInfo(myAgent));
+					dailyActivity.addSubBehaviour(new AskPrices(myAgent));
 					dailyActivity.addSubBehaviour(new ReceivePartsPrices(myAgent));
 					dailyActivity.addSubBehaviour(new ReceiveOrderQuery(myAgent));
 					dailyActivity.addSubBehaviour(new ReplyToCustomerOrderQuery(myAgent));
@@ -183,9 +183,9 @@ public class Manufacturer extends Agent
 		}
 	}
 
-	private class AskSupInfo extends OneShotBehaviour
+	private class AskPrices extends OneShotBehaviour
 	{
-		public AskSupInfo(Agent a) { super(a); }
+		public AskPrices(Agent a) { super(a); }
 		
 		@Override
 		public void action() 
@@ -227,15 +227,15 @@ public class Manufacturer extends Agent
 					{
 						PriceList supPrices = (PriceList) ce;
 						
-						HashMap<String, Integer> priceList = new HashMap<>();
+						HashMap<String, Double> priceList = new HashMap<>();
 						ArrayList<SmartphoneComponent> keys = supPrices.getComponents();
-						ArrayList<Integer> values = supPrices.getPrices();
+						ArrayList<Double> values = supPrices.getPrices();
 						
 						for(int i = 0; i < keys.size(); i++)
 						{
 							String sc = (String)keys.get(i).toString();
-							//System.out.println("added to price list:\t"+sc);
-							int price = values.get(i).intValue();
+							//System.out.println("added to price list: "+sc);
+							double price = values.get(i);
 							priceList.put(sc, price);
 						}
 						

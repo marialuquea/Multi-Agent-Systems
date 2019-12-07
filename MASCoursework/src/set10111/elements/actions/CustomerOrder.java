@@ -1,6 +1,7 @@
 package set10111.elements.actions;
 
 import jade.content.AgentAction;
+import jade.content.onto.annotations.Slot;
 import jade.core.AID;
 import set10111.elements.concepts.Smartphone;
 
@@ -19,54 +20,63 @@ public class CustomerOrder implements AgentAction
 	private double cost;
 	private int assembled;
 
+	@Slot(mandatory=true)
 	public int getId() {
 		return id;
 	}
 	public void setId(int id) {
 		this.id = id;
 	}
+	@Slot(mandatory=true)
 	public AID getCustomer() {
 		return customer;
 	}
 	public void setCustomer(AID seller) {
 		this.customer = seller;
 	}
+	@Slot(mandatory=true)
 	public int getPrice() {
 		return price;
 	}
 	public void setPrice(int price) {
 		this.price = price;
 	}
+	@Slot(mandatory=true)
 	public int getPenalty() {
 		return penalty;
 	}
 	public void setPenalty(int penalty) {
 		this.penalty = penalty;
 	}
+	@Slot(mandatory=true)
 	public Smartphone getSpecification() {
 		return smartphone;
 	}
 	public void setSpecification(Smartphone specification) {
 		this.smartphone = specification;
 	}
+	@Slot(mandatory=true)
 	public int getQuantity() {
 		return quantity;
 	}
 	public void setQuantity(int quantity) {
 		this.quantity = quantity;
 	}
+	@Slot(mandatory=true)
 	public int getDaysDue() {
 		return daysDue;
 	}
 	public void setDaysDue(int daysDue) {
 		this.daysDue = daysDue;
 	}
+	@Slot(mandatory=true)
 	public boolean isAccepted() {
 		return accepted;
 	}
 	public void setAccepted(boolean accepted) {
 		this.accepted = accepted;
 	}
+	@Slot(mandatory=true)
 	public double getCustomerPrice() {
 		return customerPrice;
 	}
@@ -79,6 +89,7 @@ public class CustomerOrder implements AgentAction
 	public void setSupplier(AID supplier) {
 		this.supplier = supplier;
 	}
+	@Slot(mandatory=true)
 	public double getCost() {
 		return cost;
 	}
@@ -105,6 +116,7 @@ public class CustomerOrder implements AgentAction
 				penalty, smartphone, quantity, daysDue,
 				accepted, customerPrice, cost, assembled);
 	}
+	@Slot(mandatory=true)
 	public int getAssembled() {
 		return assembled;
 	}

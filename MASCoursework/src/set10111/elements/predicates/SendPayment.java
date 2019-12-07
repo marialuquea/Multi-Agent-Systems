@@ -1,6 +1,7 @@
 package set10111.elements.predicates;
 
 import jade.content.Predicate;
+import jade.content.onto.annotations.Slot;
 import jade.core.AID;
 import set10111.elements.actions.CustomerOrder;
 import set10111.elements.actions.SupplierOrder;
@@ -11,12 +12,14 @@ public class SendPayment implements Predicate
 	private CustomerOrder order;
 	private SupplierOrder supOrder;
 	
+	@Slot(mandatory=true)
 	public AID getAgent() {
 		return agent;
 	}
 	public void setAgent(AID customer) {
 		this.agent = customer;
 	}
+	@Slot(mandatory=true)
 	public CustomerOrder getOrder() {
 		return order;
 	}

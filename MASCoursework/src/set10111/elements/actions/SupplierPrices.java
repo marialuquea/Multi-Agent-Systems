@@ -20,8 +20,6 @@ public class SupplierPrices implements AgentAction
 		this.supplier = supplier;
 	}
 	
-	ComponentType ct = ComponentType.getInstance();
-	
 	private static final HashMap<SmartphoneComponent, Integer> supplier1 = 
 			new HashMap<SmartphoneComponent, Integer>() {{
 				put(new Screen("SCREEN_7"), 150);
@@ -42,10 +40,12 @@ public class SupplierPrices implements AgentAction
 				put(new Ram("RAM_8"), 35);
 			}};
 	
+	@Slot(mandatory=true)
 	public static HashMap<SmartphoneComponent, Integer> getPricesSupplier1() {
 		return supplier1;
 	}
 	
+	@Slot(mandatory=true)
 	public static HashMap<SmartphoneComponent, Integer> getPricesSupplier2() {
 		return supplier2;
 	}

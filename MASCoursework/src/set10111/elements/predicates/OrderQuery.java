@@ -16,12 +16,12 @@ public class OrderQuery implements Predicate
 	}
 	public void setManufacturer(AID manufacturer) {
 	    this.manufacturer = manufacturer;
-	  }
-	  @Slot(mandatory = true)
-	  public CustomerOrder getOrder() {
-	    return order;
-	  }
-	  public void setOrder(CustomerOrder order) {
+	}
+	@Slot(mandatory = true)
+	public CustomerOrder getOrder() {
+		return order;
+	}
+	public void setOrder(CustomerOrder order) {
 	    this.order = order;
-	  } 
+	} 
 }

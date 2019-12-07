@@ -236,12 +236,12 @@ public class Supplier extends Agent
 	              
 	            // separate hashmaps in 2 lists to send
 	            ArrayList<SmartphoneComponent> components = new ArrayList<>();
-	            ArrayList<Integer> componentQuantities = new ArrayList<>();
+	            ArrayList<Double> componentQuantities = new ArrayList<>();
 	            
 	            for (Entry<SmartphoneComponent, Integer> part : supplies.entrySet())
 	            {
 	            	SmartphoneComponent comp = part.getKey();
-	            	int quantity = part.getValue();
+	            	double quantity = part.getValue();
 	            	components.add(comp);
 	            	componentQuantities.add(quantity);
 	            }

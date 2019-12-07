@@ -1,6 +1,7 @@
 package set10111.elements.actions;
 
 import jade.content.AgentAction;
+import jade.content.onto.annotations.Slot;
 import jade.core.AID;
 import set10111.elements.concepts.Smartphone;
 
@@ -18,19 +19,21 @@ public class SupplierOrder implements AgentAction
 	public void setSmartphone(Smartphone smartphone) {
 		this.smartphone = smartphone;
 	}
-	
+	@Slot(mandatory=true)
 	public AID getSupplier() {
 		return supplier;
 	}
 	public void setSupplier(AID supplier) {
 		this.supplier = supplier;
 	}
+	@Slot(mandatory=true)
 	public int getQuantity() {
 		return quantity;
 	}
 	public void setQuantity(int quantity) {
 		this.quantity = quantity;
 	}
+	@Slot(mandatory=true)
 	public int getOrderID() {
 		return orderID;
 	}
@@ -48,6 +51,7 @@ public class SupplierOrder implements AgentAction
 		        + "\t cost: %s )",
 		        smartphone, orderID, quantity, supplier, cost);
 	}
+	@Slot(mandatory=true)
 	public double getCost() {
 		return cost;
 	}
