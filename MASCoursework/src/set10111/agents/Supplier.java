@@ -91,47 +91,33 @@ public class Supplier extends Agent
 		@Override
 		public void action() 
 		{	
-			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"),
+			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"), 
 					MessageTemplate.MatchContent("terminate"));
-			ACLMessage msg = myAgent.receive(mt); 
+			ACLMessage msg = myAgent.receive(mt);  
 			if(msg != null) 
 			{
-				//System.out.println("orders _s size: "+orders.size());
-				//System.out.println("msg received in supplier: "+msg.getContent());
-
 				if(tickerAgent == null) 
 					tickerAgent = msg.getSender();
-
 				if(msg.getContent().equals("new day")) 
 				{
 					// new day - reset values
-					
-					//System.out.println(this.getAgent().getLocalName()+" orders at the start of the day:");
 					// decrease day in order to send parts to manufacturer
 					for (Entry<SupplierOrder, Integer> entry : orders.entrySet()) 
 					{	
 						order = entry.getKey();
-						orders.put(order, orders.get(order) - 1);
-						//System.out.println(entry.getKey().getOrderID() + " = " + entry.getValue()
-						//		+ " - "+this.getAgent().getLocalName());	
+						orders.put(order, orders.get(order) - 1);	
 					}
 					
-					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
-					CyclicBehaviour ror = new ReceiveOrderRequests(myAgent);
-			        myAgent.addBehaviour(ror);
-			        cyclicBehaviours.add(ror);
-
 					// activities for the day
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
-					dailyActivity.addSubBehaviour(new FindCustomers(myAgent));
 					dailyActivity.addSubBehaviour(new PriceListRequest(myAgent));
 					dailyActivity.addSubBehaviour(new SendParts(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 					
-					//myAgent.addBehaviour(new EndDay(myAgent));
-
+					// cyclic
+					myAgent.addBehaviour(new ReceiveOrderRequests(myAgent));
 				}
 				else 
 					myAgent.doDelete();
@@ -139,7 +125,6 @@ public class Supplier extends Agent
 			else
 				block();
 		}
-
 	}
 
 	private class FindManufacturer extends OneShotBehaviour 
@@ -194,27 +179,7 @@ public class Supplier extends Agent
 		}
 	}
 
-	private class FindCustomers extends OneShotBehaviour 
-	{
-		public FindCustomers(Agent a) { super(a); }
-		@Override
-		public void action() {
-
-			DFAgentDescription sellerTemplate = new DFAgentDescription();
-			ServiceDescription sd = new ServiceDescription();
-			sd.setType("customer");
-			sellerTemplate.addServices(sd);
-			try{
-				customers.clear();
-				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate);
-				for(int i=0; i<agentsType1.length; i++){ customers.add(agentsType1[i].getName()); }
-				//System.out.println("customers size "+customers.size());
-			}
-			catch(FIPAException e) { e.printStackTrace(); }
-		}
-	}
-	
-	// DONE Send Price List to Manufacturer 
+	//Send Price List to Manufacturer 
 	private class PriceListRequest extends Behaviour
 	{
 		public PriceListRequest(Agent a) { super(a); }
@@ -269,7 +234,7 @@ public class Supplier extends Agent
 		}
 	}
 	
-	//DONE
+	//from manufacturer
 	private class ReceiveOrderRequests extends CyclicBehaviour
 	{
 		public ReceiveOrderRequests(Agent a) { super(a); }
@@ -311,7 +276,7 @@ public class Supplier extends Agent
 		}
 	}
 
-	//DONE
+	//to manufacturer
 	private class SendParts extends Behaviour
 	{
 		public SendParts(Agent a) { super(a); }
@@ -380,8 +345,6 @@ public class Supplier extends Agent
 			            //System.out.println(payment.toString());
 			            expectingPayment--;
 			          }
-			          else 
-			            System.out.println("Unknown predicate " + ce.getClass().getName());
 			          
 			        }
 			        catch (CodecException ce) { ce.printStackTrace(); }

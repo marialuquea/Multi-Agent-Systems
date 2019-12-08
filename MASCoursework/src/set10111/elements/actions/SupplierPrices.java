@@ -1,14 +1,11 @@
 package set10111.elements.actions;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-
-import jade.content.AgentAction;
 import jade.content.onto.annotations.Slot;
 import jade.core.AID;
 import set10111.elements.concepts.*;
 
-public class SupplierPrices implements AgentAction
+public class SupplierPrices
 {
 	private AID supplier;
 	

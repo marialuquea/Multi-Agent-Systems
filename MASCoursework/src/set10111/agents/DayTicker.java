@@ -106,7 +106,6 @@ public class DayTicker extends Agent
 					e.printStackTrace();
 				}
 				
-				
 				//send new day message to each agent
 				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 				tick.setContent("new day");
@@ -116,6 +115,8 @@ public class DayTicker extends Agent
 				step++;
 				day++;
 				break;
+				
+
 			case 1:
 				//System.out.println("3");
 				//wait to receive a "done" message from all agents

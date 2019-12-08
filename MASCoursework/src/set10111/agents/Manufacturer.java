@@ -95,7 +95,7 @@ public class Manufacturer extends Agent
 		@Override
 		public void action() 
 		{	
-			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"),
+			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"), 
 					MessageTemplate.MatchContent("terminate"));
 			ACLMessage msg = myAgent.receive(mt); 
 			if(msg != null) 
@@ -304,12 +304,9 @@ public class Manufacturer extends Agent
 							warehouseCost = 0;
 							suppliesPurchasedCost = 0;
 							
-							
-							
 							// COST OF SUPPLIES AND LATE DAYS
 							for (SmartphoneComponent c : components)
 							{
-								
 								if (supplier.getLocalName().equals("supplier1")) 
 								{
 									suppliesPurchasedCost += ((supplier1prices.get(c.toString())*order.getQuantity()));
@@ -756,38 +753,50 @@ public class Manufacturer extends Agent
 							o.setAssembled(o.getAssembled() + quantity);
 						}
 							
-						
-						//System.out.println("quantity: "+quantity);
-						
-						//Remove components from warehouse
-						for (String comp : components)
-							warehouse.put(comp, warehouse.get(comp) - quantity);
-						
-						if (o.getQuantity() == o.getAssembled())//done
+						for (Entry<String, Integer> component : warehouse.entrySet()) 
 						{
-							//Send order back to customer
-							ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-							msg.setLanguage(codec.getName());
-							msg.setOntology(ontology.getName());
-							msg.setConversationId("orderSent");
-							msg.addReceiver(o.getCustomer());
-							
-							Action finalOrder = new Action();
-							finalOrder.setAction(o);
-							finalOrder.setActor(o.getCustomer());
-							
-							try
+							if (component.getValue() >= quantity)
 							{
-								getContentManager().fillContent(msg, finalOrder);
-								send(msg);
-								pendingPayment++;
-								orderCount++;
-								phoneAssembledCount += quantity;
-								done.add(o);
+								//System.out.println("quantity: "+quantity);
+								
+								//Remove components from warehouse
+								for (String comp : components)
+									warehouse.put(comp, warehouse.get(comp) - quantity);
+								
+								if (o.getQuantity() == o.getAssembled())//done
+								{
+									//Send order back to customer
+									ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+									msg.setLanguage(codec.getName());
+									msg.setOntology(ontology.getName());
+									msg.setConversationId("orderSent");
+									msg.addReceiver(o.getCustomer());
+									
+									// LATE DELIVERY PENALTY
+									int penalty = 0;
+									if (o.getDaysDue() < 0)
+						    			penalty -= (Math.abs(o.getDaysDue()) * o.getPenalty());
+									o.setPenalty(penalty);
+									
+									Action finalOrder = new Action();
+									finalOrder.setAction(o);
+									finalOrder.setActor(o.getCustomer());
+									
+									try
+									{
+										getContentManager().fillContent(msg, finalOrder);
+										send(msg);
+										pendingPayment++;
+										orderCount++;
+										phoneAssembledCount += quantity;
+										done.add(o);
+									}
+									catch (CodecException ce) { ce.printStackTrace(); } 
+									catch (OntologyException oe) { oe.printStackTrace(); }
+								}
 							}
-							catch (CodecException ce) { ce.printStackTrace(); } 
-							catch (OntologyException oe) { oe.printStackTrace(); }
 						}
+							
 					}
 				}
 				
@@ -803,7 +812,7 @@ public class Manufacturer extends Agent
 				//System.out.println("6");
 				MessageTemplate mt = MessageTemplate.and(
 			            MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-			            MessageTemplate.MatchConversationId("customer-payment"));
+			            MessageTemplate.MatchConversationId("customerShmoneyyy"));
 			    ACLMessage receivePayment = receive(mt);
 			    
 			    if (receivePayment != null)
@@ -822,18 +831,18 @@ public class Manufacturer extends Agent
 			    		//System.out.println(order.getPenalty());
 			    		
 			    		
-			    		double toReceive = order.getCustomerPrice();
+			    		//double toReceive = order.getCustomerPrice();
 			    		
 			    		//System.out.println("dailyProfit before: "+dailyProfit);
 			    		//System.out.println("to receive before penalty: "+toReceive);
 			    		
-			    		if (order.getDaysDue() < 0)
-			    			toReceive -= (Math.abs(order.getDaysDue()) * order.getPenalty());
+			    		//if (order.getDaysDue() < 0)
+			    			//toReceive -= (Math.abs(order.getDaysDue()) * order.getPenalty());
 			    		
 			    		//System.out.println("to receive after penalty: "+toReceive);
 			    		
-			    		dailyProfit += toReceive;
-			    		totalProfit += toReceive;
+			    		dailyProfit += (order.getCustomerPrice() - order.getPenalty());
+			    		totalProfit += (order.getCustomerPrice() - order.getPenalty());
 			    		
 			    		//System.out.println("dailyProfit after receiving payment: "+dailyProfit);
 			    		

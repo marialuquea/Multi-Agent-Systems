@@ -75,13 +75,11 @@ public class Customer extends Agent
 		@Override
 		public void action() 
 		{	
-			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"),
+			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"), 
 					MessageTemplate.MatchContent("terminate"));
 			ACLMessage msg = myAgent.receive(mt); 
 			if(msg != null) 
 			{
-				//System.out.println("msg received in customer: "+msg.getContent());
-
 				if(tickerAgent == null) 
 					tickerAgent = msg.getSender();
 
@@ -237,22 +235,7 @@ public class Customer extends Agent
 				//System.out.println("msg received in customer\n"+msg);
 				if(msg.getPerformative() == ACLMessage.ACCEPT_PROPOSAL) 
 				{
-					ACLMessage orderReq = new ACLMessage(ACLMessage.REQUEST);
-			        orderReq.setLanguage(codec.getName());
-			        orderReq.setOntology(ontology.getName()); 
-			        orderReq.setConversationId("FinalOrderRequest");
-			        orderReq.addReceiver(manufacturerAID);
-			        
-					Action request = new Action();
-					request.setAction(order);
-					request.setActor(manufacturerAID); // the agent that you request to perform the action
-					try
-					{
-						getContentManager().fillContent(orderReq, request); //send the wrapper object
-						send(orderReq);
-					}
-					catch (CodecException ce) { ce.printStackTrace(); }
-					catch (OntologyException oe) { oe.printStackTrace(); } 
+					//System.out.println(myAgent.getLocalName() + "'s order accepted | ");
 				}
 				//else 
 				//	System.out.print(myAgent.getLocalName() + "'s order not accepted | ");			
@@ -297,7 +280,7 @@ public class Customer extends Agent
 					ACLMessage pay = new ACLMessage(ACLMessage.INFORM);
 					pay.setLanguage(codec.getName());
 					pay.setOntology(ontology.getName());
-					pay.setConversationId("customer-payment");
+					pay.setConversationId("customerShmoneyyy");
 					pay.addReceiver(manufacturerAID);
 					
 					SendPayment payment = new SendPayment();
