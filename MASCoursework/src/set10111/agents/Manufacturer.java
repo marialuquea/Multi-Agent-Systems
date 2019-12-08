@@ -1,6 +1,7 @@
 package set10111.agents;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -108,7 +109,8 @@ public class Manufacturer extends Agent
 					// reset values for new day
 					customers.clear();
 					partsComingToday = 0;
-					phoneAssembledCount = orderCount = 0;
+					phoneAssembledCount = 0;
+					orderCount = 0;
 					day++;
 					dailyProfit = 0;
 					System.out.println("Day "+ day);
@@ -421,6 +423,10 @@ public class Manufacturer extends Agent
 		@Override
 		public void action() 
 		{
+			
+			
+			/*
+			// STRATEGY 1 - accept only one order per day, the most profitable 
 			double highest = 0;
 			// order list and accept only the most profitable offer
 			//System.out.println("dailyOrderQueries: "+dailyOrderQueries.size());
@@ -449,11 +455,9 @@ public class Manufacturer extends Agent
 					dailyOrderQueries.remove(highest);
 				}
 			}
-			//CustomerOrder next = null; // accept next one if > £3000 profit
+			//CustomerOrder next = null; // accept next one if > £10000 profit
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
-				
-				/*
 				if (entry.getKey() > 10000)
 				{
 					// accept
@@ -467,7 +471,7 @@ public class Manufacturer extends Agent
 				}
 				else
 				{
-					*/
+				
 					order = orders.get(entry.getValue());
 					
 					ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
@@ -481,6 +485,34 @@ public class Manufacturer extends Agent
 			
 			//if (next != null)
 				//dailyOrderQueries.remove((next.getPrice()*next.getQuantity())-next.getCost());
+			
+			*/
+			
+			
+			
+			// STRATEGY 2 - if profit > £10000, accept
+			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
+			{
+				order = orders.get(entry.getValue());
+				if (entry.getKey() > 8000)
+				{
+					toOrderSupplies.add(entry.getValue()); 
+					ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+					accept.setConversationId("customerOrder-answer");
+					accept.addReceiver(order.getCustomer());
+					myAgent.send(accept);
+				}
+				else
+				{
+					ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
+					reply.setConversationId("customerOrder-answer");
+					reply.addReceiver(order.getCustomer());
+					myAgent.send(reply);
+					orders.remove(order.getId());
+				}
+			}
+			
+			
 			
 			dailyOrderQueries.clear();
 			
@@ -753,48 +785,51 @@ public class Manufacturer extends Agent
 							o.setAssembled(o.getAssembled() + quantity);
 						}
 							
+						System.out.println("quantity: "+quantity);
 						for (Entry<String, Integer> component : warehouse.entrySet()) 
 						{
-							if (component.getValue() >= quantity)
+							if (component.getValue() >= quantity && components.contains(component.getKey()))
 							{
-								//System.out.println("quantity: "+quantity);
-								
 								//Remove components from warehouse
-								for (String comp : components)
-									warehouse.put(comp, warehouse.get(comp) - quantity);
+								component.setValue(component.getValue() - quantity);
+								//warehouse.put(component, warehouse.get(component) - quantity);
+								System.out.println(component);
 								
-								if (o.getQuantity() == o.getAssembled())//done
-								{
-									//Send order back to customer
-									ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-									msg.setLanguage(codec.getName());
-									msg.setOntology(ontology.getName());
-									msg.setConversationId("orderSent");
-									msg.addReceiver(o.getCustomer());
-									
-									// LATE DELIVERY PENALTY
-									int penalty = 0;
-									if (o.getDaysDue() < 0)
-						    			penalty -= (Math.abs(o.getDaysDue()) * o.getPenalty());
-									o.setPenalty(penalty);
-									
-									Action finalOrder = new Action();
-									finalOrder.setAction(o);
-									finalOrder.setActor(o.getCustomer());
-									
-									try
-									{
-										getContentManager().fillContent(msg, finalOrder);
-										send(msg);
-										pendingPayment++;
-										orderCount++;
-										phoneAssembledCount += quantity;
-										done.add(o);
-									}
-									catch (CodecException ce) { ce.printStackTrace(); } 
-									catch (OntologyException oe) { oe.printStackTrace(); }
-								}
+								
+								
 							}
+						}
+						
+						if (o.getQuantity() == o.getAssembled())//done
+						{
+							//Send order back to customer
+							ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+							msg.setLanguage(codec.getName());
+							msg.setOntology(ontology.getName());
+							msg.setConversationId("orderSent");
+							msg.addReceiver(o.getCustomer());
+							
+							// LATE DELIVERY PENALTY
+							int penalty = 0;
+							if (o.getDaysDue() < 0)
+				    			penalty -= (Math.abs(o.getDaysDue()) * o.getPenalty());
+							o.setPenalty(penalty);
+							
+							Action finalOrder = new Action();
+							finalOrder.setAction(o);
+							finalOrder.setActor(o.getCustomer());
+							
+							try
+							{
+								getContentManager().fillContent(msg, finalOrder);
+								send(msg);
+								pendingPayment++;
+								orderCount++;
+								phoneAssembledCount += quantity;
+								done.add(o);
+							}
+							catch (CodecException ce) { ce.printStackTrace(); } 
+							catch (OntologyException oe) { oe.printStackTrace(); }
 						}
 							
 					}
