@@ -423,21 +423,14 @@ public class Manufacturer extends Agent
 		@Override
 		public void action() 
 		{
-			
-			
 			/*
 			// STRATEGY 1 - accept only one order per day, the most profitable 
 			double highest = 0;
-			// order list and accept only the most profitable offer
-			//System.out.println("dailyOrderQueries: "+dailyOrderQueries.size());
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
-				//System.out.println("order "+entry.getValue()+", profit: "+entry.getKey());
 				if (entry.getKey() > highest)
 					highest = entry.getKey();
 			}
-			//System.out.println("highest: "+highest+", orderID: "+dailyOrderQueries.get(highest));
-			// the best offer
 			
 			if (highest > 0) // if all orders are positive (manufacturer will not lose money)
 			{
@@ -457,7 +450,7 @@ public class Manufacturer extends Agent
 			}
 			//CustomerOrder next = null; // accept next one if > £10000 profit
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
-			{
+			{/*
 				if (entry.getKey() > 10000)
 				{
 					// accept
@@ -471,7 +464,7 @@ public class Manufacturer extends Agent
 				}
 				else
 				{
-				
+				//
 					order = orders.get(entry.getValue());
 					
 					ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
@@ -482,20 +475,78 @@ public class Manufacturer extends Agent
 				//}
 				
 			}
-			
-			//if (next != null)
-				//dailyOrderQueries.remove((next.getPrice()*next.getQuantity())-next.getCost());
-			
 			*/
 			
 			
 			
+			
+			/*
 			// STRATEGY 2 - if profit > £10000, accept
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
 				order = orders.get(entry.getValue());
-				if (entry.getKey() > 8000)
+				if (entry.getKey() > 3000 && (readyToAssemble.size() < 6))
 				{
+					toOrderSupplies.add(entry.getValue()); 
+					ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+					accept.setConversationId("customerOrder-answer");
+					accept.addReceiver(order.getCustomer());
+					myAgent.send(accept);
+				}
+				else
+				{
+					ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
+					reply.setConversationId("customerOrder-answer");
+					reply.addReceiver(order.getCustomer());
+					myAgent.send(reply);
+					orders.remove(order.getId());
+				}
+			}
+			*/
+			
+			
+			
+			/*
+			// STRATEGY 3 - if unit price > £300
+			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
+			{
+				order = orders.get(entry.getValue());
+				System.out.println("unit price: "+order.getPrice()+", total: "+((order.getPrice()*order.getQuantity())-order.getCost()));
+				if (order.getPrice() >= 300 && entry.getKey() > 0)
+				{
+					toOrderSupplies.add(entry.getValue()); 
+					ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+					accept.setConversationId("customerOrder-answer");
+					accept.addReceiver(order.getCustomer());
+					myAgent.send(accept);
+				}
+				else
+				{
+					ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
+					reply.setConversationId("customerOrder-answer");
+					reply.addReceiver(order.getCustomer());
+					myAgent.send(reply);
+					orders.remove(order.getId());
+				}
+			}
+			*/
+			
+			
+			
+			
+			// STRATEGY 4 - unit price > £300 and supplier 1 or 2 ONLY ONE OF THEM
+			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
+			{
+				order = orders.get(entry.getValue());
+				if (order.getPrice() >= 300 && entry.getKey() > 0)
+				{
+					AID supplier = null;
+					for (AID s : suppliers) {
+						if (s.getLocalName().equals("supplier2"))
+							supplier = s;
+					} 
+					order.setSupplier(supplier);
+					System.out.println(order.getSupplier().getLocalName());
 					toOrderSupplies.add(entry.getValue()); 
 					ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 					accept.setConversationId("customerOrder-answer");
@@ -777,27 +828,19 @@ public class Manufacturer extends Agent
 						// if quantity left to assemble is less than the allowed phones to assemble every day
 						if ((o.getQuantity() - o.getAssembled()) < (50 - phoneAssembledCount))
 						{
-							quantity = o.getQuantity() - o.getAssembled();
-							o.setAssembled(o.getAssembled() + quantity);
+							quantity = o.getQuantity() - o.getAssembled(); // get no of smartphones already assembled
+							o.setAssembled(o.getAssembled() + quantity); // set how many will be assembled after today
 						}
 						else {
-							quantity = 50 - phoneAssembledCount;
+							quantity = 50 - phoneAssembledCount; // the allowed left to assemble today
 							o.setAssembled(o.getAssembled() + quantity);
 						}
 							
-						System.out.println("quantity: "+quantity);
+						//System.out.println("quantity: "+quantity);
 						for (Entry<String, Integer> component : warehouse.entrySet()) 
 						{
 							if (component.getValue() >= quantity && components.contains(component.getKey()))
-							{
-								//Remove components from warehouse
 								component.setValue(component.getValue() - quantity);
-								//warehouse.put(component, warehouse.get(component) - quantity);
-								System.out.println(component);
-								
-								
-								
-							}
 						}
 						
 						if (o.getQuantity() == o.getAssembled())//done
