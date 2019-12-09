@@ -506,7 +506,7 @@ public class Manufacturer extends Agent
 			
 			
 			
-			/*
+			
 			// STRATEGY 3 - if unit price > £300
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
@@ -529,11 +529,11 @@ public class Manufacturer extends Agent
 					orders.remove(order.getId());
 				}
 			}
-			*/
 			
 			
 			
 			
+			/*
 			// STRATEGY 4 - unit price > £300 and supplier 1 or 2 ONLY ONE OF THEM
 			for (Entry<Double, Integer> entry : dailyOrderQueries.entrySet())
 			{
@@ -562,7 +562,7 @@ public class Manufacturer extends Agent
 					orders.remove(order.getId());
 				}
 			}
-			
+			*/
 			
 			
 			dailyOrderQueries.clear();
